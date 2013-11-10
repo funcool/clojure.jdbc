@@ -1,8 +1,6 @@
 (ns jdbc
-  ^{
-    :author "Andrey Antukh",
+  ^{:author "Andrey Antukh",
     :doc "A Clojure interface to SQL databases via JDBC
-
 be.niwi/jdbc provides a simple abstraction for java jdbc interfaces supporting
 all crud (create, read update, delete) operations on a SQL database, along
 with basic transaction support.
@@ -11,7 +9,20 @@ Basic DDL operations will be  also supported in near future (create table,
 drop table, access to table metadata).
 
 Maps are used to represent records, making it easy to store and retrieve
-data. Results can be processed using any standard sequence operations."}
+data. Results can be processed using any standard sequence operations.
+
+Differences with `clojure.java.jdbc`:
+- Connection management is explicit.
+- Explicit resource management.
+- Transaction management is explicit with rally nested
+  transactions support (savepoints).
+- Native support for various connection pools implementations.
+- No more complexity than necesary for each available
+  function. No transaction management for each function; if
+  you need transaction in some code, wrap it using `with-transaction`
+  macro.
+- Much more examples of use this api ;) (project without documentation
+  is project that does not exists)."}
   (:import (java.net URI)
            (java.sql BatchUpdateException DriverManager
                      PreparedStatement ResultSet SQLException Statement Types)
@@ -78,6 +89,8 @@ data. Results can be processed using any standard sequence operations."}
         :else (throw ex)))
 
 (defn- make-raw-connection
+  "Given a standard dbspec or dbspec with datasource (with connection pool),
+  returns a new connection."
   [{:keys [factory connection-uri classname subprotocol subname
            datasource username password]
     :as db-spec}]
@@ -173,9 +186,12 @@ data. Results can be processed using any standard sequence operations."}
     (Connection. connection (atom false) (atom false))))
 
 (defmacro with-connection
-  "Creates context with obtaining new connection to database
-  using plain specs. Plain specs can contain connection parameters
-  or datasource instance (connection pool).
+  "Creates context obtaining new connection to database
+  using plain specs. Specs can be plain default specs or
+  specs with datasource instance (connection pool).
+
+  For more information about connection pools,
+  see `jdbc.pool` namespace documentation.
 
   Example:
 
@@ -183,12 +199,21 @@ data. Results can be processed using any standard sequence operations."}
       (do-something-with conn))"
   [dbspec bindname & body]
   `(let [~bindname (make-connection dbspec)]
-      ~@body))
+     (with-open [realconn# (:connection ~bindname)]
+       ~@body))
 
 (defn call-in-transaction
   "Wrap function in one transaction. If current connection is already in
   transaction, it uses savepoints for this purpose. The availability of
-  this feature depends on database support for it."
+  this feature depends on database support for it.
+
+  Example:
+
+  (with-connection dbspec conn
+    (call-in-transaction conn (fn [] (execute! conn 'DROP TABLE foo;'))))
+
+  For more idiomatic code, you should use `with-transaction` macro.
+  "
   [conn func {:keys [savepoints] :or {savepoints true} :as opts}]
   (when (and @(:in-transaction conn) (not savepoints))
     (throw+ "Savepoints explicitly disabled."))
@@ -219,6 +244,16 @@ data. Results can be processed using any standard sequence operations."}
             (.setAutoCommit connection current-autocommit)))))))
 
 (defmacro with-transaction
+  "Creates a context that evaluates in transaction (or nested transaction).
+  This is a more idiomatic way to execute some database operations in
+  atomic way.
+
+  Example:
+
+    (with-transaction conn
+      (execute! conn 'DROP TABLE foo;')
+      (execute! conn 'DROP TABLE bar;'))
+  "
   [conn & body]
   `(let [func# (fn [] ~@body)]
      (apply call-in-transaction [~conn func#])))
