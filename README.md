@@ -1,36 +1,11 @@
-# jdbc
+# clj.jdbc
 
-FIXME: description
+Alternative implementation of jdbc wrapper for clojure.
 
-## Installation
+For this momment, the official wrapper `clojure.jdbc` has very unclear
+api and it doing a lot of implicit things such as connection management.
 
-Download from http://example.com/FIXME.
+This library intends make more simple and clear api to jdbc than the
+official library.
 
-## Usage
-
-FIXME: explanation
-
-    $ java -jar jdbc-0.1.0-standalone.jar [args]
-
-## Options
-
-FIXME: listing of options this app accepts.
-
-## Examples
-
-...
-
-### Bugs
-
-...
-
-### Any Other Sections
-### That You Think
-### Might be Useful
-
-## License
-
-Copyright © 2013 FIXME
-
-Distributed under the Eclipse Public License either version 1.0 or (at
-your option) any later version.
+**NOTE:** this project is not ready for use.
