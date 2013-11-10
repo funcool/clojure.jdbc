@@ -18,6 +18,7 @@ data. Results can be processed using any standard sequence operations."}
            (java.util Hashtable Map Properties)
            (javax.sql DataSource))
   (:use [slingshot.slingshot :only [throw+]])
+  (:require [clojure.string :as str])
   (:refer-clojure :exclude [resultset-seq])
   (:gen-class))
 
@@ -110,8 +111,26 @@ data. Results can be processed using any standard sequence operations."}
     (let [msg (format "db-spec %s is missing a required parameter" db-spec)]
       (throw (IllegalArgumentException. msg)))))
 
-(defrecord Connection
-  [connection in-transaction rollback-only])
+(defrecord Connection [connection in-transaction rollback-only])
+
+(defrecord QueryResult [stmt rs results]
+  java.lang.AutoCloseable
+  (close [this]
+    (.close rs)
+    (.close stmt)))
+
+(defn- execute-batch
+  "Executes a batch of SQL commands and returns a sequence of update counts.
+   (-2) indicates a single operation operating on an unknown number of rows.
+   Specifically, Oracle returns that and we must call getUpdateCount() to get
+   the actual number of rows affected. In general, operations return an array
+   of update counts, so this may not be a general solution for Oracle..."
+  [^Statement stmt]
+  (let [result (.executeBatch stmt)]
+    (if (and (= 1 (count result)) (= -2 (first result)))
+      (list (.getUpdateCount stmt))
+      (seq result))))
+
 
 ;; Public Api
 
@@ -200,6 +219,122 @@ data. Results can be processed using any standard sequence operations."}
             (.setAutoCommit connection current-autocommit)))))))
 
 (defmacro with-transaction
-  [conn opts & body]
+  [conn & body]
   `(let [func# (fn [] ~@body)]
-     (apply call-in-transaction [~conn func# ~opts])))
+     (apply call-in-transaction [~conn func#])))
+
+(defn execute!
+  "Run arbitrary number of raw sql commands such as: CREATE TABLE,
+  DROP TABLE, etc... If your want transactions, you can wrap this
+  call in transaction using `with-transaction` context block macro.
+
+  Warning: not all database servers support ddl in transactions.
+
+  Examples:
+
+    ;; Without transactions
+    (with-connection dbspec conn
+      (execute! 'CREATE TABLE foo (id serial, name text);'))
+
+    ;; In one transaction
+    (with-connection dbspec conn
+      (with-transaction conn
+        (execute! conn 'CREATE TABLE foo (id serial, name text);')))
+  "
+  [conn & commands]
+  (let [connection (:connection conn)]
+    (with-open [stmt (.createStatement conn)]
+      (dorun (map (fn [command]
+                    (.addBatch stmt command)) commands))
+      (execute-batch stmt))))
+
+
+(defn result-set-lazyseq
+  "Function that wraps result in a lazy seq. This function
+  is part of public api but can not be used directly (you should pass
+  this function as parameter to `query` function).
+
+  Required parameters:
+    rs: ResultSet instance.
+
+  Optional named parameters:
+    :identifiers -> function that is applied for column name
+                    when as-arrays? is false
+    :as-arrays?  -> by default this function return a lazy seq of
+                    records as map, but in certain circumstances you
+                    need results as array. With this keywork parameter
+                    you can set result as array instead map record.
+  "
+  [rs & {:keys [identifiers as-arrays?]
+         :or {identifiers str/lower-case as-arrays? false}}]
+
+  (let [metadata    (.getMetaData rs)
+        idxs        (range 1 (inc (.getColumnCount metadata)))
+        keys        (->> idxs
+                         (map (fn [i] (.getColumnLabel metadata i)))
+                         (map (comp keyword identifiers)))
+        row-values  (fn [] (map #(.getObject rs %) idxs))
+        records     (fn thisfn []
+                      (when (.next rs)
+                        (cons (zipmap keys (row-values)) (lazy-seq (thisfn)))))
+        rows        (fn thisfn []
+                      (when (.next rs)
+                        (cons (vec (row-values)) (lazy-seq (thisfn)))))]
+    (if as-arrays?
+      (cons (vec keys) (rows))
+      (records))))
+
+(def result-set-vec
+  "Function that evaluates a result into one clojure persistent
+  vector. Accept same parameters as `result-set-lazyseq`."
+  [& args]
+  (vec (doall (apply result-set-lazyseq [args]))))
+
+(defn query
+  "Run query on the database. This function is used for make select
+  queries and obtain results from database.
+
+  This method returns an instance of QueryResult class that
+  implements `java.lang.AutoCloseable` and should be used in
+  `with-open` function context. Otherwise, also you can use
+  `with-query` specially defined macro for same purpose.
+
+  Example:
+
+    (with-connection dbspec conn
+      (with-open [query-result (query conn 'SELECT name FROM people WHERE id = ?' [1])]
+        (doseq [row (:results query-result)]
+          (println row))))
+  "
+  (^QueryResult [conn sql params]
+   (apply query [conn sql params {}]))
+  (^QueryResult [conn sql params {:keys [lazy?] :or {lazy? false} :as options}]
+   (let [connection (:connection conn)
+         stmt       (if (instance? PreparedStatement sql) sql
+                      (.prepareStatement connection sql))]
+     (dorun (map-indexed #(.setObject stmt (inc %1) %2) params))
+     (let [rs (.executeQuery stmt)]
+       (if lazy?
+         (QueryResult. stmt rs (result-set-lazyseq rs))
+         (QueryResult. stmt rs (result-set-vec rs)))))))
+
+(defmacro with-query
+  "Idiomatic dsl macro for `query` function that automatically closes
+  all resources when context is reached.
+
+  Example:
+
+    (with-query conn results
+      ['SELECT name FROM people WHERE id = ?' [1]]
+      (doseq [row results]
+        (println row)))
+  "
+  [conn bindname [query params] & body]
+  `(with-open [rs# (query ~conn ~query ~params)]
+     (let [~bindname (:results rs#)]
+       ~@body)))
+
+;; (defn insert!
+;;   "Given a database connection, a table name and either maps representing rows
+;;    perform an insert or multiple insert."
+;;   [conn table & records])
