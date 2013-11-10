@@ -28,12 +28,17 @@ Differences with `clojure.java.jdbc`:
                      PreparedStatement ResultSet SQLException Statement Types)
            (java.util Hashtable Map Properties)
            (javax.sql DataSource))
-  (:use [slingshot.slingshot :only [throw+]])
+  (:use [slingshot.slingshot :only [throw+ try+]])
   (:require [clojure.string :as str])
   (:refer-clojure :exclude [resultset-seq])
   (:gen-class))
 
 ;; Private api and definitions
+
+(defn- strip-jdbc [^String spec]
+  (if (.startsWith spec "jdbc:")
+    (.substring spec 5)
+    spec))
 
 (def ^{:private true :doc "Map of classnames to subprotocols"} classnames
   {"postgresql"     "org.postgresql.Driver"
@@ -54,29 +59,12 @@ Differences with `clojure.java.jdbc`:
      {:subname (if port
                  (str "//" host ":" port path)
                  (str "//" host path))
-      :subprotocol (subprotocols scheme scheme)}
+      :subprotocol scheme
+      :classname (get classnames scheme)}
      (if-let [user-info (.getUserInfo uri)]
              {:user (first (str/split user-info #":"))
               :password (second (str/split user-info #":"))}))))
 
-(def ^{:private true
-       :doc "Map friendly :concurrency values to ResultSet constants."}
-  result-set-concurrency
-  {:read-only ResultSet/CONCUR_READ_ONLY
-   :updatable ResultSet/CONCUR_UPDATABLE})
-
-(def ^{:private true
-       :doc "Map friendly :cursors values to ResultSet constants."}
-  result-set-holdability
-  {:hold ResultSet/HOLD_CURSORS_OVER_COMMIT
-   :close ResultSet/CLOSE_CURSORS_AT_COMMIT})
-
-(def ^{:private true
-       :doc "Map friendly :type values to ResultSet constants."}
-  result-set-type
-  {:forward-only ResultSet/TYPE_FORWARD_ONLY
-   :scroll-insensitive ResultSet/TYPE_SCROLL_INSENSITIVE
-   :scroll-sensitive ResultSet/TYPE_SCROLL_SENSITIVE})
 
 (defn- throw-non-rte
   "This ugliness makes it easier to catch SQLException objects
@@ -95,11 +83,11 @@ Differences with `clojure.java.jdbc`:
            datasource username password]
     :as db-spec}]
   (cond
-    (instance? URI db-spec)
-    (get-connection (parse-properties-uri db-spec))
-
     (string? db-spec)
     (get-connection (URI. (strip-jdbc db-spec)))
+
+    (instance? URI db-spec)
+    (get-connection (parse-properties-uri db-spec))
 
     factory
     (factory (dissoc db-spec :factory))
