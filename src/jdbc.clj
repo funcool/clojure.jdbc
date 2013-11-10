@@ -283,6 +283,32 @@ Differences with `clojure.java.jdbc`:
                     (.addBatch stmt command)) commands))
       (execute-batch stmt))))
 
+(defn execute-prepared!
+  "Same as `execute!` function, but works with prepared statements
+  instead with raw sql.
+
+  With this you can execute multiple operations throught
+  one call.
+
+  Example:
+
+    (with-connection dbspec conn
+      (let [sql 'UPDATE TABLE foo SET x = ? WHERE y = ?;']
+        (execute-prepared! sql [1 2] [2 3] [3 4])))
+
+    This code should send this sql sentences:
+
+      UPDATE TABLE foo SET x = 1 WHERE y = 2;
+      UPDATE TABLE foo SET x = 2 WHERE y = 3;
+      UPDATE TABLE foo SET x = 3 WHERE y = 4;
+  "
+  [conn sql & param-groups]
+  (let [connection (:connection conn)]
+    (with-open [stmt (.prepareStatement connection sql)]
+      (doseq [param-group param-groups]
+        (dorun (map-indexed #(.setObject stmt (inc %1) %2) params))
+        (.addBatch stmt))
+      (execute-batch stmt))))
 
 (defn result-set-lazyseq
   "Function that wraps result in a lazy seq. This function
