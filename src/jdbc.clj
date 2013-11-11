@@ -14,57 +14,57 @@ drop table, access to table metadata).
 Maps are used to represent records, making it easy to store and retrieve
 data. Results can be processed using any standard sequence operations.
 
-## Why one other jdbc wrapper? 
+## Why one other jdbc wrapper?
 
-- Connection management should be explicit. clj.jdbc has clear differentiation 
+- Connection management should be explicit. clj.jdbc has clear differentiation
   between connection and dbspec without uneccesary nesting controls and with explicit
-  resource management (using `with-open` or other specific macros for it, see 
+  resource management (using `with-open` or other specific macros for it, see
   examples).
 
-- clk.jdb has full support of all transaccions api, with ability to set database 
-  isolation level and use of nested transactions (savepoints). 
-  
-  `with-transaction` macro works well with nested transactions using savepoints 
-  when it used as nested transaction. It ceates new transaction if no one transaction 
+- clk.jdb has full support of all transaccions api, with ability to set database
+  isolation level and use of nested transactions (savepoints).
+
+  `with-transaction` macro works well with nested transactions using savepoints
+  when it used as nested transaction. It ceates new transaction if no one transaction
   is active or savepoins in other case.
 
-- clj.jdbc has native support for connection pools, having helpers for varios 
+- clj.jdbc has native support for connection pools, having helpers for varios
   implementations (c3p0 and bonecp) for convert a plain dbspec to
   dbspec with datasource.
-  
-- clj.jdbc has simpler implementation than clojure.java.jdbc. It has no more complexity 
-  than necesary for each available function in public api. 
-  
-  As example: 
-  
-  - clojure.java.jdbc has logic for connection nestig because it hasn't have proper 
-    connection management. Functions like `create!` can receive plain dbspec or dbspec 
-    with crated connection. If dbspec with active connection is received, it should 
+
+- clj.jdbc has simpler implementation than clojure.java.jdbc. It has no more complexity
+  than necesary for each available function in public api.
+
+  As example:
+
+  - clojure.java.jdbc has logic for connection nestig because it hasn't have proper
+    connection management. Functions like `create!` can receive plain dbspec or dbspec
+    with crated connection. If dbspec with active connection is received, it should
     increment a nesting value (this prevents a close connection at finish). This is a
     good example of complexity introduced with improperly connection management.
-    
-    With clj.jdbc, all work with database should explicitly wrapped in connection
-    context using `with-connection` macro. And each function like `create!` can 
-    suppose that always going to receive a connection instance, removing connection
-    handling from all functions. 
 
-  - clojure.java.jdbc has repeated transaction handling on each crud method 
-    (insert!, drop!, etc...). With clj.jdbc, if you want that some code runs in a 
-    transaction, you should wrap it in a transaction context using 
+    With clj.jdbc, all work with database should explicitly wrapped in connection
+    context using `with-connection` macro. And each function like `create!` can
+    suppose that always going to receive a connection instance, removing connection
+    handling from all functions.
+
+  - clojure.java.jdbc has repeated transaction handling on each crud method
+    (insert!, drop!, etc...). With clj.jdbc, if you want that some code runs in a
+    transaction, you should wrap it in a transaction context using
     `with-transaction` macro (see transactions section for more information).
-    
+
 - Much more examples of use this api ;) (project without documentation
   is project that does not exists).
 
 ## Dbspecs or database connection parameters
 
 Usually, all documentation of any jvm languaje that explains jdbc, always suppose
-that a reader comes from java and knowns well about jdbc. This documentation will 
+that a reader comes from java and knowns well about jdbc. This documentation will
 not make the same mistake.
 
 jdbc is a default abstraction/interface for sql databases written in java. Is like
 a python DB-API or any other abstraction in any languaje. Clojure as a guest language
-on a jvm, is benefits of having a good and well tested abstraction. 
+on a jvm, is benefits of having a good and well tested abstraction.
 
 `dbspec` is a simple clojure way to define database connection parameters that are
 used to create a new database connection or create new datasource (connection pool).
@@ -76,7 +76,7 @@ This is a default aspect of one dbspec definition:
    :subname \"//localhost:5432/dbname\"
    :user \"username\"
    :password \"password\"}
-   
+
 - `:classname` can be omited and it automatically resolved from predefined list
    using `:subprotocol`. This is a class location of jdbc driver. Each driver has
    one, in this example is a path to a postgresql jdbc driver.
@@ -86,7 +86,7 @@ Also, dbspec has other formats that finally parsed to a previously explained for
 As example you can pass a string containing a url with same data:
 
   \"postgresql://user:password@localhost:5432/dbname\"
-  
+
 And also, it has other format using datasource, but it explained in 'Connection pools'
 section.
 "}
@@ -131,7 +131,6 @@ section.
      (if-let [user-info (.getUserInfo uri)]
              {:user (first (str/split user-info #":"))
               :password (second (str/split user-info #":"))}))))
-
 
 (defn- throw-non-rte
   "This ugliness makes it easier to catch SQLException objects
@@ -181,7 +180,7 @@ section.
 
 (defrecord Connection [connection in-transaction rollback-only])
 
-(defrecord QueryResult [stmt rs results]
+(defrecord QueryResult [stmt rs data]
   java.lang.AutoCloseable
   (close [this]
     (.close rs)
@@ -199,6 +198,28 @@ section.
       (list (.getUpdateCount stmt))
       (seq result))))
 
+
+(defn- make-prepared-statement
+  "Given connection and parametrized query as vector with first
+  argument as string and other arguments as params, return a
+  prepared statement.
+
+  Example:
+
+    (let [stmt (make-prepared-statement conn [\"SELECT foo FROM bar WHERE id = ?\" 1])]
+      (println (instance? java.sql.PreparedStatement stmt)))
+    ;; -> true
+  "
+  [conn sqlvec]
+  {:pre [(instance? Connection conn)
+         (vector? sqlvec)]}
+  (let [connection  (:connection)
+        sql         (first sqlvec)
+        params      (rest sqlvec)
+        stmt        (.prepareStatement connection sql)]
+    (when (seq params)
+      (dorun (map-indexed #(.setObject stmt (inc %1) %2) params)))
+    stmt))
 
 ;; Public Api
 
@@ -406,29 +427,52 @@ section.
   [& args]
   (vec (doall (apply result-set-lazyseq [args]))))
 
-(defn query
-  "Run query on the database. This function is used for make select
-  queries and obtain results from database.
+(defn make-query
+  "Given a connection and paramatrized sql, execute a query and
+  return a instance of QueryResult that works as stantard clojure
+  map but implements a closable interface.
 
-  This method returns an instance of QueryResult class that
-  implements `java.lang.AutoCloseable` and should be used in
-  `with-open` function context. Otherwise, also you can use
-  `with-query` specially defined macro for same purpose.
+  This functions indents be a low level access for making queries
+  and it delegate to a user the resource management. You should
+  use `with-open` macro for store a result as example:
 
-  Example:
+    (with-open [result (make-query conn [\"SELECT foo FROM bar WHERE id = ?\" 1])]
+      (doseq [row (:data result)]
+        (println row)))
 
-    (with-connection dbspec conn
-      (with-open [query-result (query conn 'SELECT name FROM people WHERE id = ?' [1])]
-        (doseq [row (:results query-result)]
-          (println row))))
+  A QueryResult contains a these keys:
+
+  - `:stmt` as PreparedStatement instance
+  - `:rs` as ResultSet instance
+  - `:data` as lazy seq of results.
+
+  You can pass options on call `make-query` for make `:data` key as
+  evaluated (not lazy) instead of lazy sequence:
+
+    (with-open [result (make-query conn [\"SELECT foo FROM bar WHERE id = ?\" 1] {:lazy? false})]
+      (doseq [row (:data result)]
+        (println row)))
+
+  NOTE: It strongly recommended not use this function directly and use a `with-query`
+  macro that manage resources for you and return directly a seq instead of a
+  QueryResult instance.
   "
-  (^QueryResult [conn sql params]
-   (apply query [conn sql params {}]))
-  (^QueryResult [conn sql params {:keys [lazy?] :or {lazy? false} :as options}]
+  ([conn sql-with-params]
+   (apply query [conn sql-with-params {}]))
+
+  ([conn sql-with-params {:keys [lazy?] :or {lazy? false} :as options}]
+   {:pre [(or (instance? PreparedStatement sql-with-params)
+              (vector? sql-with-params))]}
    (let [connection (:connection conn)
-         stmt       (if (instance? PreparedStatement sql) sql
-                      (.prepareStatement connection sql))]
-     (dorun (map-indexed #(.setObject stmt (inc %1) %2) params))
+         stmt       (cond
+                      (instance? PreparedStatement sql-with-params)
+                      sql-with-params
+
+                      (vector? sql-with-params)
+                      (make-prepared-statement conn sql-with-params)
+
+                      (string? sql-with-params)
+                      (make-prepared-statement conn [sql-with-params]))]
      (let [rs (.executeQuery stmt)]
        (if lazy?
          (QueryResult. stmt rs (result-set-lazyseq rs))
@@ -445,9 +489,9 @@ section.
       (doseq [row results]
         (println row)))
   "
-  [conn bindname [query params] & body]
-  `(with-open [rs# (query ~conn ~query ~params)]
-     (let [~bindname (:results rs#)]
+  [conn bindname sql-with-params & body]
+  `(with-open [rs# (query ~conn ~sql-with-params)]
+     (let [~bindname (:data rs#)]
        ~@body)))
 
 ;; (defn insert!
