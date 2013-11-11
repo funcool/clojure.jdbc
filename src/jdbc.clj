@@ -16,21 +16,25 @@ data. Results can be processed using any standard sequence operations.
 
 ## Why one other jdbc wrapper? 
 
-- Connection management is explicit. clj.jdbc has clear differentiation between
-  connection and dbspec without uneccesary nesting controls and with explicit
+- Connection management should be explicit. clj.jdbc has clear differentiation 
+  between connection and dbspec without uneccesary nesting controls and with explicit
   resource management (using `with-open` or other specific macros for it, see 
   examples).
 
-- Full support of all transaccions api, with ability to set database isolation
-  level and use of nested transactions (savepoints). `with-transaction` macro
-  instead of handling all in one transaction, creates new transaction if no 
-  one transaction is active or savepoins in other case.
+- clk.jdb has full support of all transaccions api, with ability to set database 
+  isolation level and use of nested transactions (savepoints). 
+  
+  `with-transaction` macro works well with nested transactions using savepoints 
+  when it used as nested transaction. It ceates new transaction if no one transaction 
+  is active or savepoins in other case.
 
-- Has native support for connection pools, having helpers for varios 
+- clj.jdbc has native support for connection pools, having helpers for varios 
   implementations (c3p0 and bonecp) for convert a plain dbspec to
   dbspec with datasource.
   
-- No more complexity than necesary for each available function in public api. 
+- clj.jdbc has simpler implementation than clojure.java.jdbc. It has no more complexity 
+  than necesary for each available function in public api. 
+  
   As example: 
   
   - clojure.java.jdbc has logic for connection nestig because it hasn't have proper 
@@ -82,8 +86,9 @@ Also, dbspec has other formats that finally parsed to a previously explained for
 As example you can pass a string containing a url with same data:
 
   \"postgresql://user:password@localhost:5432/dbname\"
-
-
+  
+And also, it has other format using datasource, but it explained in 'Connection pools'
+section.
 "}
   (:import (java.net URI)
            (java.sql BatchUpdateException DriverManager
