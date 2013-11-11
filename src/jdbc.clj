@@ -1,7 +1,10 @@
 (ns jdbc
   ^{:author "Andrey Antukh",
-    :doc "A Clojure interface to SQL databases via JDBC
-be.niwi/jdbc provides a simple abstraction for java jdbc interfaces supporting
+    :doc "Alternative implementation of jdbc wrapper for clojure.
+
+## Introduction
+
+clj.jdbc provides a simple abstraction for java jdbc interfaces supporting
 all crud (create, read update, delete) operations on a SQL database, along
 with basic transaction support.
 
@@ -11,7 +14,7 @@ drop table, access to table metadata).
 Maps are used to represent records, making it easy to store and retrieve
 data. Results can be processed using any standard sequence operations.
 
-Differences with `clojure.java.jdbc`:
+## Why one other jdbc wrapper? 
 
 - Connection management is explicit. clj.jdbc has clear differentiation between
   connection and dbspec without uneccesary nesting controls and with explicit
@@ -27,27 +30,61 @@ Differences with `clojure.java.jdbc`:
   implementations (c3p0 and bonecp) for convert a plain dbspec to
   dbspec with datasource.
   
-- More simple implementation. No more complexity than necesary for each available
-  function in public api. As example: 
+- No more complexity than necesary for each available function in public api. 
+  As example: 
   
   - clojure.java.jdbc has logic for connection nestig because it hasn't have proper 
     connection management. Functions like `create!` can receive plain dbspec or dbspec 
     with crated connection. If dbspec with active connection is received, it should 
-    increment a nesting value. It prevents a close connection at finish. This is a
+    increment a nesting value (this prevents a close connection at finish). This is a
     good example of complexity introduced with improperly connection management.
     
     With clj.jdbc, all work with database should explicitly wrapped in connection
     context using `with-connection` macro. And each function like `create!` can 
     suppose that always going to receive a connection instance, removing connection
-    handling from all functions.
+    handling from all functions. 
 
   - clojure.java.jdbc has repeated transaction handling on each crud method 
-    (insert!, drop!, etc...). This, with explicit transaction management is 
-    unnecesary. With clj.jdbc, if you want that one code runs in a transaction, 
-    wrap it in a transaction using `with-transaction` macro.
+    (insert!, drop!, etc...). With clj.jdbc, if you want that some code runs in a 
+    transaction, you should wrap it in a transaction context using 
+    `with-transaction` macro (see transactions section for more information).
     
 - Much more examples of use this api ;) (project without documentation
-  is project that does not exists)."}
+  is project that does not exists).
+
+## Dbspecs or database connection parameters
+
+Usually, all documentation of any jvm languaje that explains jdbc, always suppose
+that a reader comes from java and knowns well about jdbc. This documentation will 
+not make the same mistake.
+
+jdbc is a default abstraction/interface for sql databases written in java. Is like
+a python DB-API or any other abstraction in any languaje. Clojure as a guest language
+on a jvm, is benefits of having a good and well tested abstraction. 
+
+`dbspec` is a simple clojure way to define database connection parameters that are
+used to create a new database connection or create new datasource (connection pool).
+
+This is a default aspect of one dbspec definition:
+
+  {:classname \"org.postgresql.Driver\"
+   :subprotocol \"postgresql\"
+   :subname \"//localhost:5432/dbname\"
+   :user \"username\"
+   :password \"password\"}
+   
+- `:classname` can be omited and it automatically resolved from predefined list
+   using `:subprotocol`. This is a class location of jdbc driver. Each driver has
+   one, in this example is a path to a postgresql jdbc driver.
+- `:user` and `:password` can be ommited if them are empty
+
+Also, dbspec has other formats that finally parsed to a previously explained format.
+As example you can pass a string containing a url with same data:
+
+  \"postgresql://user:password@localhost:5432/dbname\"
+
+
+"}
   (:import (java.net URI)
            (java.sql BatchUpdateException DriverManager
                      PreparedStatement ResultSet SQLException Statement Types)
