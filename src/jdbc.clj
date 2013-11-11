@@ -204,13 +204,16 @@ section.
     (let [msg (format "db-spec %s is missing a required parameter" db-spec)]
       (throw (IllegalArgumentException. msg)))))
 
-(defrecord Connection [connection in-transaction rollback-only])
+(defrecord Connection [connection in-transaction rollback-only]
+  java.lang.AutoCloseable
+  (close [this]
+    (.close (:connection this))))
 
 (defrecord QueryResult [stmt rs data]
   java.lang.AutoCloseable
   (close [this]
-    (.close rs)
-    (.close stmt)))
+    (.close (:rs this))
+    (.close (:stmt this))))
 
 (defn- execute-batch
   "Executes a batch of SQL commands and returns a sequence of update counts.
@@ -239,7 +242,7 @@ section.
   [conn sqlvec]
   {:pre [(instance? Connection conn)
          (vector? sqlvec)]}
-  (let [connection  (:connection)
+  (let [connection  (:connection conn)
         sql         (first sqlvec)
         params      (rest sqlvec)
         stmt        (.prepareStatement connection sql)]
@@ -282,7 +285,6 @@ section.
   String:
     subprotocol://user:password@host:post/subname
                  An optional prefix of jdbc: is allowed."
-  ^java.sql.Connection
   [dbspec]
   (let [connection (apply make-raw-connection [dbspec])]
     (Connection. connection (atom false) (atom false))))
@@ -300,9 +302,8 @@ section.
     (with-connection dbspec conn
       (do-something-with conn))"
   [dbspec bindname & body]
-  `(let [~bindname (make-connection dbspec)]
-     (with-open [realconn# (:connection ~bindname)]
-       ~@body)))
+  `(with-open [~bindname (make-connection ~dbspec)]
+     ~@body))
 
 (defn call-in-transaction
   "Wrap function in one transaction. If current connection is already in
@@ -380,7 +381,7 @@ section.
   "
   [conn & commands]
   (let [connection (:connection conn)]
-    (with-open [stmt (.createStatement conn)]
+    (with-open [stmt (.createStatement connection)]
       (dorun (map (fn [command]
                     (.addBatch stmt command)) commands))
       (execute-batch stmt))))
@@ -451,7 +452,7 @@ section.
   "Function that evaluates a result into one clojure persistent
   vector. Accept same parameters as `result-set-lazyseq`."
   [& args]
-  (vec (doall (apply result-set-lazyseq [args]))))
+  (vec (doall (apply result-set-lazyseq args))))
 
 (defn make-query
   "Given a connection and paramatrized sql, execute a query and
@@ -516,6 +517,6 @@ section.
         (println row)))
   "
   [conn bindname sql-with-params & body]
-  `(with-open [rs# (query ~conn ~sql-with-params)]
+  `(with-open [rs# (make-query ~conn ~sql-with-params)]
      (let [~bindname (:data rs#)]
        ~@body)))
