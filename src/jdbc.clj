@@ -107,6 +107,32 @@ section.
     (.substring spec 5)
     spec))
 
+(defn- as-str
+  "Given a naming strategy and a keyword, return the keyword as a
+   string per that naming strategy. Given (a naming strategy and)
+   a string, return it as-is.
+   A keyword of the form :x.y is treated as keywords :x and :y,
+   both are turned into strings via the naming strategy and then
+   joined back together so :x.y might become `x`.`y` if the naming
+   strategy quotes identifiers with `."
+  [f x]
+  (if (instance? clojure.lang.Named x)
+    (let [n (name x)
+          i (.indexOf n (int \.))]
+      (if (= -1 i)
+        (f n)
+        (str/join "." (map f (.split n "\\.")))))
+    (str x)))
+
+(defn- as-properties
+  "Convert any seq of pairs to a java.utils.Properties instance.
+   Uses as-str to convert both keys and values into strings."
+  [m]
+  (let [p (Properties.)]
+    (doseq [[k v] m]
+      (.setProperty p (as-str identity k) (as-str identity v)))
+    p))
+
 (def ^{:private true :doc "Map of classnames to subprotocols"} classnames
   {"postgresql"     "org.postgresql.Driver"
    "mysql"          "com.mysql.jdbc.Driver"
@@ -150,10 +176,10 @@ section.
     :as db-spec}]
   (cond
     (string? db-spec)
-    (get-connection (URI. (strip-jdbc db-spec)))
+    (make-raw-connection (URI. (strip-jdbc db-spec)))
 
     (instance? URI db-spec)
-    (get-connection (parse-properties-uri db-spec))
+    (make-raw-connection (parse-properties-uri db-spec))
 
     factory
     (factory (dissoc db-spec :factory))
@@ -276,7 +302,7 @@ section.
   [dbspec bindname & body]
   `(let [~bindname (make-connection dbspec)]
      (with-open [realconn# (:connection ~bindname)]
-       ~@body))
+       ~@body)))
 
 (defn call-in-transaction
   "Wrap function in one transaction. If current connection is already in
@@ -382,7 +408,7 @@ section.
   (let [connection (:connection conn)]
     (with-open [stmt (.prepareStatement connection sql)]
       (doseq [param-group param-groups]
-        (dorun (map-indexed #(.setObject stmt (inc %1) %2) params))
+        (dorun (map-indexed #(.setObject stmt (inc %1) %2) param-group))
         (.addBatch stmt))
       (execute-batch stmt))))
 
@@ -421,7 +447,7 @@ section.
       (cons (vec keys) (rows))
       (records))))
 
-(def result-set-vec
+(defn result-set-vec
   "Function that evaluates a result into one clojure persistent
   vector. Accept same parameters as `result-set-lazyseq`."
   [& args]
@@ -458,7 +484,7 @@ section.
   QueryResult instance.
   "
   ([conn sql-with-params]
-   (apply query [conn sql-with-params {}]))
+   (apply make-query [conn sql-with-params {}]))
 
   ([conn sql-with-params {:keys [lazy?] :or {lazy? false} :as options}]
    {:pre [(or (instance? PreparedStatement sql-with-params)
@@ -493,8 +519,3 @@ section.
   `(with-open [rs# (query ~conn ~sql-with-params)]
      (let [~bindname (:data rs#)]
        ~@body)))
-
-;; (defn insert!
-;;   "Given a database connection, a table name and either maps representing rows
-;;    perform an insert or multiple insert."
-;;   [conn table & records])
