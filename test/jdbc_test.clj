@@ -41,4 +41,12 @@
   (testing "Simple query result"
     (with-connection h2-dbspec3 conn
       (with-query conn results ["SELECT 1 + 1 as foo;"]
-        (is (= [{:foo 2}] (doall results)))))))
+        (is (= [{:foo 2}] (doall results))))))
+
+  (testing "Low level query result"
+    (with-open [conn    (make-connection h2-dbspec3)
+                result  (make-query conn ["SELECT 1 + 1 as foo;"])]
+      (is (instance? jdbc.QueryResult result))
+      (is (instance? java.sql.ResultSet (:rs result)))
+      (is (instance? java.sql.PreparedStatement (:stmt result)))
+      (is (= [{:foo 2}] (doall (:data result)))))))
