@@ -397,7 +397,7 @@ section.
 
     (with-connection dbspec conn
       (let [sql 'UPDATE TABLE foo SET x = ? WHERE y = ?;']
-        (execute-prepared! sql [1 2] [2 3] [3 4])))
+        (execute-prepared! conn sql [1 2] [2 3] [3 4])))
 
     This code should send this sql sentences:
 

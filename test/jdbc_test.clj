@@ -49,4 +49,13 @@
       (is (instance? jdbc.QueryResult result))
       (is (instance? java.sql.ResultSet (:rs result)))
       (is (instance? java.sql.PreparedStatement (:stmt result)))
-      (is (= [{:foo 2}] (doall (:data result)))))))
+      (is (= [{:foo 2}] (doall (:data result))))))
+
+  (testing "Execute prepared"
+    (with-connection h2-dbspec3 conn
+      (execute! conn "CREATE TABLE foo (name varchar(255), age integer);")
+      (execute-prepared! conn "INSERT INTO foo (name,age) VALUES (?, ?);"
+                         ["foo", 1]  ["bar", 2])
+
+      (with-query conn results ["SELECT count(age) as total FROM foo;"]
+        (is (= [{:total 2}] (doall results)))))))
