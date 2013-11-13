@@ -68,11 +68,13 @@
 ;;
 ;; This is a default aspect of one dbspec definition:
 ;;
-;;   {:classname "org.postgresql.Driver"
-;;    :subprotocol "postgresql"
-;;    :subname "//localhost:5432/dbname"
-;;    :user "username"
-;;    :password "password"}
+;;      {:classname "org.postgresql.Driver"
+;;       :subprotocol "postgresql"
+;;       :subname "//localhost:5432/dbname"
+;;       :user "username"
+;;       :password "password"}
+;;
+;; Parameters description:
 ;;
 ;; - `:classname` can be omited and it automatically resolved from predefined list
 ;;    using `:subprotocol`. This is a class location of jdbc driver. Each driver has
@@ -82,11 +84,27 @@
 ;; Also, dbspec has other formats that finally parsed to a previously explained format.
 ;; As example you can pass a string containing a url with same data:
 ;;
-;;   "postgresql://user:password@localhost:5432/dbname"
+;;      "postgresql://user:password@localhost:5432/dbname"
 ;;
 ;; And also, it has other format using datasource, but it explained in 'Connection pools'
 ;; section.
-
+;;
+;; ## Execute database commands
+;;
+;; clj.jdbc has many methods for execute database commands, like create tables, inserting
+;; data or simply execute stored procedure.
+;;
+;; The simplest way to execute a raw sql is using `execute!` function. It receives
+;; a connection as first parameter and  one or more sql strings.
+;;
+;;      ;; Without transactions
+;;      (with-connection dbspec conn
+;;        (execute! conn 'CREATE TABLE foo (id serial, name text);'))
+;;
+;;      ;; In one transaction
+;;      (with-connection dbspec conn
+;;        (with-transaction conn
+;;          (execute! conn 'CREATE TABLE foo (id serial, name text);')))
 
 (ns jdbc
   (:import (java.net URI)
@@ -97,8 +115,6 @@
   (:require [clojure.string :as str])
   (:refer-clojure :exclude [resultset-seq])
   (:gen-class))
-
-;; ## Private Api definitions and utils
 
 (defn- as-str
   "Given a naming strategy and a keyword, return the keyword as a
@@ -371,7 +387,7 @@
 
     ;; Without transactions
     (with-connection dbspec conn
-      (execute! 'CREATE TABLE foo (id serial, name text);'))
+      (execute! conn 'CREATE TABLE foo (id serial, name text);'))
 
     ;; In one transaction
     (with-connection dbspec conn
