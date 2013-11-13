@@ -9,7 +9,7 @@ official library."
   :url "http://github.com/niwibe/clj.jdbc"
   :license {:name "Apache 2.0"
             :url "http://www.apache.org/licenses/LICENSE-2.0.txt"}
-  :dependencies [[slingshot "0.10.3"]]
+  :dependencies [[org.clojure/clojure "1.5.1"]]
   :profiles {:uberjar {:aot :all}
              :dev {:dependencies [[org.clojure/clojure "1.5.1"]]}
              :test {:dependencies [[com.h2database/h2 "1.3.170"]

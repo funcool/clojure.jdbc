@@ -69,3 +69,39 @@
         (is (instance? jdbc.Connection conn))
         (is (instance? java.sql.Connection (:connection conn)))))))
 
+
+(deftest db-transactions
+  (let [sql1 "CREATE TABLE foo (name varchar(255), age integer);"
+        sql2 "INSERT INTO foo (name,age) VALUES (?, ?);"
+        sql3 "SELECT age FROM foo;"]
+
+    (testing "Basic transaction test"
+      (with-connection h2-dbspec3 conn
+        (execute! conn sql1)
+
+        (try
+          (with-transaction conn
+            (execute-prepared! conn sql2 ["foo", 1]  ["bar", 2])
+            (with-query conn results [sql3]
+              (is (= (count results) 2))
+              (throw (RuntimeException. "Fooo"))))
+          (catch Exception e
+            (with-query conn results [sql3]
+              (is (= (count results) 0)))))))
+
+    (testing "Subtransactions"
+      (with-connection h2-dbspec3 conn
+        (execute! conn sql1)
+
+        (with-transaction conn
+          (execute-prepared! conn sql2 ["foo", 1]  ["bar", 2])
+
+          (try
+            (with-transaction conn
+              (execute-prepared! conn sql2 ["foo", 1]  ["bar", 2])
+              (with-query conn results [sql3]
+                (is (= (count results) 4))
+                (throw (RuntimeException. "Fooo"))))
+            (catch Exception e
+              (with-query conn results [sql3]
+                (is (= (count results) 2))))))))))

@@ -94,13 +94,11 @@
                      PreparedStatement ResultSet SQLException Statement Types)
            (java.util Hashtable Map Properties)
            (javax.sql DataSource))
-  (:use [slingshot.slingshot :only [throw+ try+]])
   (:require [clojure.string :as str])
   (:refer-clojure :exclude [resultset-seq])
   (:gen-class))
 
 ;; ## Private Api definitions and utils
-
 
 (defn- as-str
   "Given a naming strategy and a keyword, return the keyword as a
@@ -318,16 +316,16 @@
 
   For more idiomatic code, you should use `with-transaction` macro.
   "
-  [conn func {:keys [savepoints] :or {savepoints true} :as opts}]
+  [conn func & {:keys [savepoints] :or {savepoints true} :as opts}]
   (when (and @(:in-transaction conn) (not savepoints))
-    (throw+ "Savepoints explicitly disabled."))
+    (throw (RuntimeException. "Savepoints explicitly disabled.")))
   (let [connection      (:connection conn)
         in-transaction  (:in-transaction conn)]
-    (if in-transaction
+    (if @in-transaction
       (let [savepoint (.setSavepoint connection)]
-        (try+
-          (func)
-          (.releaseSavepoint savepoint)
+        (try
+          (apply func [])
+          (.releaseSavepoint connection savepoint)
           (catch Throwable t
             (.rollback connection savepoint)
             (throw-non-rte t))))
@@ -335,7 +333,7 @@
             rollback-only      (:rollback-only conn)]
         (swap! in-transaction not)
         (.setAutoCommit connection false)
-        (try+
+        (try
           (func)
           (if @rollback-only
             (.rollback connection)
