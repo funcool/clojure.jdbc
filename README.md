@@ -70,11 +70,13 @@ used to create a new database connection or create new datasource (connection po
 
 This is a default aspect of one dbspec definition:
 
-    {:classname "org.postgresql.Driver"
-     :subprotocol "postgresql"
-     :subname "//localhost:5432/dbname"
-     :user "username"
-     :password "password"}
+```clojure
+{:classname "org.postgresql.Driver"
+ :subprotocol "postgresql"
+ :subname "//localhost:5432/dbname"
+ :user "username"
+ :password "password"}
+```
 
 Parameters description:
 
