@@ -17,5 +17,6 @@ official library."
                                    [com.mchange/c3p0 "0.9.5-pre5"]]}}
 
   ;; :main ^:skip-aot jdbc.core
-  :plugins [[lein-marginalia "0.7.1"]]
+  :plugins [[lein-marginalia "0.7.1"]
+            [codox "0.6.6"]]
   :target-path "target/%s")
