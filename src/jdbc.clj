@@ -101,10 +101,6 @@
 
 ;; ## Private Api definitions and utils
 
-(defn strip-jdbc [^String spec]
-  (if (.startsWith spec "jdbc:")
-    (.substring spec 5)
-    spec))
 
 (defn- as-str
   "Given a naming strategy and a keyword, return the keyword as a
@@ -143,6 +139,21 @@
    "h2"             "org.h2.Driver"
    "sqlite"         "org.sqlite.JDBC"})
 
+(defn- throw-non-rte
+  "This ugliness makes it easier to catch SQLException objects
+  rather than something wrapped in a RuntimeException which
+  can really obscure your code when working with JDBC from
+  Clojure... :("
+  [^Throwable ex]
+  (cond (instance? java.sql.SQLException ex) (throw ex)
+        (and (instance? RuntimeException ex) (.getCause ex)) (throw-non-rte (.getCause ex))
+        :else (throw ex)))
+
+(defn strip-jdbc [^String spec]
+  (if (.startsWith spec "jdbc:")
+    (.substring spec 5)
+    spec))
+
 (defn parse-properties-uri [^URI uri]
   (let [host (.getHost uri)
         port (if (pos? (.getPort uri)) (.getPort uri))
@@ -157,16 +168,6 @@
      (if-let [user-info (.getUserInfo uri)]
              {:user (first (str/split user-info #":"))
               :password (second (str/split user-info #":"))}))))
-
-(defn- throw-non-rte
-  "This ugliness makes it easier to catch SQLException objects
-  rather than something wrapped in a RuntimeException which
-  can really obscure your code when working with JDBC from
-  Clojure... :("
-  [^Throwable ex]
-  (cond (instance? java.sql.SQLException ex) (throw ex)
-        (and (instance? RuntimeException ex) (.getCause ex)) (throw-non-rte (.getCause ex))
-        :else (throw ex)))
 
 (defn- make-raw-connection
   "Given a standard dbspec or dbspec with datasource (with connection pool),
