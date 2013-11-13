@@ -1,5 +1,6 @@
 (ns jdbc-test
   (:require [jdbc :refer :all]
+            [jdbc.pool.c3p0 :as pool-c3p0]
             [clojure.test :refer :all]))
 
 (def h2-dbspec1 {:classname "org.h2.Driver"
@@ -59,3 +60,12 @@
 
       (with-query conn results ["SELECT count(age) as total FROM foo;"]
         (is (= [{:total 2}] (doall results)))))))
+
+(deftest db-pool
+  (testing "C3P0 connection pool testing."
+    (let [spec (pool-c3p0/make-datasource-spec h2-dbspec3)]
+      (is (instance? javax.sql.DataSource (:datasource spec)))
+      (with-open [conn (make-connection spec)]
+        (is (instance? jdbc.Connection conn))
+        (is (instance? java.sql.Connection (:connection conn)))))))
+

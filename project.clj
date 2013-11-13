@@ -13,7 +13,8 @@ official library."
   :profiles {:uberjar {:aot :all}
              :dev {:dependencies [[org.clojure/clojure "1.5.1"]]}
              :test {:dependencies [[com.h2database/h2 "1.3.170"]
-                                   [postgresql "9.1-901.jdbc4"]]}}
+                                   [postgresql "9.1-901.jdbc4"]
+                                   [com.mchange/c3p0 "0.9.5-pre5"]]}}
 
   ;; :main ^:skip-aot jdbc.core
   :plugins [[lein-marginalia "0.7.1"]]

@@ -34,7 +34,7 @@
     (instance? URI dbspec)
     (parse-properties-uri dbspec)
 
-    :else db-spec))
+    :else dbspec))
 
 (defn make-datasource-spec
   "This implements a dummy connection pool. Really does
