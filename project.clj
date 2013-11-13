@@ -16,4 +16,5 @@ official library."
                                    [postgresql "9.1-901.jdbc4"]]}}
 
   ;; :main ^:skip-aot jdbc.core
+  :plugins [[lein-marginalia "0.7.1"]]
   :target-path "target/%s")

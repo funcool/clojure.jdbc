@@ -1,6 +1,6 @@
 (ns jdbc.pool.c3p0
   (:use [slingshot.slingshot :only [throw+ try+]])
-  (:require [jdbc.pool :refer [normalize-dbspec])
+  (:require [jdbc.pool :refer [normalize-dbspec]])
   (:import (com.mchange.v2.c3p0 ComboPooledDataSource)))
 
 (defn make-datasource-spec
