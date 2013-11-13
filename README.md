@@ -99,11 +99,13 @@ data or simply execute stored procedure.
 The simplest way to execute a raw sql is using `execute!` function. It receives
 a connection as first parameter and  one or more sql strings.
 
-    ;; Without transactions
-    (with-connection dbspec conn
-      (execute! conn 'CREATE TABLE foo (id serial, name text);'))
+```clojure
+;; Without transactions
+(with-connection dbspec conn
+  (execute! conn 'CREATE TABLE foo (id serial, name text);'))
 
-    ;; In one transaction
-    (with-connection dbspec conn
-      (with-transaction conn
-        (execute! conn 'CREATE TABLE foo (id serial, name text);')))
+;; In one transaction
+(with-connection dbspec conn
+  (with-transaction conn
+    (execute! conn 'CREATE TABLE foo (id serial, name text);')))
+```
