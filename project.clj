@@ -1,4 +1,4 @@
-(defproject be.niwi/jdbc "0.1.0"
+(defproject be.niwi/clj.jdbc "0.1.0"
   :description "Alternative implementation of jdbc wrapper for clojure.
 
 For this momment, the official wrapper `clojure.jdbc` has very unclear
@@ -6,7 +6,7 @@ api and it doing a lot of implicit things such as connection management.
 
 This library intends make more simple and clear api to jdbc than the
 official library."
-  :url "http://github.com/niwibe/cljdbc"
+  :url "http://github.com/niwibe/clj.jdbc"
   :license {:name "Apache 2.0"
             :url "http://www.apache.org/licenses/LICENSE-2.0.txt"}
   :dependencies [[slingshot "0.10.3"]]
