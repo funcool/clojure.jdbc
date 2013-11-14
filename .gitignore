@@ -8,3 +8,7 @@ pom.xml.asc
 *.class
 /.lein-*
 /.nrepl-port
+*.db
+docs/_build*
+docs/codox*
+docs/uberdoc.html
