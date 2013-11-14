@@ -7,7 +7,7 @@ Why one other jdbc wrapper?
   resource management (using `with-open` or other specific macros for it, see
   examples).
 
-- clk.jdb has full support of all transaccions api, with ability to set database
+- clj.jdb has full support of all transaccions api, with ability to set database
   isolation level and use of nested transactions (savepoints).
 
   `with-transaction` macro works well with nested transactions using savepoints

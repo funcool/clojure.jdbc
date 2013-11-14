@@ -12,7 +12,7 @@ not make the same mistake.
 
 jdbc is a default abstraction/interface for sql databases written in java. Is like
 a python DB-API or any other abstraction in any languaje. Clojure as a guest language
-on a jvm, is benefits of having a good and well tested abstraction.
+on a jvm, is benefits of having a good and well tested abstraction like this.
 
 `dbspec` is a simple clojure way to define database connection parameters that are
 used to create a new database connection or create new datasource (connection pool).
@@ -51,6 +51,9 @@ Execute database commands
 clj.jdbc has many methods for execute database commands, like create tables, inserting
 data or simply execute stored procedure.
 
+Execute raw sql statements
+--------------------------
+
 The simplest way to execute a raw sql is using `execute!` function. It receives
 a connection as first parameter and  one or more sql strings.
 
@@ -65,5 +68,13 @@ a connection as first parameter and  one or more sql strings.
       (with-transaction conn
         (execute! conn "CREATE TABLE foo (id serial, name text);")))
 
+Execute parametrized sql statements
+-----------------------------------
 
+Raw sql statements works well for creating tables and similar operations, but when
+you need insert some data, specially if data comes from untrusted sources, `execute!`
+function is not adecuate.
+
+For this problem, clj.jdbc exposes `execute-prepared!` function. It accepts parametrized
+sql an list of groups of parameters.
 
