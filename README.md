@@ -2,4 +2,5 @@
 
 Alternative implementation of jdbc wrapper for clojure.
 
-**Documentation:** TODO
+**Documentation:** http://cljjdbc.readthedocs.org/en/latest/
+
