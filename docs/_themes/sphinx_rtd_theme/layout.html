@@ -23,7 +23,7 @@
   {% endif %}
 
   {# CSS #}
-  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700|Anonymous+Pro:400,700' rel='stylesheet' type='text/css'>
 
   {# JS #}
   {% if not embedded %}
@@ -56,6 +56,7 @@
   {% for cssfile in css_files %}
     <link rel="stylesheet" href="{{ pathto(cssfile, 1) }}" type="text/css" />
   {% endfor %}
+    <link rel="stylesheet" href="{{ pathto('_static/css/niwi.css', 1) }}" type="text/css" />
 
   {%- block linktags %}
     {%- if hasdoc('about') %}
