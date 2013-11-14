@@ -1,10 +1,22 @@
 (ns jdbc
-  "Alternative implementation of jdbc wrapper for clojure."
+  "Alternative implementation of jdbc wrapper for clojure.
+
+clj.jdbc provides a simple abstraction for java jdbc interfaces supporting
+all crud (create, read update, delete) operations on a SQL database, along
+with basic transaction support.
+
+Basic DDL operations will be  also supported in near future (create table,
+drop table, access to table metadata).
+
+Maps are used to represent records, making it easy to store and retrieve
+data. Results can be processed using any standard sequence operations.
+  "
   (:import (java.net URI)
            (java.sql BatchUpdateException DriverManager
                      PreparedStatement ResultSet SQLException Statement Types)
            (java.util Hashtable Map Properties)
-           (javax.sql DataSource))
+           (javax.sql DataSource)
+           (jdbc.types Connection QueryResult))
   (:require [clojure.string :as str])
   (:refer-clojure :exclude [resultset-seq])
   (:gen-class))
@@ -57,11 +69,14 @@
         :else (throw ex)))
 
 (defn strip-jdbc [^String spec]
+  "Siple util function that strip a \"jdbc:\" prefix
+  from connection string urls."
   (if (.startsWith spec "jdbc:")
     (.substring spec 5)
     spec))
 
 (defn parse-properties-uri [^URI uri]
+  "Parses a dbspec as url into a plain dbspec."
   (let [host (.getHost uri)
         port (if (pos? (.getPort uri)) (.getPort uri))
         path (.getPath uri)
@@ -112,17 +127,6 @@
     (let [msg (format "db-spec %s is missing a required parameter" db-spec)]
       (throw (IllegalArgumentException. msg)))))
 
-(defrecord Connection [connection in-transaction rollback-only]
-  java.lang.AutoCloseable
-  (close [this]
-    (.close (:connection this))))
-
-(defrecord QueryResult [stmt rs data]
-  java.lang.AutoCloseable
-  (close [this]
-    (.close (:rs this))
-    (.close (:stmt this))))
-
 (defn- execute-batch
   "Executes a batch of SQL commands and returns a sequence of update counts.
    (-2) indicates a single operation operating on an unknown number of rows.
@@ -135,8 +139,7 @@
       (list (.getUpdateCount stmt))
       (seq result))))
 
-
-(defn- make-prepared-statement
+(defn make-prepared-statement
   "Given connection and parametrized query as vector with first
   argument as string and other arguments as params, return a
   prepared statement.
@@ -157,8 +160,6 @@
     (when (seq params)
       (dorun (map-indexed #(.setObject stmt (inc %1) %2) params)))
     stmt))
-
-;; ## Public Api
 
 (defn make-connection
   "Creates a connection to a database. db-spec is a map containing connection
@@ -191,32 +192,62 @@
     Parsed JDBC connection string - see below
 
   String:
-    subprotocol://user:password@host:post/subname
+    subprotocol://user:password@host:port/subname
                  An optional prefix of jdbc: is allowed."
   [dbspec]
   (let [connection (apply make-raw-connection [dbspec])]
     (Connection. connection (atom false) (atom false))))
 
 (defmacro with-connection
-  "Creates context obtaining new connection to database
-  using plain specs. Specs can be plain default specs or
-  specs with datasource instance (connection pool).
+  "Given database connection paramers (dbspec), creates
+  a context with new connection to database that are closed
+  at end of code block.
 
-  For more information about connection pools,
-  see `jdbc.pool` namespace documentation.
+  If dbspec has datasource (connection pool), instead of create
+  a new connection, get it from connection pool and release it
+  at the end.
 
   Example:
 
     (with-connection dbspec conn
-      (do-something-with conn))"
+      (do-something-with conn))
+  "
   [dbspec bindname & body]
   `(with-open [~bindname (make-connection ~dbspec)]
      ~@body))
 
+(defn mark-as-rollback-only!
+  "Mark a current connection with `:rollback-only` flag.
+
+  If a code runs inside a transaction, this ensures that on
+  the successful end of execution of your code executes rollback
+  instead of commit.
+
+  Example:
+
+    (with-transaction conn
+      (make-some-queries-without-changes conn)
+      (mark-as-rollback-only! conn))
+
+  "
+  [conn]
+  (reset! (:rollback-only conn) true))
+
+(defn unmark-rollback-only!
+  "Revert flag setted by `mark-as-rollback-only!`."
+  [conn]
+  (reset! (:rollback-only conn) false))
+
+(defn is-rollback-only?
+  "Check if a `:rollback-only` flag is set on the
+  current connection."
+  [conn]
+  (deref (:rollback-only conn)))
+
 (defn call-in-transaction
   "Wrap function in one transaction. If current connection is already in
-  transaction, it uses savepoints for this purpose. The availability of
-  this feature depends on database support for it.
+  transaction, it uses truly nested transactions for properly handle it.
+  The availability of this feature depends on database support for it.
 
   Example:
 
@@ -256,6 +287,7 @@
 
 (defmacro with-transaction
   "Creates a context that evaluates in transaction (or nested transaction).
+
   This is a more idiomatic way to execute some database operations in
   atomic way.
 

@@ -3,8 +3,7 @@
   pool implementations.
 
   Currently it has support for:
-  - c3p0 (jdbc.pool.c3p0 namespace)
-  - bonecp (jdbc.pool.bonecp namespace)
+  - c3p0 (see jdbc.pool.c3p0 namespace)
 
   Each wrapped connection pool interface only implements
   one function: `make-datasource-spec` that receves a default
@@ -37,6 +36,7 @@
     :else dbspec))
 
 (defn make-datasource-spec
-  "This implements a dummy connection pool. Really does
-  nothing and returns dbspec as is."
+  "Dummy function that returns dbspec as is. This
+  function should be implemented in concrete connection
+  pool namespaces"
   [dbspec] dbspec)

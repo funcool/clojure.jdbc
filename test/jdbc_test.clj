@@ -18,13 +18,13 @@
     (let [c1 (make-connection h2-dbspec1)
           c2 (make-connection h2-dbspec2)
           c3 (make-connection h2-dbspec3)]
-      (is (instance? jdbc.Connection c1))
-      (is (instance? jdbc.Connection c2))
-      (is (instance? jdbc.Connection c3))))
+      (is (instance? jdbc.types.Connection c1))
+      (is (instance? jdbc.types.Connection c2))
+      (is (instance? jdbc.types.Connection c3))))
 
   (testing "Using macro with-connection"
     (with-connection h2-dbspec3 conn
-      (is (instance? jdbc.Connection conn)))))
+      (is (instance? jdbc.types.Connection conn)))))
 
 (deftest db-commands
   (testing "Simple create table"
@@ -47,7 +47,7 @@
   (testing "Low level query result"
     (with-open [conn    (make-connection h2-dbspec3)
                 result  (make-query conn ["SELECT 1 + 1 as foo;"])]
-      (is (instance? jdbc.QueryResult result))
+      (is (instance? jdbc.types.QueryResult result))
       (is (instance? java.sql.ResultSet (:rs result)))
       (is (instance? java.sql.PreparedStatement (:stmt result)))
       (is (= [{:foo 2}] (doall (:data result))))))
@@ -66,7 +66,7 @@
     (let [spec (pool-c3p0/make-datasource-spec h2-dbspec3)]
       (is (instance? javax.sql.DataSource (:datasource spec)))
       (with-open [conn (make-connection spec)]
-        (is (instance? jdbc.Connection conn))
+        (is (instance? jdbc.types.Connection conn))
         (is (instance? java.sql.Connection (:connection conn)))))))
 
 
