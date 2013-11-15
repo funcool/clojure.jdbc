@@ -24,7 +24,6 @@ Documentation
 .. toctree::
     :maxdepth: 2
 
-    intro
     user-guide
     faq
 
