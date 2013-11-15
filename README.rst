@@ -12,7 +12,7 @@ Leiningen
 
     [be.niwi/clj.jdbc "0.1.0-beta1"]
 
-Graddle
+Gradle
 
 .. code-block:: groovy
 

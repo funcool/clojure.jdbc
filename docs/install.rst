@@ -14,10 +14,10 @@ vector on ``project.clj``:
 
     [be.niwi/clj.jdbc "0.1.0-beta1"]
 
-Graddle
+Gradle
 -------
 
-If you are using graddle, this is a dependency line for graddle dsl:
+If you are using gradle, this is a dependency line for gradle dsl:
 
 .. code-block:: groovy
 
