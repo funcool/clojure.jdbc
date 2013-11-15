@@ -35,6 +35,27 @@ data. Results can be processed using any standard sequence operations.
   (:refer-clojure :exclude [resultset-seq])
   (:gen-class))
 
+(def ^:dynamic *default-isolation-level* (atom :none))
+(def ^:private isolation-level-map {:none nil
+                                    :read-commited (java.sql.Connection/TRANSACTION_READ_UNCOMMITTED)
+                                    :repeatable-read (java.sql.Connection/TRANSACTION_REPEATABLE_READ)
+                                    :serializable (java.sql.Connection/TRANSACTION_SERIALIZABLE)})
+
+(defn set-default-isolation-level!
+  "Set a default isolation level for each new
+  created connection.
+
+  By default no isolation level is set.
+
+  You can obtain a current default isolation level with:
+
+    (deref *default-isolation-level*)
+  "
+  [level]
+  {:pre [(keyword? level)
+         (contains? isolation-level-map level)]}
+  (reset! *default-isolation-level* level))
+
 (defn- as-str
   "Given a naming strategy and a keyword, return the keyword as a
    string per that naming strategy. Given (a naming strategy and)
@@ -175,6 +196,22 @@ data. Results can be processed using any standard sequence operations.
       (dorun (map-indexed #(.setObject stmt (inc %1) %2) params)))
     stmt))
 
+(defn- wrap-isolation-level
+  "Wraps and handles a isolation level for connection."
+  [dbspec conn]
+  (let [connection  (:connection conn)
+        dbspec-il   (:isolation-level dbspec)
+        default-il  (deref *default-isolation-level*)]
+    (if dbspec-il
+      (do
+        (when (dbspec-il isolation-level-map)
+          (.setTransactionIsolation connection (dbspec-il isolation-level-map)))
+        (assoc conn :isolation-level dbspec-il))
+      (do
+        (when (default-il isolation-level-map)
+          (.setTransactionIsolation connection (default-il isolation-level-map)))
+        (assoc conn :isolation-level default-il)))))
+
 (defn make-connection
   "Creates a connection to a database. db-spec is a map containing connection
   parameters. db-spec is a map containing values for one of the following
@@ -210,7 +247,10 @@ data. Results can be processed using any standard sequence operations.
                  An optional prefix of jdbc: is allowed."
   [dbspec]
   (let [connection (apply make-raw-connection [dbspec])]
-    (Connection. connection (atom false) (atom false))))
+    (wrap-isolation-level dbspec (Connection.
+                                    connection       ;; :connection
+                                    (atom false)     ;; :in-transaction
+                                    (atom false))))) ;; :rollback-only
 
 (defmacro with-connection
   "Given database connection paramers (dbspec), creates
