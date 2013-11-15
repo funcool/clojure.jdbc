@@ -1,32 +1,55 @@
-# clj.jdbc
+clj.jdbc
+========
 
 Alternative implementation of jdbc wrapper for clojure.
 
-
-## Install
+Install
+-------
 
 Leiningen
 
-```clojure
-[be.niwi/clj.jdbc "0.1.0-beta1"]
-```
+.. code-block:: clojure
+
+    [be.niwi/clj.jdbc "0.1.0-beta1"]
 
 Graddle
 
-```groovy
-compile "be.niwi:clj.jdbc:0.1.0-beta1"
-```
+.. code-block:: groovy
+
+    compile "be.niwi:clj.jdbc:0.1.0-beta1"
 
 Maven
 
-```xml
-<dependency>
-  <groupId>be.niwi</groupId>
-  <artifactId>clj.jdbc</artifactId>
-  <version>0.1.0-beta1</version>
-</dependency>
-```
-
-## Documentation
+.. code-block:: xml
+
+    <dependency>
+      <groupId>be.niwi</groupId>
+      <artifactId>clj.jdbc</artifactId>
+      <version>0.1.0-beta1</version>
+    </dependency>
+
+
+Documentation
+-------------
 
 http://cljjdbc.readthedocs.org/en/latest/
+
+
+Changelog
+---------
+
+Version 0.1-beta2
+~~~~~~~~~~~~~~~~~
+
+Date: unreleased
+
+- Add ability to set the isolation level.
+- DSL for inserting data in more idiomatic way.
+
+
+Version 0.1-beta1
+~~~~~~~~~~~~~~~~~
+
+Date: 2013/11/14
+
+- Initial relase
