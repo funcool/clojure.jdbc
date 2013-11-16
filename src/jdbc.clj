@@ -169,6 +169,7 @@ data. Results can be processed using any standard sequence operations.
    the actual number of rows affected. In general, operations return an array
    of update counts, so this may not be a general solution for Oracle..."
   [^Statement stmt]
+  {:pre [(instance? Statement stmt)]}
   (let [result (.executeBatch stmt)]
     (if (and (= 1 (count result)) (= -2 (first result)))
       (list (.getUpdateCount stmt))
@@ -285,17 +286,20 @@ data. Results can be processed using any standard sequence operations.
 
   "
   [conn]
+  {:pre [(instance? Connection conn)]}
   (reset! (:rollback-only conn) true))
 
 (defn unmark-rollback-only!
   "Revert flag setted by `mark-as-rollback-only!`."
   [conn]
+  {:pre [(instance? Connection conn)]}
   (reset! (:rollback-only conn) false))
 
 (defn is-rollback-only?
   "Check if a `:rollback-only` flag is set on the
   current connection."
   [conn]
+  {:pre [(instance? Connection conn)]}
   (deref (:rollback-only conn)))
 
 (defn call-in-transaction
@@ -311,6 +315,7 @@ data. Results can be processed using any standard sequence operations.
   For more idiomatic code, you should use `with-transaction` macro.
   "
   [conn func & {:keys [savepoints] :or {savepoints true} :as opts}]
+  {:pre [(instance? Connection conn)]}
   (when (and @(:in-transaction conn) (not savepoints))
     (throw (RuntimeException. "Savepoints explicitly disabled.")))
   (let [connection      (:connection conn)
@@ -374,6 +379,7 @@ data. Results can be processed using any standard sequence operations.
         (execute! conn 'CREATE TABLE foo (id serial, name text);')))
   "
   [conn & commands]
+  {:pre [(instance? Connection conn)]}
   (let [connection (:connection conn)]
     (with-open [stmt (.createStatement connection)]
       (dorun (map (fn [command]
@@ -400,6 +406,7 @@ data. Results can be processed using any standard sequence operations.
       UPDATE TABLE foo SET x = 3 WHERE y = 4;
   "
   [conn sql & param-groups]
+  {:pre [(instance? Connection conn)]}
   (let [connection (:connection conn)]
     (with-open [stmt (.prepareStatement connection sql)]
       (doseq [param-group param-groups]
@@ -478,26 +485,24 @@ data. Results can be processed using any standard sequence operations.
   macro that manage resources for you and return directly a seq instead of a
   QueryResult instance.
   "
-  ([conn sql-with-params]
-   (apply make-query [conn sql-with-params {}]))
+  [conn sql-with-params & {:keys [lazy?] :or {lazy? false} :as options}]
+  {:pre [(or (instance? PreparedStatement sql-with-params)
+             (vector? sql-with-params))
+         (instance? Connection conn)]}
+  (let [connection (:connection conn)
+        stmt       (cond
+                     (instance? PreparedStatement sql-with-params)
+                     sql-with-params
 
-  ([conn sql-with-params {:keys [lazy?] :or {lazy? false} :as options}]
-   {:pre [(or (instance? PreparedStatement sql-with-params)
-              (vector? sql-with-params))]}
-   (let [connection (:connection conn)
-         stmt       (cond
-                      (instance? PreparedStatement sql-with-params)
-                      sql-with-params
+                     (vector? sql-with-params)
+                     (make-prepared-statement conn sql-with-params)
 
-                      (vector? sql-with-params)
-                      (make-prepared-statement conn sql-with-params)
-
-                      (string? sql-with-params)
-                      (make-prepared-statement conn [sql-with-params]))]
-     (let [rs (.executeQuery stmt)]
-       (if lazy?
-         (QueryResult. stmt rs (result-set-lazyseq rs))
-         (QueryResult. stmt rs (result-set-vec rs)))))))
+                     (string? sql-with-params)
+                     (make-prepared-statement conn [sql-with-params]))]
+    (let [rs (.executeQuery stmt)]
+      (if lazy?
+        (QueryResult. stmt rs (result-set-lazyseq rs))
+        (QueryResult. stmt rs (result-set-vec rs))))))
 
 (defmacro with-query
   "Idiomatic dsl macro for `query` function that automatically closes
