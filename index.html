@@ -3034,116 +3034,56 @@ net.brehaut.ClojureTools = (function (SH) {
     build_tree: build_tree
   };
 })(SyntaxHighlighter);
-</script><title>be.niwi/jdbc -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name">be.niwi/jdbc</h1><h2 class="project-version">0.1.0</h2><br /><p>Alternative implementation of jdbc wrapper for clojure.</p>
+</script><title>be.niwi/clj.jdbc -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name">be.niwi/clj.jdbc</h1><h2 class="project-version">0.1.0-beta1</h2><br /><p>Alternative implementation of jdbc wrapper for clojure.</p>
 
 <p>For this momment, the official wrapper <code>clojure.jdbc</code> has very unclear
 api and it doing a lot of implicit things such as connection management.</p>
 
 <p>This library intends make more simple and clear api to jdbc than the
 official library.</p>
-</div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">slingshot</td><td class="dotted"><hr /></td><td class="dep-version">0.10.3</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#jdbc">jdbc</a></li><li><a href="#jdbc.pool">jdbc.pool</a></li><li><a href="#jdbc.pool.c3p0">jdbc.pool.c3p0</a></li><li><a href="#jdbc.sql">jdbc.sql</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#jdbc" name="jdbc"><h1 class="project-name">jdbc</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>Alternative implementation of jdbc wrapper for clojure.</p>
+</div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">org.clojure/clojure</td><td class="dotted"><hr /></td><td class="dep-version">1.5.1</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#jdbc">jdbc</a></li><li><a href="#jdbc.pool">jdbc.pool</a></li><li><a href="#jdbc.pool.c3p0">jdbc.pool.c3p0</a></li><li><a href="#jdbc.sql">jdbc.sql</a></li><li><a href="#jdbc.types">jdbc.types</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#jdbc" name="jdbc"><h1 class="project-name">jdbc</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>Copyright 2013 Andrey Antukh <a href="&#x6d;a&#x69;&#x6c;&#116;&#111;&#58;&#x6e;&#105;&#119;&#x69;&#x40;&#x6e;iw&#x69;&#46;b&#x65;">&#110;&#105;&#119;&#105;&#64;&#x6e;&#105;&#x77;&#105;&#46;&#98;&#101;</a></p>
 
-<h2>Introduction</h2>
+<p>Licensed under the Apache License, Version 2.0 (the "License")
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at</p>
 
-<p>clj.jdbc provides a simple abstraction for java jdbc interfaces supporting
-all crud (create, read update, delete) operations on a SQL database, along
-with basic transaction support.</p>
+<pre><code>http://www.apache.org/licenses/LICENSE-2.0
+</code></pre>
 
-<p>Basic DDL operations will be  also supported in near future (create table,
-drop table, access to table metadata).</p>
-
-<p>Maps are used to represent records, making it easy to store and retrieve
-data. Results can be processed using any standard sequence operations.</p>
-
-<h2>Why one other jdbc wrapper?</h2>
-
-<ul>
-<li><p>Connection management should be explicit. clj.jdbc has clear differentiation
-between connection and dbspec without uneccesary nesting controls and with explicit
-resource management (using <code>with-open</code> or other specific macros for it, see
-examples).</p></li>
-<li><p>clk.jdb has full support of all transaccions api, with ability to set database
-isolation level and use of nested transactions (savepoints).</p>
-
-<p><code>with-transaction</code> macro works well with nested transactions using savepoints
-when it used as nested transaction. It ceates new transaction if no one transaction
-is active or savepoins in other case.</p></li>
-<li><p>clj.jdbc has native support for connection pools, having helpers for varios
-implementations (c3p0 and bonecp) for convert a plain dbspec to
-dbspec with datasource.</p></li>
-<li><p>clj.jdbc has simpler implementation than clojure.java.jdbc. It has no more complexity
-than necesary for each available function in public api.</p>
-
-<p>As example:</p>
-
-<ul><li><p>clojure.java.jdbc has logic for connection nestig because it hasn't have proper
-connection management. Functions like <code>create!</code> can receive plain dbspec or dbspec
-with crated connection. If dbspec with active connection is received, it should
-increment a nesting value (this prevents a close connection at finish). This is a
-good example of complexity introduced with improperly connection management.<br /><br />
-With clj.jdbc, all work with database should explicitly wrapped in connection
-context using <code>with-connection</code> macro. And each function like <code>create!</code> can
-suppose that always going to receive a connection instance, removing connection
-handling from all functions.</p></li>
-<li><p>clojure.java.jdbc has repeated transaction handling on each crud method
-(insert!, drop!, etc...). With clj.jdbc, if you want that some code runs in a
-transaction, you should wrap it in a transaction context using
-<code>with-transaction</code> macro (see transactions section for more information).</p></li></ul></li>
-<li><p>Much more examples of use this api ;) (project without documentation
-is project that does not exists).</p></li>
-</ul>
-
-<h2>DbSpecs or database connection parameters</h2>
-
-<p>Usually, all documentation of any jvm languaje that explains jdbc, always suppose
-that a reader comes from java and knowns well about jdbc. This documentation will
-not make the same mistake.</p>
-
-<p>jdbc is a default abstraction/interface for sql databases written in java. Is like
-a python DB-API or any other abstraction in any languaje. Clojure as a guest language
-on a jvm, is benefits of having a good and well tested abstraction.</p>
-
-<p><code>dbspec</code> is a simple clojure way to define database connection parameters that are
-used to create a new database connection or create new datasource (connection pool).</p>
-
-<p>This is a default aspect of one dbspec definition:</p>
-
-<p>  {:classname "org.postgresql.Driver"
-   :subprotocol "postgresql"
-   :subname "//localhost:5432/dbname"
-   :user "username"
-   :password "password"}</p>
-
-<ul>
-<li><code>:classname</code> can be omited and it automatically resolved from predefined list
-using <code>:subprotocol</code>. This is a class location of jdbc driver. Each driver has
-one, in this example is a path to a postgresql jdbc driver.</li>
-<li><code>:user</code> and <code>:password</code> can be ommited if them are empty</li>
-</ul>
-
-<p>Also, dbspec has other formats that finally parsed to a previously explained format.
-As example you can pass a string containing a url with same data:</p>
-
-<p>  "postgresql://user:password@localhost:5432/dbname"</p>
-
-<p>And also, it has other format using datasource, but it explained in 'Connection pools'
-section.</p>
-</td><td class="codes"></td></tr><tr><td class="docs">
+<p>Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.</p>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>Alternative implementation of jdbc wrapper for clojure.</p>
 </td><td class="codes"><pre class="brush: clojure">(ns jdbc
   (:import (java.net URI)
            (java.sql BatchUpdateException DriverManager
                      PreparedStatement ResultSet SQLException Statement Types)
            (java.util Hashtable Map Properties)
-           (javax.sql DataSource))
-  (:use [slingshot.slingshot :only [throw+ try+]])
+           (javax.sql DataSource)
+           (jdbc.types Connection QueryResult))
   (:require [clojure.string :as str])
   (:refer-clojure :exclude [resultset-seq])
-  (:gen-class))</pre></td></tr><tr><td class="docs"><h2>Private Api definitions and utils</h2>
-</td><td class="codes"></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defn strip-jdbc [^String spec]
-  (if (.startsWith spec &quot;jdbc:&quot;)
-    (.substring spec 5)
-    spec))</pre></td></tr><tr><td class="docs"><p>Given a naming strategy and a keyword, return the keyword as a
+  (:gen-class))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(def ^:dynamic *default-isolation-level* (atom :none))
+(def ^:private isolation-level-map {:none nil
+                                    :read-commited (java.sql.Connection/TRANSACTION_READ_UNCOMMITTED)
+                                    :repeatable-read (java.sql.Connection/TRANSACTION_REPEATABLE_READ)
+                                    :serializable (java.sql.Connection/TRANSACTION_SERIALIZABLE)})</pre></td></tr><tr><td class="docs"><p>Set a default isolation level for each new
+  created connection.</p>
+
+<p>  By default no isolation level is set.</p>
+
+<p>  You can obtain a current default isolation level with:</p>
+
+<pre><code>(deref *default-isolation-level*)
+</code></pre>
+</td><td class="codes"><pre class="brush: clojure">(defn set-default-isolation-level!
+  [level]
+  {:pre [(keyword? level)
+         (contains? isolation-level-map level)]}
+  (reset! *default-isolation-level* level))</pre></td></tr><tr><td class="docs"><p>Given a naming strategy and a keyword, return the keyword as a
    string per that naming strategy. Given (a naming strategy and)
    a string, return it as-is.</p>
 
@@ -3175,8 +3115,23 @@ section.</p>
    &quot;derby&quot;          &quot;org.apache.derby.jdbc.EmbeddedDriver&quot;
    &quot;hsqldb&quot;         &quot;org.hsqldb.jdbcDriver&quot;
    &quot;h2&quot;             &quot;org.h2.Driver&quot;
-   &quot;sqlite&quot;         &quot;org.sqlite.JDBC&quot;})</pre></td></tr><tr><td class="docs">
+   &quot;sqlite&quot;         &quot;org.sqlite.JDBC&quot;})</pre></td></tr><tr><td class="docs"><p>This ugliness makes it easier to catch SQLException objects
+  rather than something wrapped in a RuntimeException which
+  can really obscure your code when working with JDBC from
+  Clojure... :(</p>
+</td><td class="codes"><pre class="brush: clojure">(defn- throw-non-rte
+  [^Throwable ex]
+  (cond (instance? java.sql.SQLException ex) (throw ex)
+        (and (instance? RuntimeException ex) (.getCause ex)) (throw-non-rte (.getCause ex))
+        :else (throw ex)))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn strip-jdbc [^String spec]
+  &quot;Siple util function that strip a \&quot;jdbc:\&quot; prefix
+  from connection string urls.&quot;
+  (if (.startsWith spec &quot;jdbc:&quot;)
+    (.substring spec 5)
+    spec))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn parse-properties-uri [^URI uri]
+  &quot;Parses a dbspec as url into a plain dbspec.&quot;
   (let [host (.getHost uri)
         port (if (pos? (.getPort uri)) (.getPort uri))
         path (.getPath uri)
@@ -3189,15 +3144,7 @@ section.</p>
       :classname (get classnames scheme)}
      (if-let [user-info (.getUserInfo uri)]
              {:user (first (str/split user-info #&quot;:&quot;))
-              :password (second (str/split user-info #&quot;:&quot;))}))))</pre></td></tr><tr><td class="docs"><p>This ugliness makes it easier to catch SQLException objects
-  rather than something wrapped in a RuntimeException which
-  can really obscure your code when working with JDBC from
-  Clojure... :(</p>
-</td><td class="codes"><pre class="brush: clojure">(defn- throw-non-rte
-  [^Throwable ex]
-  (cond (instance? java.sql.SQLException ex) (throw ex)
-        (and (instance? RuntimeException ex) (.getCause ex)) (throw-non-rte (.getCause ex))
-        :else (throw ex)))</pre></td></tr><tr><td class="docs"><p>Given a standard dbspec or dbspec with datasource (with connection pool),
+              :password (second (str/split user-info #&quot;:&quot;))}))))</pre></td></tr><tr><td class="docs"><p>Given a standard dbspec or dbspec with datasource (with connection pool),
   returns a new connection.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn- make-raw-connection
   [{:keys [factory connection-uri classname subprotocol subname
@@ -3224,22 +3171,14 @@ section.</p>
     (.getConnection datasource)
     :else
     (let [msg (format &quot;db-spec %s is missing a required parameter&quot; db-spec)]
-      (throw (IllegalArgumentException. msg)))))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defrecord Connection [connection in-transaction rollback-only]
-  java.lang.AutoCloseable
-  (close [this]
-    (.close (:connection this))))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defrecord QueryResult [stmt rs data]
-  java.lang.AutoCloseable
-  (close [this]
-    (.close (:rs this))
-    (.close (:stmt this))))</pre></td></tr><tr><td class="docs"><p>Executes a batch of SQL commands and returns a sequence of update counts.
+      (throw (IllegalArgumentException. msg)))))</pre></td></tr><tr><td class="docs"><p>Executes a batch of SQL commands and returns a sequence of update counts.
    (-2) indicates a single operation operating on an unknown number of rows.
    Specifically, Oracle returns that and we must call getUpdateCount() to get
    the actual number of rows affected. In general, operations return an array
    of update counts, so this may not be a general solution for Oracle...</p>
 </td><td class="codes"><pre class="brush: clojure">(defn- execute-batch
   [^Statement stmt]
+  {:pre [(instance? Statement stmt)]}
   (let [result (.executeBatch stmt)]
     (if (and (= 1 (count result)) (= -2 (first result)))
       (list (.getUpdateCount stmt))
@@ -3253,7 +3192,7 @@ section.</p>
   (println (instance? java.sql.PreparedStatement stmt)))
 ;; -&gt; true
 </code></pre>
-</td><td class="codes"><pre class="brush: clojure">(defn- make-prepared-statement
+</td><td class="codes"><pre class="brush: clojure">(defn make-prepared-statement
   [conn sqlvec]
   {:pre [(instance? Connection conn)
          (vector? sqlvec)]}
@@ -3263,8 +3202,21 @@ section.</p>
         stmt        (.prepareStatement connection sql)]
     (when (seq params)
       (dorun (map-indexed #(.setObject stmt (inc %1) %2) params)))
-    stmt))</pre></td></tr><tr><td class="docs"><h2>Public Api</h2>
-</td><td class="codes"></td></tr><tr><td class="docs"><p>Creates a connection to a database. db-spec is a map containing connection
+    stmt))</pre></td></tr><tr><td class="docs"><p>Wraps and handles a isolation level for connection.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn- wrap-isolation-level
+  [dbspec conn]
+  (let [connection  (:connection conn)
+        dbspec-il   (:isolation-level dbspec)
+        default-il  (deref *default-isolation-level*)]
+    (if dbspec-il
+      (do
+        (when (dbspec-il isolation-level-map)
+          (.setTransactionIsolation connection (dbspec-il isolation-level-map)))
+        (assoc conn :isolation-level dbspec-il))
+      (do
+        (when (default-il isolation-level-map)
+          (.setTransactionIsolation connection (default-il isolation-level-map)))
+        (assoc conn :isolation-level default-il)))))</pre></td></tr><tr><td class="docs"><p>Creates a connection to a database. db-spec is a map containing connection
   parameters. db-spec is a map containing values for one of the following
   parameter sets:</p>
 
@@ -3294,17 +3246,22 @@ section.</p>
     Parsed JDBC connection string - see below</p>
 
 <p>  String:
-    subprotocol://user:password@host:post/subname
+    subprotocol://user:password@host:port/subname
                  An optional prefix of jdbc: is allowed.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn make-connection
   [dbspec]
   (let [connection (apply make-raw-connection [dbspec])]
-    (Connection. connection (atom false) (atom false))))</pre></td></tr><tr><td class="docs"><p>Creates context obtaining new connection to database
-  using plain specs. Specs can be plain default specs or
-  specs with datasource instance (connection pool).</p>
+    (wrap-isolation-level dbspec (Connection.
+                                    connection       ;; :connection
+                                    (atom false)     ;; :in-transaction
+                                    (atom false))))) ;; :rollback-only</pre></td></tr><tr><td class="docs"><p>:rollback-only</p>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>Given database connection paramers (dbspec), creates
+  a context with new connection to database that are closed
+  at end of code block.</p>
 
-<p>  For more information about connection pools,
-  see <code>jdbc.pool</code> namespace documentation.</p>
+<p>  If dbspec has datasource (connection pool), instead of create
+  a new connection, get it from connection pool and release it
+  at the end.</p>
 
 <p>  Example:</p>
 
@@ -3314,9 +3271,33 @@ section.</p>
 </td><td class="codes"><pre class="brush: clojure">(defmacro with-connection
   [dbspec bindname &amp; body]
   `(with-open [~bindname (make-connection ~dbspec)]
-     ~@body))</pre></td></tr><tr><td class="docs"><p>Wrap function in one transaction. If current connection is already in
-  transaction, it uses savepoints for this purpose. The availability of
-  this feature depends on database support for it.</p>
+     ~@body))</pre></td></tr><tr><td class="docs"><p>Mark a current connection with <code>:rollback-only</code> flag.</p>
+
+<p>  If a code runs inside a transaction, this ensures that on
+  the successful end of execution of your code executes rollback
+  instead of commit.</p>
+
+<p>  Example:</p>
+
+<pre><code>(with-transaction conn
+  (make-some-queries-without-changes conn)
+  (mark-as-rollback-only! conn))
+</code></pre>
+</td><td class="codes"><pre class="brush: clojure">(defn mark-as-rollback-only!
+  [conn]
+  {:pre [(instance? Connection conn)]}
+  (reset! (:rollback-only conn) true))</pre></td></tr><tr><td class="docs"><p>Revert flag setted by <code>mark-as-rollback-only!</code>.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn unmark-rollback-only!
+  [conn]
+  {:pre [(instance? Connection conn)]}
+  (reset! (:rollback-only conn) false))</pre></td></tr><tr><td class="docs"><p>Check if a <code>:rollback-only</code> flag is set on the
+  current connection.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn is-rollback-only?
+  [conn]
+  {:pre [(instance? Connection conn)]}
+  (deref (:rollback-only conn)))</pre></td></tr><tr><td class="docs"><p>Wrap function in one transaction. If current connection is already in
+  transaction, it uses truly nested transactions for properly handle it.
+  The availability of this feature depends on database support for it.</p>
 
 <p>  Example:</p>
 
@@ -3325,16 +3306,17 @@ section.</p>
 
 <p>  For more idiomatic code, you should use <code>with-transaction</code> macro.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn call-in-transaction
-  [conn func {:keys [savepoints] :or {savepoints true} :as opts}]
+  [conn func &amp; {:keys [savepoints] :or {savepoints true} :as opts}]
+  {:pre [(instance? Connection conn)]}
   (when (and @(:in-transaction conn) (not savepoints))
-    (throw+ &quot;Savepoints explicitly disabled.&quot;))
+    (throw (RuntimeException. &quot;Savepoints explicitly disabled.&quot;)))
   (let [connection      (:connection conn)
         in-transaction  (:in-transaction conn)]
-    (if in-transaction
+    (if @in-transaction
       (let [savepoint (.setSavepoint connection)]
-        (try+
-          (func)
-          (.releaseSavepoint savepoint)
+        (try
+          (apply func [])
+          (.releaseSavepoint connection savepoint)
           (catch Throwable t
             (.rollback connection savepoint)
             (throw-non-rte t))))
@@ -3342,7 +3324,7 @@ section.</p>
             rollback-only      (:rollback-only conn)]
         (swap! in-transaction not)
         (.setAutoCommit connection false)
-        (try+
+        (try
           (func)
           (if @rollback-only
             (.rollback connection)
@@ -3352,8 +3334,9 @@ section.</p>
             (throw-non-rte t))
           (finally
             (swap! in-transaction not)
-            (.setAutoCommit connection current-autocommit)))))))</pre></td></tr><tr><td class="docs"><p>Creates a context that evaluates in transaction (or nested transaction).
-  This is a more idiomatic way to execute some database operations in
+            (.setAutoCommit connection current-autocommit)))))))</pre></td></tr><tr><td class="docs"><p>Creates a context that evaluates in transaction (or nested transaction).</p>
+
+<p>  This is a more idiomatic way to execute some database operations in
   atomic way.</p>
 
 <p>  Example:</p>
@@ -3375,7 +3358,7 @@ section.</p>
 
 <pre><code>;; Without transactions
 (with-connection dbspec conn
-  (execute! 'CREATE TABLE foo (id serial, name text);'))
+  (execute! conn 'CREATE TABLE foo (id serial, name text);'))
 
 ;; In one transaction
 (with-connection dbspec conn
@@ -3384,6 +3367,7 @@ section.</p>
 </code></pre>
 </td><td class="codes"><pre class="brush: clojure">(defn execute!
   [conn &amp; commands]
+  {:pre [(instance? Connection conn)]}
   (let [connection (:connection conn)]
     (with-open [stmt (.createStatement connection)]
       (dorun (map (fn [command]
@@ -3408,6 +3392,7 @@ This code should send this sql sentences:
 </code></pre>
 </td><td class="codes"><pre class="brush: clojure">(defn execute-prepared!
   [conn sql &amp; param-groups]
+  {:pre [(instance? Connection conn)]}
   (let [connection (:connection conn)]
     (with-open [stmt (.prepareStatement connection sql)]
       (doseq [param-group param-groups]
@@ -3480,23 +3465,22 @@ macro that manage resources for you and return directly a seq instead of a
 QueryResult instance.</p></li>
 </ul>
 </td><td class="codes"><pre class="brush: clojure">(defn make-query
-  ([conn sql-with-params]
-   (apply make-query [conn sql-with-params {}]))
-  ([conn sql-with-params {:keys [lazy?] :or {lazy? false} :as options}]
-   {:pre [(or (instance? PreparedStatement sql-with-params)
-              (vector? sql-with-params))]}
-   (let [connection (:connection conn)
-         stmt       (cond
-                      (instance? PreparedStatement sql-with-params)
-                      sql-with-params
-                      (vector? sql-with-params)
-                      (make-prepared-statement conn sql-with-params)
-                      (string? sql-with-params)
-                      (make-prepared-statement conn [sql-with-params]))]
-     (let [rs (.executeQuery stmt)]
-       (if lazy?
-         (QueryResult. stmt rs (result-set-lazyseq rs))
-         (QueryResult. stmt rs (result-set-vec rs)))))))</pre></td></tr><tr><td class="docs"><p>Idiomatic dsl macro for <code>query</code> function that automatically closes
+  [conn sql-with-params &amp; {:keys [lazy?] :or {lazy? false} :as options}]
+  {:pre [(or (instance? PreparedStatement sql-with-params)
+             (vector? sql-with-params))
+         (instance? Connection conn)]}
+  (let [connection (:connection conn)
+        stmt       (cond
+                     (instance? PreparedStatement sql-with-params)
+                     sql-with-params
+                     (vector? sql-with-params)
+                     (make-prepared-statement conn sql-with-params)
+                     (string? sql-with-params)
+                     (make-prepared-statement conn [sql-with-params]))]
+    (let [rs (.executeQuery stmt)]
+      (if lazy?
+        (QueryResult. stmt rs (result-set-lazyseq rs))
+        (QueryResult. stmt rs (result-set-vec rs))))))</pre></td></tr><tr><td class="docs"><p>Idiomatic dsl macro for <code>query</code> function that automatically closes
   all resources when context is reached.</p>
 
 <p>  Example:</p>
@@ -3510,12 +3494,25 @@ QueryResult instance.</p></li>
   [conn bindname sql-with-params &amp; body]
   `(with-open [rs# (make-query ~conn ~sql-with-params)]
      (let [~bindname (:data rs#)]
-       ~@body)))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#jdbc.pool" name="jdbc.pool"><h1 class="project-name">jdbc.pool</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>clj.jdbc has native support for more than one connection
+       ~@body)))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#jdbc.pool" name="jdbc.pool"><h1 class="project-name">jdbc.pool</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>Copyright 2013 Andrey Antukh <a href="&#x6d;&#97;&#105;&#x6c;&#x74;&#111;&#58;&#x6e;&#105;&#119;&#x69;&#64;&#110;&#105;&#x77;&#x69;&#x2e;&#98;e">n&#105;&#119;&#x69;@&#110;&#x69;&#119;i&#x2e;b&#x65;</a></p>
+
+<p>Licensed under the Apache License, Version 2.0 (the "License")
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at</p>
+
+<pre><code>http://www.apache.org/licenses/LICENSE-2.0
+</code></pre>
+
+<p>Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.</p>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>clj.jdbc has native support for more than one connection
   pool implementations.</p>
 
 <p>  Currently it has support for:
-  - c3p0 (jdbc.pool.c3p0 namespace)
-  - bonecp (jdbc.pool.bonecp namespace)</p>
+  - c3p0 (see jdbc.pool.c3p0 namespace)</p>
 
 <p>  Each wrapped connection pool interface only implements
   one function: <code>make-datasource-spec</code> that receves a default
@@ -3542,31 +3539,66 @@ QueryResult instance.</p></li>
     (normalize-dbspec (URI. (strip-jdbc dbspec)))
     (instance? URI dbspec)
     (parse-properties-uri dbspec)
-    :else db-spec))</pre></td></tr><tr><td class="docs"><p>This implements a dummy connection pool. Really does
-  nothing and returns dbspec as is.</p>
+    :else dbspec))</pre></td></tr><tr><td class="docs"><p>Dummy function that returns dbspec as is. This
+  function should be implemented in concrete connection
+  pool namespaces</p>
 </td><td class="codes"><pre class="brush: clojure">(defn make-datasource-spec
-  [dbspec] dbspec)</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#jdbc.pool.c3p0" name="jdbc.pool.c3p0"><h1 class="project-name">jdbc.pool.c3p0</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
+  [dbspec] dbspec)</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#jdbc.pool.c3p0" name="jdbc.pool.c3p0"><h1 class="project-name">jdbc.pool.c3p0</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>Copyright 2013 Andrey Antukh <a href="ma&#105;&#x6c;&#x74;&#111;&#x3a;&#x6e;&#105;&#x77;&#105;&#64;&#x6e;&#x69;&#119;&#105;&#46;&#98;&#101;">&#x6e;&#x69;&#119;&#105;&#x40;&#110;&#105;&#119;&#105;&#x2e;&#98;&#101;</a></p>
+
+<p>Licensed under the Apache License, Version 2.0 (the "License")
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at</p>
+
+<pre><code>http://www.apache.org/licenses/LICENSE-2.0
+</code></pre>
+
+<p>Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.</p>
+</td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(ns jdbc.pool.c3p0
-  (:use [slingshot.slingshot :only [throw+ try+]])
   (:require [jdbc.pool :refer [normalize-dbspec]])
-  (:import (com.mchange.v2.c3p0 ComboPooledDataSource)))</pre></td></tr><tr><td class="docs"><p>This implements a dummy connection pool. Really does
-  nothing and returns dbspec as is.</p>
+  (:import (com.mchange.v2.c3p0 ComboPooledDataSource)))</pre></td></tr><tr><td class="docs"><p>Given a plain dbspec, convert it on datasource dbspec
+  using c3p0 connection pool implementation.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn make-datasource-spec
-  ;; TODO: not finished
   [dbspec]
   (let [normalized (normalize-dbspec dbspec)]
     (when (or (:factory normalized)
               (:connection-uri normalized))
-      (throw+ &quot;Can not create connection pool from dbspec with factory or connection-url&quot;))
+      (throw (RuntimeException. &quot;Can not create connection pool from dbspec with factory or connection-url&quot;)))
     (when (:datasource normalized)
-      (throw+ &quot;Already have datasource.&quot;))
+      (throw (RuntimeException. &quot;Already have datasource.&quot;)))
     {:datasource (doto (ComboPooledDataSource.)
                    (.setDriverClass (:classname normalized))
                    (.setJdbcUrl (str &quot;jdbc:&quot;
                                      (:subprotocol normalized) &quot;:&quot;
                                      (:subname normalized)))
                    (.setUser (:user normalized))
-                   (.setPassword (:password normalized)))}))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#jdbc.sql" name="jdbc.sql"><h1 class="project-name">jdbc.sql</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
+                   (.setPassword (:password normalized))
+                   (.setMaxIdleTimeExcessConnections (:excess-timeout normalized (* 30 60)))
+                   (.setMaxIdleTime (:idle-timeout normalized (* 3 60 60)))
+                   (.setMinPoolSize (:min-pool-size normalized 3))
+                   (.setMaxPoolSize (:max-pool-size normalized 15))
+                   (.setIdleConnectionTestPeriod (:idle-connection-test-period normalized 0))
+                   (.setTestConnectionOnCheckin (:test-connection-on-checkin normalized false))
+                   (.setTestConnectionOnCheckout (:test-connection-on-checkout normalized false))
+                   (.setPreferredTestQuery (:test-connection-query normalized nil)))}))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#jdbc.sql" name="jdbc.sql"><h1 class="project-name">jdbc.sql</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>Copyright 2013 Andrey Antukh <a href="&#x6d;&#97;i&#x6c;&#x74;&#111;:&#110;&#x69;&#x77;&#x69;&#64;&#110;&#105;&#119;&#x69;&#46;b&#x65;">&#110;&#105;&#x77;i&#64;&#110;&#105;&#x77;&#x69;&#46;&#x62;&#101;</a></p>
+
+<p>Licensed under the Apache License, Version 2.0 (the "License")
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at</p>
+
+<pre><code>http://www.apache.org/licenses/LICENSE-2.0
+</code></pre>
+
+<p>Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.</p>
+</td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(ns jdbc.sql
   (:require [clojure.string :as str])
   (:gen-class))</pre></td></tr><tr><td class="docs"><p>Given a table name and records, returns a map with
@@ -3596,5 +3628,30 @@ This should return:
                               (str/join &quot;,&quot; (map name columns))
                               (str/join &quot;,&quot; (repeat (count columns) &quot;?&quot;)))]
     {:stmt-sql final-sql
-     :param-groups (doall (map order-values records))}))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr></table><div class="footer">Generated by <a href="https://github.com/fogus/marginalia">Marginalia</a>.&nbsp;&nbsp;Syntax highlighting provided by Alex Gorbatchev's <a href="http://alexgorbatchev.com/SyntaxHighlighter/">SyntaxHighlighter</a></div><script type="text/javascript">SyntaxHighlighter.defaults['gutter'] = false;
+     :param-groups (doall (map order-values records))}))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#jdbc.types" name="jdbc.types"><h1 class="project-name">jdbc.types</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>Copyright 2013 Andrey Antukh <a href="&#109;&#x61;&#x69;&#108;&#x74;&#111;&#x3a;&#110;&#105;&#119;&#x69;&#64;&#110;&#x69;&#x77;&#x69;&#46;&#x62;&#x65;">&#110;&#105;&#119;&#x69;&#x40;&#x6e;&#105;&#x77;&#x69;&#x2e;&#98;&#x65;</a></p>
+
+<p>Licensed under the Apache License, Version 2.0 (the "License")
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at</p>
+
+<pre><code>http://www.apache.org/licenses/LICENSE-2.0
+</code></pre>
+
+<p>Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.</p>
+</td><td class="codes"></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(ns jdbc.types
+  (:gen-class))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defrecord Connection [connection in-transaction rollback-only]
+  java.lang.AutoCloseable
+  (close [this]
+    (.close (:connection this))))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defrecord QueryResult [stmt rs data]
+  java.lang.AutoCloseable
+  (close [this]
+    (.close (:rs this))
+    (.close (:stmt this))))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr></table><div class="footer">Generated by <a href="https://github.com/fogus/marginalia">Marginalia</a>.&nbsp;&nbsp;Syntax highlighting provided by Alex Gorbatchev's <a href="http://alexgorbatchev.com/SyntaxHighlighter/">SyntaxHighlighter</a></div><script type="text/javascript">SyntaxHighlighter.defaults['gutter'] = false;
        SyntaxHighlighter.all()</script></body></html>
