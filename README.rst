@@ -29,10 +29,12 @@ Maven
     </dependency>
 
 
-Documentation
--------------
+Doc
+---
 
-http://cljjdbc.readthedocs.org/en/latest/
+**Documentation:** http://cljjdbc.readthedocs.org/en/latest/
+
+**ApiDoc:** http://niwibe.github.io/clj.jdbc/api/
 
 
 Changelog
