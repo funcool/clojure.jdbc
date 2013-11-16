@@ -196,9 +196,9 @@ macro is that you can make a ``:data`` rows seq not lazy:
 
 .. code-block:: clojure
 
-    (with-open [result (make-query conn ["SELECT id,name FROM people WHERE age > ?", 2]
-                                        {:lazy? false})]
-      (println (vector? (:data result))))
+    (let [sql ["SELECT id,name FROM people WHERE age > ?", 2]]
+      (with-open [result (make-query conn sql :lazy? false)]
+        (println (vector? (:data result)))))
 
     ;; -> true
 
