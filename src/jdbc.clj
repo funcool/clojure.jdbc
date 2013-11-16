@@ -13,18 +13,7 @@
 ;; limitations under the License.
 
 (ns jdbc
-  "Alternative implementation of jdbc wrapper for clojure.
-
-clj.jdbc provides a simple abstraction for java jdbc interfaces supporting
-all crud (create, read update, delete) operations on a SQL database, along
-with basic transaction support.
-
-Basic DDL operations will be  also supported in near future (create table,
-drop table, access to table metadata).
-
-Maps are used to represent records, making it easy to store and retrieve
-data. Results can be processed using any standard sequence operations.
-  "
+  "Alternative implementation of jdbc wrapper for clojure."
   (:import (java.net URI)
            (java.sql BatchUpdateException DriverManager
                      PreparedStatement ResultSet SQLException Statement Types)
