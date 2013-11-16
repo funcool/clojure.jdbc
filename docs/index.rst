@@ -13,6 +13,7 @@ Documentation
     intro
     install
     user-guide
+    dbspec
     faq
 
 
