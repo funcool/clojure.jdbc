@@ -9,14 +9,14 @@ Connecting to database
 Connection parameters
 ---------------------
 
-Usually, the documentation of any jvm language that explains JDBC, always
+Usually, the documentation of any jvm language that explains JDBC always
 supposes that the reader comes from Java and knowns JDBC well. This
 documentation will not make the same mistake.
 
-JDBC is the default abstraction/interface for SQL databases written in Java.
-It's like the Python DB-API and similar abstractions in other languages.
-Clojure, as a guest language on a jvm, benefits from having a good and well
-tested abstraction like this.
+JDBC is the default JAVA abstraction/interface for SQL databases.  It's like
+the Python DB-API and similar abstractions in other languages.  Clojure, as a
+guest language on the jvm, benefits from having a good, well tested abstraction
+like this.
 
 ``dbspec`` is a simple Clojure way to define the database connection parameters
 that are used to create a new database connection or create a new datasource
@@ -153,10 +153,10 @@ The previous code should execute these SQL statements:
 Make queries
 ============
 
-As usual, clj.jdbc offers two ways to send queries to a database, low level and
-high level way. In this case, the low level interface differs a litle bit from
-the high level one, because it returns an intermediate object: an instance of
-the ``QueryResult`` type, defined by clj.jdbc.
+As usual, clj.jdbc offers two ways to send queries to a database, a low level
+and a high level way. In this case, the low level interface differs a litle
+from the high level one, because it returns an intermediate object: an instance
+of the ``QueryResult`` type, defined by clj.jdbc.
 
 .. note::
 
@@ -176,15 +176,16 @@ examples:
 
 ``results`` is a var name where a ``with-query`` macro binds a lazy-seq with rows.
 
-Futhermore, the low level function, as I have said before, returns a QueryResult instance
-that works as Clojure map and contains three keys: ``:stmt``, ``:rs`` and ``:data``.
+Futhermore, the low level function, as mentioned before, returns a QueryResult
+instance that works as a Clojure map and contains three keys: ``:stmt``,
+``:rs`` and ``:data``.
 
 The value represented by the last key (``:data``) is the ``results`` of previous code.
 
 If you know how jdbc works, you should know that if you execute two queries and
 the second is executed while the results of the first haven't been completely
 consumed, the results of the first query are aborted. For this purpose you
-should use with precaution the ``make-query`` function.
+should use the ``make-query`` function with precaution.
 
 This is a simple example of use for the ``make-query`` function:
 
@@ -215,7 +216,7 @@ Transactions
 
 Managing transactions well is almost the most important thing when building an
 application, and delaying it to the end is not a good approach. Managing
-transactions implicitly, trusting your "web framework" to do it for you is
+transactions implicitly, trusting your "web framework" to do it for you, is
 another very bad approach.
 
 **clj.jdbc** offers (as usually) two ways of managing transactions: the
