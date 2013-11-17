@@ -13,7 +13,7 @@ Usually, the documentation of any jvm language that explains JDBC always
 supposes that the reader comes from Java and knowns JDBC well. This
 documentation will not make the same mistake.
 
-JDBC is the default JAVA abstraction/interface for SQL databases.  It's like
+JDBC is the default Java abstraction/interface for SQL databases.  It's like
 the Python DB-API and similar abstractions in other languages.  Clojure, as a
 guest language on the jvm, benefits from having a good, well tested abstraction
 like this.
@@ -124,7 +124,7 @@ Execute parametrized SQL statements
 
 Raw SQL statements work well for creating tables and similar operations, but
 when you need to insert some data, especially if the data comes from untrusted
-sources, the ``execute!`` function is not adecuate.
+sources, the ``execute!`` function is not adequate.
 
 For this problem, clj.jdbc exposes the ``execute-prepared!`` function. It
 accepts parametrized SQL and a list of groups of parameters.
@@ -177,7 +177,7 @@ examples:
 
 ``results`` is a var name where a ``with-query`` macro binds a lazy-seq with rows.
 
-Futhermore, the low level function, as mentioned before, returns a QueryResult
+Furthermore, the low level function, as mentioned before, returns a QueryResult
 instance that works as a Clojure map and contains three keys: ``:stmt``,
 ``:rs`` and ``:data``.
 
