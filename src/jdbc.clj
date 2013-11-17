@@ -296,10 +296,12 @@
   transaction, it uses truly nested transactions for properly handle it.
   The availability of this feature depends on database support for it.
 
+  Passed function will reive a connection as first parameter.
+
   Example:
 
   (with-connection dbspec conn
-    (call-in-transaction conn (fn [] (execute! conn 'DROP TABLE foo;'))))
+    (call-in-transaction conn (fn [conn] (execute! conn 'DROP TABLE foo;'))))
 
   For more idiomatic code, you should use `with-transaction` macro.
   "
@@ -312,7 +314,7 @@
     (if @in-transaction
       (let [savepoint (.setSavepoint connection)]
         (try
-          (apply func [])
+          (apply func [conn])
           (.releaseSavepoint connection savepoint)
           (catch Throwable t
             (.rollback connection savepoint)
@@ -322,7 +324,7 @@
         (swap! in-transaction not)
         (.setAutoCommit connection false)
         (try
-          (func)
+          (apply func [conn])
           (if @rollback-only
             (.rollback connection)
             (.commit connection))
@@ -346,7 +348,7 @@
       (execute! conn 'DROP TABLE bar;'))
   "
   [conn & body]
-  `(let [func# (fn [] ~@body)]
+  `(let [func# (fn [c#] ~@body)]
      (apply call-in-transaction [~conn func#])))
 
 (defn execute!
