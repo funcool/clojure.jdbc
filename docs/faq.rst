@@ -16,10 +16,6 @@ Why another jdbc wrapper?
   It creates a new transaction if no other transaction is active but,
   when invoked within the context of an already existing transaction, it creates a savepoint.
 
-  The `with-transaction` macro works well with nested transactions. It creates
-  a new transaction if no other transaction is active but, when invoked within
-  the context of an already existing transaction, it creates a savepoint.
-
 - clj.jdbc has native support for connection pools. It offers helpers fuctions
   for various implementations (c3p0 and bonecp), that convert a plain dbspec to
   a dbspec with a datasource attached.
