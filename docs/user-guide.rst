@@ -46,6 +46,7 @@ As example you can pass a string containing a url with same data:
 And also, it has other format using datasource, but it explained in 'Connection pools'
 section.
 
+
 Creating a connection
 ---------------------
 
@@ -231,3 +232,66 @@ Or using ``call-in-transaction`` function:
 examples also wraps some code in transaction block. clj.jdbc automatically wrapps it in
 one subtransaction (savepoints) making all code wrapped in a transaction truly atomic.
 
+
+Isolation Level
+---------------
+
+clj.jdbc by default does nothing with isolation level and keep it with default values. But
+provides a simple way to use a specific isolation level if a user requires it.
+
+You have two ways to change a isolation level. Setting it on your dbspec or setting
+programatically a globally default that will be applied automatically on each new created
+connection.
+
+As example, each connection created with this dbspec automatically set
+a isolation level to SERIALIZABLE:
+
+.. code-block:: clojure
+
+    (def dbsoec {:subprotocol "h2"
+                 :subname "mem:"
+                 :isolation-level :serializable})
+
+Also, clj.jdbc provides a simple function ``set-default-isolation-level!`` that you can
+use, to set it globally:
+
+.. code-block:: clojure
+
+    (set-default-isolation-level! :read-commited)
+
+This is a list of supported options:
+
+- ``:read-commited`` - Set read committed isolation level
+- ``:repeatable-read`` - Set repeatable reads isolation level
+- ``:serializable`` - Set serializable isolation level
+- ``:none`` - Use this option to indicate to clj.jdbc to do nothing and keep default behavior.
+
+You can read more about it on wikipedia_.
+
+.. _wikipedia: http://en.wikipedia.org/wiki/Isolation_(database_systems)
+
+
+Connection pool
+===============
+
+clj.jdbc by default goes with connection pools helpers. And, as all of things in clj.jdbc,
+if you need a connection pool you should do it explicitly.
+
+Java ecosystem comes with various connection pool implementations for jdbc and clj.jdbc
+add helpers for one of this: c3p0 (in near future will surely be implemented helpers for
+other implementations).
+
+A simple way to start using a connection pool is convert your plain dbspec with database
+connection parameters to dbspec with datasource instance:
+
+.. code-block:: clojure
+
+    (require '[jdbc.pool.c3p0 :as pool])
+
+    (def dbspec (pool/make-datasource-spec {:classname "org.postgresql.Driver"
+                                            :subprotocol "postgresql"
+                                            :subname "//localhost:5432/dbname"}))
+
+``dbspec`` now contains a ``:datasource`` key with ``javax.sql.DataSource`` instance as value
+instead of plain dbspec with database connection parameters. And it can be used as
+dbspec for create connection with ``with-connection`` macro or ``make-connection`` function.
