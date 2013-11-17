@@ -2,53 +2,58 @@
 FAQ
 ===
 
-Why one other jdbc wrapper?
+Why another jdbc wrapper?
 ===========================
 
-- Connection management should be explicit. clj.jdbc has clear differentiation
-  between connection and dbspec without uneccesary nesting controls and with explicit
-  resource management (using `with-open` or other specific macros for it, see
+- Connection management should be explicit. clj.jdbc has a clear differentiation
+  between connection and dbspec without unnecessary nesting controls and with explicit
+  resource management (using `with-open` or other specific macros for it, see the
   examples).
 
-- clj.jdb has full support of all transaccions api, with ability to set database
-  isolation level and use of nested transactions (savepoints).
+- clj.jdb has full support for all the transactions api, with the ability to set the
+  database isolation level and use nested transactions (savepoints).
 
-  `with-transaction` macro works well with nested transactions using savepoints
-  when it used as nested transaction. It ceates new transaction if no one transaction
-  is active or savepoins in other case.
+  It creates a new transaction if no other transaction is active but,
+  when invoked within the context of an already existing transaction, it creates a savepoint.
 
-- clj.jdbc has native support for connection pools, having helpers for varios
-  implementations (c3p0 and bonecp) for convert a plain dbspec to
-  dbspec with datasource.
+  The `with-transaction` macro works well with nested transactions. It creates
+  a new transaction if no other transaction is active but, when invoked within
+  the context of an already existing transaction, it creates a savepoint.
 
-- clj.jdbc has simpler implementation than clojure.java.jdbc. It has no more complexity
-  than necesary for each available function in public api.
+- clj.jdbc has native support for connection pools. It offers helpers fuctions
+  for various implementations (c3p0 and bonecp), that convert a plain dbspec to
+  a dbspec with a datasource attached.
 
-  As example:
+- clj.jdbc has a simpler implementation than clojure.java.jdbc. It has no more
+  complexity than necessary for each available function in public api.
 
-  - clojure.java.jdbc has logic for connection nestig because it hasn't have proper
-    connection management. Functions like `create!` can receive plain dbspec or dbspec
-    with crated connection. If dbspec with active connection is received, it should
-    increment a nesting value (this prevents a close connection at finish). This is a
-    good example of complexity introduced with improperly connection management.
+  As an example:
 
-    With clj.jdbc, all work with database should explicitly wrapped in connection
-    context using `with-connection` macro. And each function like `create!` can
-    suppose that always going to receive a connection instance, removing connection
-    handling from all functions.
+  - clojure.java.jdbc has logic for connection nesting because it doesn't have proper
+    connection management. Functions like `create!` can receive a plain dbspec or a dbspec
+    with a created connection. If dbspec with active connection is received, it must
+    increment a nesting value (this prevents prematurely closing the connection). This is a
+    good example of complexity introduced because of improper connection management.
 
-  - clojure.java.jdbc has repeated transaction handling on each crud method
-    (insert!, drop!, etc...). With clj.jdbc, if you want that some code runs in a
-    transaction, you should wrap it in a transaction context using
-    `with-transaction` macro (see transactions section for more information).
+    With clj.jdbc, all the work done with a database should explicitly be
+    wrapped in a connection context using the `with-connection` macro. This
+    way, each function like `create!` can always be sure that it is going to
+    receive a connection instance, removing connection handling from all
+    functions.
 
-- Much more examples of use this api ;) (project without documentation
-  is project that does not exists).
+  - clojure.java.jdbc has repeated transaction handling on each CRUD method
+    (insert!, drop!, etc...). With clj.jdbc, if you want some code to run in a
+    transaction, you should wrap it in a transaction context using the
+    `with-transaction` macro (see the transactions section for more information).
+
+- Many more examples of use for this api ;) (a project with no documentation
+  is a project that doesn't really exist).
 
 
 Why clj.jdbc does not include dsl for working with sql as clojure.java.jdbc 0.3?
 ================================================================================
 
-Write programs that do one thing and do it well. clj.jdbc is a wrapper for a java jdbc, not
-a wrapper and a lot of things more. Now, already exists a lot of dsl for work with sql.
-clj.jdbc will not reinvent the wheel.
+Write programs that do one thing and do it well. clj.jdbc is a wrapper for Java
+JDBC, not a wrapper and lot more things besides. There already are a good number
+of DSLs for working with SQL. clj.jdbc will not reinvent the wheel.
+
