@@ -9,16 +9,18 @@ Connecting to database
 Connection parameters
 ---------------------
 
-Usually, all documentation of any jvm languaje that explains jdbc, always suppose
-that a reader comes from java and knowns well about jdbc. This documentation will
-not make the same mistake.
+Usually, the documentation of any jvm language that explains JDBC, always
+supposes that the reader comes from Java and knowns JDBC well. This
+documentation will not make the same mistake.
 
-jdbc is a default abstraction/interface for sql databases written in java. Is like
-a python DB-API or any other abstraction in any languaje. Clojure as a guest language
-on a jvm, is benefits of having a good and well tested abstraction like this.
+JDBC is the default abstraction/interface for SQL databases written in Java.
+It's like the Python DB-API and similar abstractions in other languages.
+Clojure, as a guest language on a jvm, benefits from having a good and well
+tested abstraction like this.
 
-``dbspec`` is a simple clojure way to define database connection parameters that are
-used to create a new database connection or create new datasource (connection pool).
+``dbspec`` is a simple Clojure way to define the database connection parameters
+that are used to create a new database connection or create a new datasource
+(connection pool).
 
 This is a default aspect of one dbspec definition:
 
@@ -30,36 +32,37 @@ This is a default aspect of one dbspec definition:
      :user "username"
      :password "password"}
 
-Parameters description:
+Description of the parameters:
 
-- ``:classname`` can be omited and it automatically resolved from predefined list using ``:subprotocol``.
-  This is a class location of jdbc driver. Each driver has one, in this example is a path to a postgresql jdbc driver.
-- ``:user`` and ``:password`` can be ommited if them are empty
+- ``:classname`` This is a class location of JDBC driver. Each driver has one; in this example it is a path to a Postgresql JDBC driver.  This parameter can be omited;  in that case it is automatically resolved from a predefined list using ``:subprotocol``.
+- ``:user`` and ``:password`` can be ommited if they are empty.
 
-Also, dbspec has other formats that finally parsed to a previously explained format.
-As example you can pass a string containing a url with same data:
+dbspec has other formats which are ultimately parsed to the previously explained format.
+As an example, you can pass a string containing a url with same data:
 
 .. code-block:: text
 
     "postgresql://user:password@localhost:5432/dbname"
 
-And also, it has other format using datasource, but it explained in 'Connection pools'
-section.
+Also, there is another format using datasource, but this it is explained in the
+'Connection pools' section.
 
 Creating a connection
 ---------------------
 
-Every function that interacts with database in clj.jdbc only accept a connection
-instance in difference with clojure.java.jdbc. For it, a connection will be opened
-explicitly.
+In clj.jdbc, every function that interacts with a database takes a connection
+instance as parameter, in contrast to clojure.java.jdbc. clj.jdbc requires
+connections to be explicitly opened.
 
-For this purpose, clj.jdbc exposes two ways to create new connection: using ``make-connection``
-function or ``with-connection`` macro.
+For this purpose, clj.jdbc exposes two ways to create new connections:
+then ``make-connection`` function and the ``with-connection`` macro.
 
-The first function intends be a low level interface and delegates to user a resource
-management (close a connection when is not used as example). And a second as a high level
-interface. ``with-connection`` creates a context when connection is available and at the end
-of context code execution, connection is closed automatically.
+The first way intends be a low level interface and delegates resource
+management to the user (who has to close the connection once it is no longer
+used, for example). The second way is a higher level interface:
+``with-connection`` creates a context in which the connection is available and,
+at the end of execution of the code within the context, the connection is
+closed automatically.
 
 
 .. note::
@@ -74,15 +77,17 @@ This is a simple example of use ``make-connection``:
       (do-something-with conn)
       (.close conn))
 
-Connection instance implements AutoClosable interface, and you can avoid call directly
-to ``close`` method using clojure ``with-open`` macro:
+The Connection class implements the AutoClosable interface, so you can avoid
+having to call the ``close`` method directly by using Clojure's ``with-open``
+macro:
 
 .. code-block:: clojure
 
     (with-open [conn (make-connection dbspec)]
       (do-something-with conn))
 
-And this is a equivalent code using ``with-connection`` macro that clj.jdbc provides:
+And this is an equivalent piece of code using the ``with-connection`` macro
+that clj.jdbc provides:
 
 .. code-block:: clojure
 
@@ -93,14 +98,14 @@ And this is a equivalent code using ``with-connection`` macro that clj.jdbc prov
 Execute database commands
 =========================
 
-clj.jdbc has many methods for execute database commands, like create tables, inserting
-data or simply execute stored procedure.
+clj.jdbc has many methods for executing database commands, like creating
+tables, inserting data or simply executing stored procedures.
 
 Execute raw sql statements
 --------------------------
 
-The simplest way to execute a raw sql is using ``execute!`` function. It receives
-a connection as first parameter and  one or more sql strings.
+The simplest way to execute a raw SQL is using the ``execute!`` function. It
+receives a connection as the first parameter, and one or more SQL strings.
 
 .. code-block:: clojure
 
@@ -113,32 +118,32 @@ a connection as first parameter and  one or more sql strings.
       (with-transaction conn
         (execute! conn "CREATE TABLE foo (id serial, name text);")))
 
-Execute parametrized sql statements
+Execute parametrized SQL statements
 -----------------------------------
 
-Raw sql statements works well for creating tables and similar operations, but when
-you need insert some data, specially if data comes from untrusted sources, ``execute!``
-function is not adecuate.
+Raw SQL statements work well for creating tables and similar operations, but
+when you need to insert some data, especially if the data comes from untrusted
+sources, the ``execute!`` function is not adecuate.
 
-For this problem, clj.jdbc exposes ``execute-prepared!`` function. It accepts parametrized
-sql an list of groups of parameters.
+For this problem, clj.jdbc exposes the ``execute-prepared!`` function. It
+accepts parametrized SQL and a list of groups of parameters.
 
-For execute a simple insert sql statement:
+To execute a simple insert SQL statement:
 
 .. code-block:: clojure
 
     (let [sql "INSERT INTO foo VALUES (?, ?);"]
       (execute-prepared! conn sql ["Foo", 2]))
 
-But `execute-prepared!` function accept multiple param groups, that can help for insert
-a multiple inserts in batch:
+The `execute-prepared!` function can accept multiple param groups, that are
+helpful for performing multiple inserts in a batch:
 
 .. code-block:: clojure
 
     (let [sql "INSERT INTO foo VALUES (?, ?);"]
       (execute-prepared! conn sql ["Foo", 2] ["Bar", 3]))
 
-The previous code should execute this sql statements:
+The previous code should execute these SQL statements:
 
 .. code-block:: sql
 
@@ -148,17 +153,19 @@ The previous code should execute this sql statements:
 Make queries
 ============
 
-As usual, clj.jdbc offers two ways to send queries to a database, low level and high level
-way. In this case, a low level interface differs litle bit from hight level, because it returns
-a intermediate object, instance of ``QueryResult`` type, defined by clj.jdbc.
+As usual, clj.jdbc offers two ways to send queries to a database, low level and
+high level way. In this case, the low level interface differs a litle bit from
+the high level one, because it returns an intermediate object: an instance of
+the ``QueryResult`` type, defined by clj.jdbc.
 
 .. note::
 
-    You can see a api documentation for know more about it, but mainly is for mantain a reference
-    to a original java jdbc objects that are used for execute a query.
+    You can see the api documentation to know more about it, but mainly it is for mantaining a reference
+    to the original java jdbc objects which were used for executing a query.
 
-In this case we start explain a high level macro ``with-query`` for make queries. The simplest way
-to explain of how it works is seeing some examples:
+We will begin by explaining the high-level ``with-query`` macro for performing
+queries. The simplest way of explaining how it works is by seeing some
+examples:
 
 .. code-block:: clojure
 
@@ -169,16 +176,17 @@ to explain of how it works is seeing some examples:
 
 ``results`` is a var name where a ``with-query`` macro binds a lazy-seq with rows.
 
-Futhermore, a low level function, as I have said before, returns a QueryResult instance
-that works as clojure map and contains three keys: ``:stmt``, ``:rs`` and ``:data``.
+Futhermore, the low level function, as I have said before, returns a QueryResult instance
+that works as Clojure map and contains three keys: ``:stmt``, ``:rs`` and ``:data``.
 
-The value that represents a last key (``:data``) is a ``results`` of previous code.
+The value represented by the last key (``:data``) is the ``results`` of previous code.
 
-If you known's how jdbc works, I should know that if you execute two queries and the second is
-executed when the results of first are not completelly consumed, results of first query are
-aborted. For this purpose you should use with precaution a ``make-query`` function.
+If you know how jdbc works, you should know that if you execute two queries and
+the second is executed while the results of the first haven't been completely
+consumed, the results of the first query are aborted. For this purpose you
+should use with precaution the ``make-query`` function.
 
-This is a simple example of use ``make-query`` function:
+This is a simple example of use for the ``make-query`` function:
 
 .. code-block:: clojure
 
@@ -188,11 +196,11 @@ This is a simple example of use ``make-query`` function:
         (println row))
       (.close result))
 
-QueryResult also implements ``AutoClosable`` interface and you can use it with ``with-open``
-macro.
+QueryResult also implements the ``AutoClosable`` interface and you can use it
+with ``with-open`` macro.
 
-Othe of the features that exposes ``make-query`` that is not available on ``with-query``
-macro is that you can make a ``:data`` rows seq not lazy:
+Another feature that ``make-query`` exposes that is not available on the
+``with-query`` macro is that you can request a non-lazy ``:data`` rows seq:
 
 .. code-block:: clojure
 
@@ -205,15 +213,16 @@ macro is that you can make a ``:data`` rows seq not lazy:
 Transactions
 ============
 
-Manage well transactions is almost the most important this when you build one application, and
-delay it for the last time is not a good approach. Managing transaction implicitly, trust your
-"web framework" for do it is other very bad approach.
+Managing transactions well is almost the most important thing when building an
+application, and delaying it to the end is not a good approach. Managing
+transactions implicitly, trusting your "web framework" to do it for you is
+another very bad approach.
 
-For this case, **clj.jdbc** offers (as usually) two ways to manage transactions. Using
-``with-transaction`` macro or ``call-in-transaction`` function.
+**clj.jdbc** offers (as usually) two ways of managing transactions: the
+``with-transaction`` macro and the ``call-in-transaction`` function.
 
-Make some code transactional (executes in one transaction) is as simple how wrap some code in
-transaction context block:
+Making some code transactional (so that executes in one transaction) is as
+simple as wrapping the code in a transaction context block:
 
 .. code-block:: clojure
 
@@ -221,13 +230,14 @@ transaction context block:
        (do-thing-first conn)
        (do-thing-second conn))
 
-Or using ``call-in-transaction`` function:
+Or, alternatively, using the ``call-in-transaction`` function:
 
 .. code-block:: clojure
 
     (call-in-transaction conn do-things)
 
-**clj.jdbc** supports well subtransactions. As example, if one of functions used in previous
-examples also wraps some code in transaction block. clj.jdbc automatically wrapps it in
-one subtransaction (savepoints) making all code wrapped in a transaction truly atomic.
+**clj.jdbc** supports subtransactions well. As an example, if one of the
+functions used in the previous examples itself wrapped some code in a
+transaction block, clj.jdbc would automatically wrap it in one subtransaction
+(savepoint), making all the code wrapped in a transaction truly atomic.
 
