@@ -45,31 +45,11 @@
          (contains? isolation-level-map level)]}
   (reset! *default-isolation-level* level))
 
-(defn- as-str
-  "Given a naming strategy and a keyword, return the keyword as a
-   string per that naming strategy. Given (a naming strategy and)
-   a string, return it as-is.
-
-   A keyword of the form :x.y is treated as keywords :x and :y,
-   both are turned into strings via the naming strategy and then
-   joined back together so :x.y might become `x`.`y` if the naming
-   strategy quotes identifiers with `."
-  [f x]
-  (if (instance? clojure.lang.Named x)
-    (let [n (name x)
-          i (.indexOf n (int \.))]
-      (if (= -1 i)
-        (f n)
-        (str/join "." (map f (.split n "\\.")))))
-    (str x)))
-
-(defn- as-properties
-  "Convert any seq of pairs to a java.utils.Properties instance.
-   Uses as-str to convert both keys and values into strings."
+(defn- map->properties
+  "Convert some dbspec options to java.utils.Properties instance."
   [m]
   (let [p (Properties.)]
-    (doseq [[k v] m]
-      (.setProperty p (as-str identity k) (as-str identity v)))
+    (doseq [[k v] m] (.setProperty p (name k) (str v)))
     p))
 
 (def ^{:private true :doc "Map of classnames to subprotocols"} classnames
@@ -139,7 +119,7 @@
           etc (dissoc db-spec :classname :subprotocol :subname)
           classname (or classname (classnames subprotocol))]
       (clojure.lang.RT/loadClassForName classname)
-      (DriverManager/getConnection url (as-properties etc)))
+      (DriverManager/getConnection url (map->properties etc)))
 
     (and datasource username password)
     (.getConnection datasource username password)
