@@ -135,18 +135,11 @@
     (throw (IllegalArgumentException.
              (format "dbspec %s is missing a required parameter" db-spec)))))
 
-(defn- execute-batch
-  "Executes a batch of SQL commands and returns a sequence of update counts.
-   (-2) indicates a single operation operating on an unknown number of rows.
-   Specifically, Oracle returns that and we must call getUpdateCount() to get
-   the actual number of rows affected. In general, operations return an array
-   of update counts, so this may not be a general solution for Oracle..."
-  [^Statement stmt]
+(defn- execute-statement
+  "Execute a statement and return a result of update counts."
+  [stmt]
   {:pre [(instance? Statement stmt)]}
-  (let [result (.executeBatch stmt)]
-    (if (and (= 1 (count result)) (= -2 (first result)))
-      (list (.getUpdateCount stmt))
-      (seq result))))
+  (seq (.executeBatch stmt)))
 
 (defn make-prepared-statement
   "Given connection and parametrized query as vector with first
@@ -187,9 +180,8 @@
         (assoc conn :isolation-level default-il)))))
 
 (defn make-connection
-  "Creates a connection to a database. db-spec is a map containing connection
-  parameters. db-spec is a map containing values for one of the following
-  parameter sets:
+  "Creates a connection to a database. dbspec is a map containing connection
+  parameters:
 
   Factory:
     :factory     (required) a function of one argument, a map of params
@@ -205,9 +197,6 @@
     :datasource  (required) a javax.sql.DataSource
     :username    (optional) a String
     :password    (optional) a String, required if :username is supplied
-
-  JNDI:
-    Not supported because it's shit!
 
   Raw:
     :connection-uri (required) a String
@@ -359,7 +348,7 @@
     (with-open [stmt (.createStatement connection)]
       (dorun (map (fn [command]
                     (.addBatch stmt command)) commands))
-      (execute-batch stmt))))
+      (execute-statement stmt))))
 
 (defn execute-prepared!
   "Same as `execute!` function, but works with prepared statements
@@ -387,7 +376,7 @@
       (doseq [param-group param-groups]
         (dorun (map-indexed #(.setObject stmt (inc %1) %2) param-group))
         (.addBatch stmt))
-      (execute-batch stmt))))
+      (execute-statement stmt))))
 
 (defn result-set-lazyseq
   "Function that wraps result in a lazy seq. This function

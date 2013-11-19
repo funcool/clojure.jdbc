@@ -33,6 +33,7 @@
   (testing "Utils functions"
     (is (= (strip-jdbc "jdbc:fobar") "fobar"))))
 
+
 (deftest db-isolation-level
   (testing "Set/Unset isolation level"
     (is (= (deref *default-isolation-level*) :none))
@@ -98,6 +99,15 @@
 
       (with-query conn results ["SELECT count(age) as total FROM foo;"]
         (is (= [{:total 2}] (doall results)))))))
+
+(deftest db-execute-statement
+  (testing "Statement result"
+    (with-connection h2-dbspec3 conn
+      (execute! conn "CREATE TABLE foo (name varchar(255), age integer);")
+      (let [res (execute-prepared! conn "INSERT INTO foo (name,age) VALUES (?, ?);"
+                                   ["foo", 1]  ["bar", 2])]
+        (is (= res (seq [1 1])))))))
+
 
 (deftest db-pool
   (testing "C3P0 connection pool testing."
