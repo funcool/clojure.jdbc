@@ -4,8 +4,6 @@ clj.jdbc
 
 Alternative implementation of jdbc wrapper for clojure.
 
-This library is mainly based on ``clojure.java.jdbc 0.2.x`` library and
-contains few util functions and ideas from it.
 
 Documentation
 =============

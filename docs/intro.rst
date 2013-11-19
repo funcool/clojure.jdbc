@@ -30,4 +30,6 @@ software.
 
 **clj.jdbc** is released under terms of Apache2 License.
 
-
+Few parts of clj.jdbc library are originated from clojure.java.jdbc 0.2.x
+and are licensed under epl. You can see a full copyright agreement on
+index page of this documentation.
