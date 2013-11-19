@@ -84,19 +84,20 @@
 
 (defn parse-properties-uri [^URI uri]
   "Parses a dbspec as url into a plain dbspec."
-  (let [host (.getHost uri)
-        port (if (pos? (.getPort uri)) (.getPort uri))
-        path (.getPath uri)
-        scheme (.getScheme uri)]
+  (let [host      (.getHost uri)
+        port      (.getPort uri)
+        path      (.getPath uri)
+        scheme    (.getScheme uri)
+        userinfo  (.getUserInfo uri)]
     (merge
-     {:subname (if port
+      {:subname (if (pos? port)
                  (str "//" host ":" port path)
                  (str "//" host path))
       :subprotocol scheme
       :classname (get classnames scheme)}
-     (if-let [user-info (.getUserInfo uri)]
-             {:user (first (str/split user-info #":"))
-              :password (second (str/split user-info #":"))}))))
+      (when userinfo
+        (let [[username password] (str/split userinfo #":")]
+          {:user username :password password})))))
 
 (defn- make-raw-connection
   "Given a standard dbspec or dbspec with datasource (with connection pool),
