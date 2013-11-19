@@ -76,12 +76,11 @@
     (and (instance? RuntimeException ex) (.getCause ex)) (throw-non-rte (.getCause ex))
     :else (throw ex)))
 
-(defn strip-jdbc [^String spec]
+(defn strip-jdbc
   "Siple util function that strip a \"jdbc:\" prefix
   from connection string urls."
-  (if (.startsWith spec "jdbc:")
-    (.substring spec 5)
-    spec))
+  [^String url]
+  (str/replace-first url #"^jdbc:" ""))
 
 (defn parse-properties-uri [^URI uri]
   "Parses a dbspec as url into a plain dbspec."
