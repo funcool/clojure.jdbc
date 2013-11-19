@@ -58,3 +58,5 @@ licensed under epl:
 
     seancorfield (gmail)
     Migrated from clojure.contrib.sql 17 April 2011
+
+You can see a full license on "LICENSE.epl" on the project root.
