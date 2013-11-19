@@ -66,11 +66,15 @@
   "This ugliness makes it easier to catch SQLException objects
   rather than something wrapped in a RuntimeException which
   can really obscure your code when working with JDBC from
-  Clojure... :("
+  Clojure...
+
+  NOTE: Original code taken from version 0.2 of clojure.java.jdbc.
+  "
   [^Throwable ex]
-  (cond (instance? java.sql.SQLException ex) (throw ex)
-        (and (instance? RuntimeException ex) (.getCause ex)) (throw-non-rte (.getCause ex))
-        :else (throw ex)))
+  (cond
+    (instance? java.sql.SQLException ex) (throw ex)
+    (and (instance? RuntimeException ex) (.getCause ex)) (throw-non-rte (.getCause ex))
+    :else (throw ex)))
 
 (defn strip-jdbc [^String spec]
   "Siple util function that strip a \"jdbc:\" prefix
