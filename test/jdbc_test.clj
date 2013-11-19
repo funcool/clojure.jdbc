@@ -28,7 +28,10 @@
 
   (testing "Using macro with-connection"
     (with-connection h2-dbspec3 conn
-      (is (instance? jdbc.types.Connection conn)))))
+      (is (instance? jdbc.types.Connection conn))))
+
+  (testing "Utils functions"
+    (is (= (strip-jdbc "jdbc:fobar") "fobar"))))
 
 (deftest db-isolation-level
   (testing "Set/Unset isolation level"
