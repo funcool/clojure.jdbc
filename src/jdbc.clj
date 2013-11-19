@@ -52,15 +52,15 @@
     (doseq [[k v] m] (.setProperty p (name k) (str v)))
     p))
 
-(def ^{:private true :doc "Map of classnames to subprotocols"} classnames
-  {"postgresql"     "org.postgresql.Driver"
-   "mysql"          "com.mysql.jdbc.Driver"
-   "sqlserver"      "com.microsoft.sqlserver.jdbc.SQLServerDriver"
-   "jtds:sqlserver" "net.sourceforge.jtds.jdbc.Driver"
-   "derby"          "org.apache.derby.jdbc.EmbeddedDriver"
-   "hsqldb"         "org.hsqldb.jdbcDriver"
-   "h2"             "org.h2.Driver"
-   "sqlite"         "org.sqlite.JDBC"})
+(def ^{:private true :doc "Map of classnames to subprotocols"}
+  classnames {"postgresql"     "org.postgresql.Driver"
+              "mysql"          "com.mysql.jdbc.Driver"
+              "sqlserver"      "com.microsoft.sqlserver.jdbc.SQLServerDriver"
+              "jtds:sqlserver" "net.sourceforge.jtds.jdbc.Driver"
+              "derby"          "org.apache.derby.jdbc.EmbeddedDriver"
+              "hsqldb"         "org.hsqldb.jdbcDriver"
+              "h2"             "org.h2.Driver"
+              "sqlite"         "org.sqlite.JDBC"})
 
 (defn- throw-non-rte
   "This ugliness makes it easier to catch SQLException objects
@@ -128,8 +128,8 @@
     (.getConnection datasource)
 
     :else
-    (let [msg (format "db-spec %s is missing a required parameter" db-spec)]
-      (throw (IllegalArgumentException. msg)))))
+    (throw (IllegalArgumentException.
+             (format "dbspec %s is missing a required parameter" db-spec)))))
 
 (defn- execute-batch
   "Executes a batch of SQL commands and returns a sequence of update counts.
