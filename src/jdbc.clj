@@ -62,20 +62,6 @@
               "h2"             "org.h2.Driver"
               "sqlite"         "org.sqlite.JDBC"})
 
-(defn- throw-non-rte
-  "This ugliness makes it easier to catch SQLException objects
-  rather than something wrapped in a RuntimeException which
-  can really obscure your code when working with JDBC from
-  Clojure...
-
-  NOTE: Original code taken from version 0.2 of clojure.java.jdbc.
-  "
-  [^Throwable ex]
-  (cond
-    (instance? java.sql.SQLException ex) (throw ex)
-    (and (instance? RuntimeException ex) (.getCause ex)) (throw-non-rte (.getCause ex))
-    :else (throw ex)))
-
 (defn strip-jdbc
   "Siple util function that strip a \"jdbc:\" prefix
   from connection string urls."
@@ -284,7 +270,7 @@
           (.releaseSavepoint connection savepoint)
           (catch Throwable t
             (.rollback connection savepoint)
-            (throw-non-rte t))))
+            (throw t))))
       (let [current-autocommit (.getAutoCommit connection)
             rollback-only      (:rollback-only conn)]
         (swap! in-transaction not)
@@ -296,7 +282,7 @@
             (.commit connection))
           (catch Throwable t
             (.rollback connection)
-            (throw-non-rte t))
+            (throw t))
           (finally
             (swap! in-transaction not)
             (.setAutoCommit connection current-autocommit)))))))
