@@ -36,6 +36,14 @@ Doc
 
 **ApiDoc:** http://niwibe.github.io/clj.jdbc/api/
 
+Todo:
+-----
+
+- helper for work with binary data
+- helper for create table.
+- helper for drop table.
+- access to more low level options of connection, resultset or statement.
+
 
 Changelog
 ---------
@@ -48,7 +56,6 @@ Date: unreleased
 - Remove some taken code from clojure.java.jdbc
   that are licensed under epl.
 - Add ability to set the isolation level.
-- Helper for create table.
 
 Version 0.1-beta1
 ~~~~~~~~~~~~~~~~~
