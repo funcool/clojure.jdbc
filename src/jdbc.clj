@@ -83,7 +83,7 @@
   (str/replace-first url #"^jdbc:" ""))
 
 (defn parse-properties-uri [^URI uri]
-  "Parses a dbspec as url into a plain dbspec."
+  "Parses a dbspec as uri into a plain dbspec."
   (let [host      (.getHost uri)
         port      (.getPort uri)
         path      (.getPath uri)
