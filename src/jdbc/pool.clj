@@ -32,7 +32,7 @@
                        :subname \"//localhost:5432/test\"}))
     (swap! dbspec make-datasource-spec)
   "
-  (:require [jdbc :refer [strip-jdbc parse-properties-uri]])
+  (:require [jdbc :refer [strip-jdbc-prefix parse-properties-uri]])
   (:import (java.net URI))
   (:gen-class))
 
@@ -42,7 +42,7 @@
   [dbspec]
   (cond
     (string? dbspec)
-    (normalize-dbspec (URI. (strip-jdbc dbspec)))
+    (normalize-dbspec (URI. (strip-jdbc-prefix dbspec)))
 
     (instance? URI dbspec)
     (parse-properties-uri dbspec)

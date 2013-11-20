@@ -62,7 +62,7 @@
               "h2"             "org.h2.Driver"
               "sqlite"         "org.sqlite.JDBC"})
 
-(defn strip-jdbc
+(defn strip-jdbc-prefix
   "Siple util function that strip a \"jdbc:\" prefix
   from connection string urls."
   [^String url]
@@ -93,7 +93,7 @@
     :as db-spec}]
   (cond
     (string? db-spec)
-    (make-raw-connection (URI. (strip-jdbc db-spec)))
+    (make-raw-connection (URI. (strip-jdbc-prefix db-spec)))
 
     (instance? URI db-spec)
     (make-raw-connection (parse-properties-uri db-spec))

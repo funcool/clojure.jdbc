@@ -31,8 +31,7 @@
       (is (instance? jdbc.types.Connection conn))))
 
   (testing "Utils functions"
-    (is (= (strip-jdbc "jdbc:fobar") "fobar"))))
-
+    (is (= (strip-jdbc-prefix "jdbc:fobar") "fobar"))))
 
 (deftest db-isolation-level
   (testing "Set/Unset isolation level"
