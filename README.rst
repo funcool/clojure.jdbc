@@ -45,9 +45,10 @@ Version 0.1-beta2
 
 Date: unreleased
 
+- Remove some taken code from clojure.java.jdbc
+  that are licensed under epl.
 - Add ability to set the isolation level.
-- DSL for inserting data in more idiomatic way.
-
+- Helper for create table.
 
 Version 0.1-beta1
 ~~~~~~~~~~~~~~~~~
