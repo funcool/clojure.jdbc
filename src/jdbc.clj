@@ -102,7 +102,7 @@
 (defn- make-raw-connection
   "Given a standard dbspec or dbspec with datasource (with connection pool),
   returns a new connection."
-  [{:keys [factory connection-uri classname subprotocol subname
+  [{:keys [connection-uri classname subprotocol subname
            datasource username password]
     :as db-spec}]
   (cond
@@ -111,9 +111,6 @@
 
     (instance? URI db-spec)
     (make-raw-connection (parse-properties-uri db-spec))
-
-    factory
-    (factory (dissoc db-spec :factory))
 
     connection-uri
     (DriverManager/getConnection connection-uri)
@@ -182,10 +179,6 @@
 (defn make-connection
   "Creates a connection to a database. dbspec is a map containing connection
   parameters:
-
-  Factory:
-    :factory     (required) a function of one argument, a map of params
-    (others)     (optional) passed to the factory function in a map
 
   DriverManager:
     :subprotocol (required) a String, the jdbc subprotocol
