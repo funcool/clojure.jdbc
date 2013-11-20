@@ -51,26 +51,17 @@
     (dorun (map (fn [[k v]] (.setProperty p (name k) (str v))) (seq data)))
     p))
 
-(def ^{:private true :doc "Map of classnames to subprotocols"}
-  classnames {"postgresql"     "org.postgresql.Driver"
-              "mysql"          "com.mysql.jdbc.Driver"
-              "sqlserver"      "com.microsoft.sqlserver.jdbc.SQLServerDriver"
-              "jtds:sqlserver" "net.sourceforge.jtds.jdbc.Driver"
-              "derby"          "org.apache.derby.jdbc.EmbeddedDriver"
-              "hsqldb"         "org.hsqldb.jdbcDriver"
-              "h2"             "org.h2.Driver"
-              "sqlite"         "org.sqlite.JDBC"})
-
-(defn strip-jdbc-prefix
+(defn- strip-jdbc-prefix
   "Siple util function that strip a \"jdbc:\" prefix
   from connection string urls."
   [^String url]
   (str/replace-first url #"^jdbc:" ""))
 
-(defn url->dbspec
-  "Parses a dbspec as uri into a plain dbspec."
+(defn uri->dbspec
+  "Parses a dbspec as uri into a plain dbspec. This function
+  accepts ``java.net.URI`` or ``String`` as parameter."
   [url]
-  (let [uri       (if (instance? URI url) url (URI. url))
+  (let [uri       (if (instance? URI url) url (URI. (strip-jdbc-prefix url)))
         host      (.getHost uri)
         port      (.getPort uri)
         path      (.getPath uri)
@@ -80,8 +71,7 @@
       {:subname (if (pos? port)
                  (str "//" host ":" port path)
                  (str "//" host path))
-      :subprotocol scheme
-      :classname (get classnames scheme)}
+      :subprotocol scheme}
       (when userinfo
         (let [[user password] (str/split userinfo #":")]
           {:user user :password password})))))
@@ -130,18 +120,18 @@
           (.setTransactionIsolation connection (default-il isolation-level-map)))
         (assoc conn :isolation-level default-il)))))
 
-(defn- make-raw-connection-from-url
+(defn- make-raw-connection-from-jdbcurl
   "Given a url and optionally params, returns a raw jdbc connection."
   ([url opts] (DriverManager/getConnection url (map->properties opts)))
   ([url] (DriverManager/getConnection url)))
 
-(defn- make-raw-connection-from-map
-  "Given a plain dbspec, converts it to a valid jdbc urls with
-  optionally options and pass it to ``make-raw-connection-from-url``"
+(defn- make-raw-connection-from-dbspec
+  "Given a plain dbspec, converts it to a valid jdbc url with
+  optionally options and pass it to ``make-raw-connection-from-jdbcurl``"
   [{:keys [subprotocol subname] :as dbspec}]
   (let [url     (format "jdbc:%s:%s" subprotocol subname)
-        options (dissoc dbspec :classname :subprotocol :subname)]
-    (make-raw-connection-from-url url options)))
+        options (dissoc dbspec :subprotocol :subname)]
+    (make-raw-connection-from-jdbcurl url options)))
 
 (defn make-connection
   "Creates a connection to a database.
@@ -157,7 +147,7 @@
     (with-open [c (make-connection \"postgresql://user:pass@localhost/test\")]
       (do-somethin-with-connection c))
   "
-  [{:keys [connection-uri classname subprotocol subname
+  [{:keys [connection-uri subprotocol subname
            datasource user password]
     :as dbspec}]
 
@@ -167,11 +157,11 @@
             (and datasource)
               (.getConnection datasource)
             (and subprotocol subname)
-              (make-raw-connection-from-map dbspec)
+              (make-raw-connection-from-dbspec dbspec)
             (and connection-uri)
-              (make-raw-connection-from-url connection-uri)
+              (make-raw-connection-from-jdbcurl connection-uri)
             (or (string? dbspec) (instance? URI dbspec))
-              (make-raw-connection-from-map (url->dbspec dbspec))
+              (make-raw-connection-from-dbspec (uri->dbspec dbspec))
             :else
               (throw (IllegalArgumentException. "Invalid dbspec format")))]
     (wrap-isolation-level dbspec (Connection.

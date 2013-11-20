@@ -32,7 +32,7 @@
                        :subname \"//localhost:5432/test\"}))
     (swap! dbspec make-datasource-spec)
   "
-  (:require [jdbc :refer [strip-jdbc-prefix url->dbspec]])
+  (:require [jdbc :refer [uri->dbspec]])
   (:import (java.net URI))
   (:gen-class))
 
@@ -40,14 +40,9 @@
   "Normalizes a dbspec in one common format usefull for
   plain connections or connection pool implementations."
   [dbspec]
-  (cond
-    (string? dbspec)
-    (normalize-dbspec (URI. (strip-jdbc-prefix dbspec)))
-
-    (instance? URI dbspec)
-    (url->dbspec dbspec)
-
-    :else dbspec))
+  (if (or (string? dbspec) (instance? URI dbspec))
+    (uri->dbspec dbspec)
+    dbspec))
 
 (defn make-datasource-spec
   "Dummy function that returns dbspec as is. This
