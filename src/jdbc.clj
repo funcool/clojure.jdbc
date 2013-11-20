@@ -34,9 +34,8 @@
   "Set a default isolation level for each new
   created connection.
 
-  By default no isolation level is set.
-
-  You can obtain a current default isolation level with:
+  By default no isolation level is set. You can obtain
+  a current default isolation level with:
 
     (deref *default-isolation-level*)
   "
@@ -47,9 +46,9 @@
 
 (defn- map->properties
   "Convert some dbspec options to java.utils.Properties instance."
-  [m]
+  [data]
   (let [p (Properties.)]
-    (doseq [[k v] m] (.setProperty p (name k) (str v)))
+    (dorun (map (fn [[k v]] (.setProperty p (name k) (str v))) (seq data)))
     p))
 
 (def ^{:private true :doc "Map of classnames to subprotocols"}
@@ -68,9 +67,11 @@
   [^String url]
   (str/replace-first url #"^jdbc:" ""))
 
-(defn parse-properties-uri [^URI uri]
+(defn url->dbspec
   "Parses a dbspec as uri into a plain dbspec."
-  (let [host      (.getHost uri)
+  [url]
+  (let [uri       (if (instance? URI url) url (URI. url))
+        host      (.getHost uri)
         port      (.getPort uri)
         path      (.getPath uri)
         scheme    (.getScheme uri)
@@ -82,41 +83,8 @@
       :subprotocol scheme
       :classname (get classnames scheme)}
       (when userinfo
-        (let [[username password] (str/split userinfo #":")]
-          {:user username :password password})))))
-
-(defn- make-raw-connection
-  "Given a standard dbspec or dbspec with datasource (with connection pool),
-  returns a new connection."
-  [{:keys [connection-uri classname subprotocol subname
-           datasource username password]
-    :as db-spec}]
-  (cond
-    (string? db-spec)
-    (make-raw-connection (URI. (strip-jdbc-prefix db-spec)))
-
-    (instance? URI db-spec)
-    (make-raw-connection (parse-properties-uri db-spec))
-
-    connection-uri
-    (DriverManager/getConnection connection-uri)
-
-    (and subprotocol subname)
-    (let [url (format "jdbc:%s:%s" subprotocol subname)
-          etc (dissoc db-spec :classname :subprotocol :subname)
-          classname (or classname (classnames subprotocol))]
-      (clojure.lang.RT/loadClassForName classname)
-      (DriverManager/getConnection url (map->properties etc)))
-
-    (and datasource username password)
-    (.getConnection datasource username password)
-
-    datasource
-    (.getConnection datasource)
-
-    :else
-    (throw (IllegalArgumentException.
-             (format "dbspec %s is missing a required parameter" db-spec)))))
+        (let [[user password] (str/split userinfo #":")]
+          {:user user :password password})))))
 
 (defn- execute-statement
   "Execute a statement and return a result of update counts."
@@ -162,35 +130,52 @@
           (.setTransactionIsolation connection (default-il isolation-level-map)))
         (assoc conn :isolation-level default-il)))))
 
+(defn- make-raw-connection-from-url
+  "Given a url and optionally params, returns a raw jdbc connection."
+  ([url opts] (DriverManager/getConnection url (map->properties opts)))
+  ([url] (DriverManager/getConnection url)))
+
+(defn- make-raw-connection-from-map
+  "Given a plain dbspec, converts it to a valid jdbc urls with
+  optionally options and pass it to ``make-raw-connection-from-url``"
+  [{:keys [subprotocol subname] :as dbspec}]
+  (let [url     (format "jdbc:%s:%s" subprotocol subname)
+        options (dissoc dbspec :classname :subprotocol :subname)]
+    (make-raw-connection-from-url url options)))
+
 (defn make-connection
-  "Creates a connection to a database. dbspec is a map containing connection
-  parameters:
+  "Creates a connection to a database.
 
-  DriverManager:
-    :subprotocol (required) a String, the jdbc subprotocol
-    :subname     (required) a String, the jdbc subname
-    :classname   (optional) a String, the jdbc driver class name
-    (others)     (optional) passed to the driver as properties.
+  Here some simple examples, but if you want more detailed information,
+  please read a documentation:
 
-  DataSource:
-    :datasource  (required) a javax.sql.DataSource
-    :username    (optional) a String
-    :password    (optional) a String, required if :username is supplied
+    ;; Using a plain dbspec
+    (with-open [c (make-connection {:subprotocol \"h2\" :subname \"mem:\"})]
+      (do-somethin-with-connection c))
 
-  Raw:
-    :connection-uri (required) a String
-                 Passed directly to DriverManager/getConnection
+    ;; Using raw jdbc connection url
+    (with-open [c (make-connection \"postgresql://user:pass@localhost/test\")]
+      (do-somethin-with-connection c))
+  "
+  [{:keys [connection-uri classname subprotocol subname
+           datasource user password]
+    :as dbspec}]
 
-  URI:
-    Parsed JDBC connection string - see below
-
-  String:
-    subprotocol://user:password@host:port/subname
-                 An optional prefix of jdbc: is allowed."
-  [dbspec]
-  (let [connection (apply make-raw-connection [dbspec])]
+  (let [c (cond
+            (and datasource user password)
+              (.getConnection datasource user password)
+            (and datasource)
+              (.getConnection datasource)
+            (and subprotocol subname)
+              (make-raw-connection-from-map dbspec)
+            (and connection-uri)
+              (make-raw-connection-from-url connection-uri)
+            (or (string? dbspec) (instance? URI dbspec))
+              (make-raw-connection-from-map (url->dbspec dbspec))
+            :else
+              (throw (IllegalArgumentException. "Invalid dbspec format")))]
     (wrap-isolation-level dbspec (Connection.
-                                    connection       ;; :connection
+                                    c                ;; :connection
                                     (atom false)     ;; :in-transaction
                                     (atom false))))) ;; :rollback-only
 
@@ -224,7 +209,6 @@
     (with-transaction conn
       (make-some-queries-without-changes conn)
       (mark-as-rollback-only! conn))
-
   "
   [conn]
   {:pre [(instance? Connection conn)]}
