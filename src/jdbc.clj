@@ -377,20 +377,18 @@
          :or {identifiers str/lower-case as-arrays? false}}]
 
   (let [metadata    (.getMetaData rs)
-        idxs        (range 1 (inc (.getColumnCount metadata)))
-        keys        (->> idxs
+        idseq       (range 1 (inc (.getColumnCount metadata)))
+        keyseq      (->> idseq
                          (map (fn [i] (.getColumnLabel metadata i)))
                          (map (comp keyword identifiers)))
-        row-values  (fn [] (map #(.getObject rs %) idxs))
+        values      (fn [] (map #(.getObject rs %) idseq))
         records     (fn thisfn []
                       (when (.next rs)
-                        (cons (zipmap keys (row-values)) (lazy-seq (thisfn)))))
+                        (cons (zipmap keyseq (values)) (lazy-seq (thisfn)))))
         rows        (fn thisfn []
                       (when (.next rs)
-                        (cons (vec (row-values)) (lazy-seq (thisfn)))))]
-    (if as-arrays?
-      (cons (vec keys) (rows))
-      (records))))
+                        (cons (vec (values)) (lazy-seq (thisfn)))))]
+    (if as-arrays? (rows) (records))))
 
 (defn result-set-vec
   "Function that evaluates a result into one clojure persistent
