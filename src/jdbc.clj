@@ -402,24 +402,26 @@
   macro that manage resources for you and return directly a seq instead of a
   QueryResult instance.
   "
-  [conn sql-with-params & {:keys [lazy?] :or {lazy? false} :as options}]
-  {:pre [(or (instance? PreparedStatement sql-with-params)
-             (vector? sql-with-params))
-         (instance? Connection conn)]}
-  (let [connection (:connection conn)
-        stmt       (cond
-                     (instance? PreparedStatement sql-with-params)
-                     sql-with-params
+  ([conn sql-with-params] (make-query conn sql-with-params {}))
+  ([conn sql-with-params {:keys [lazy?] :or {lazy? false} :as options}]
+   {:pre [(or (instance? PreparedStatement sql-with-params)
+              (vector? sql-with-params))
+          (instance? Connection conn)]}
+   (let [connection (:connection conn)
+         stmt       (cond
+                      (instance? PreparedStatement sql-with-params)
+                      sql-with-params
 
-                     (vector? sql-with-params)
-                     (make-prepared-statement conn sql-with-params)
+                      (vector? sql-with-params)
+                      (make-prepared-statement conn sql-with-params)
 
-                     (string? sql-with-params)
-                     (make-prepared-statement conn [sql-with-params]))]
-    (let [rs (.executeQuery stmt)]
-      (if lazy?
-        (QueryResult. stmt rs (result-set-lazyseq rs))
-        (QueryResult. stmt rs (result-set-vec rs))))))
+                      (string? sql-with-params)
+                      (make-prepared-statement conn [sql-with-params]))]
+     (let [rs (.executeQuery stmt)]
+       (if lazy?
+         (QueryResult. stmt rs (result-set-lazyseq rs))
+         (QueryResult. stmt rs (result-set-vec rs)))))))
+
 
 (defmacro with-query
   "Idiomatic dsl macro for `query` function that automatically closes

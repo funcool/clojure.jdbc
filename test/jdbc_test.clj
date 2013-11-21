@@ -80,7 +80,7 @@
 
   (testing "Low level query result with lazy off"
     (with-open [conn    (make-connection h2-dbspec3)
-                result  (make-query conn ["SELECT 1 + 1 as foo;"] :lazy? false)]
+                result  (make-query conn ["SELECT 1 + 1 as foo;"] {:lazy? false})]
       (is (instance? jdbc.types.QueryResult result))
       (is (instance? java.sql.ResultSet (:rs result)))
       (is (instance? java.sql.PreparedStatement (:stmt result)))
