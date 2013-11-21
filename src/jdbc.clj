@@ -163,11 +163,13 @@
             (or (string? dbspec) (instance? URI dbspec))
               (make-raw-connection-from-dbspec (uri->dbspec dbspec))
             :else
-              (throw (IllegalArgumentException. "Invalid dbspec format")))]
+              (throw (IllegalArgumentException. "Invalid dbspec format")))
+        vendor (.getDatabaseProductName (.getMetaData c))]
     (wrap-isolation-level dbspec (Connection.
                                     c                ;; :connection
                                     (atom false)     ;; :in-transaction
-                                    (atom false))))) ;; :rollback-only
+                                    (atom false)     ;; :rollback-only
+                                    vendor))))
 
 (defmacro with-connection
   "Given database connection paramers (dbspec), creates

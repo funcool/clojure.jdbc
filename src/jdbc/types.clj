@@ -15,7 +15,7 @@
 (ns jdbc.types
   (:gen-class))
 
-(defrecord Connection [connection in-transaction rollback-only]
+(defrecord Connection [connection in-transaction rollback-only vendor]
   java.lang.AutoCloseable
   (close [this]
     (.close (:connection this))))
