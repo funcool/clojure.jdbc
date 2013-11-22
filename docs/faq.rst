@@ -53,6 +53,8 @@ Write programs that do one thing and do it well. clj.jdbc is a wrapper for Java
 JDBC, not a wrapper and lot more things besides. There already are a good number
 of DSLs for working with SQL. clj.jdbc will not reinvent the wheel.
 
+One example of a good dsl for build sql: <https://github.com/r0man/sqlingvo>
+
 
 This is a fork of clojure.java.jdbc?
 ====================================
