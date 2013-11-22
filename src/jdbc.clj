@@ -25,10 +25,11 @@
   (:gen-class))
 
 (def ^:dynamic *default-isolation-level* (atom :none))
-(def ^:private isolation-level-map {:none nil
-                                    :read-commited (java.sql.Connection/TRANSACTION_READ_UNCOMMITTED)
-                                    :repeatable-read (java.sql.Connection/TRANSACTION_REPEATABLE_READ)
-                                    :serializable (java.sql.Connection/TRANSACTION_SERIALIZABLE)})
+(def ^:private isolation-level-map
+  {:none nil
+   :read-commited (java.sql.Connection/TRANSACTION_READ_UNCOMMITTED)
+   :repeatable-read (java.sql.Connection/TRANSACTION_REPEATABLE_READ)
+   :serializable (java.sql.Connection/TRANSACTION_SERIALIZABLE)})
 
 (defn set-default-isolation-level!
   "Set a default isolation level for each new
@@ -82,6 +83,20 @@
   {:pre [(instance? Statement stmt)]}
   (seq (.executeBatch stmt)))
 
+(def ^:private resultset-constants
+   ;; Type
+  {:forward-only ResultSet/TYPE_FORWARD_ONLY
+   :scroll-insensitive ResultSet/TYPE_SCROLL_INSENSITIVE
+   :scroll-sensitive ResultSet/TYPE_SCROLL_SENSITIVE
+
+   ;; Cursors
+   :hold ResultSet/HOLD_CURSORS_OVER_COMMIT
+   :close ResultSet/CLOSE_CURSORS_AT_COMMIT
+
+   ;; Concurrency
+   :read-only ResultSet/CONCUR_READ_ONLY
+   :updatable ResultSet/CONCUR_UPDATABLE})
+
 (defn make-prepared-statement
   "Given connection and parametrized query as vector with first
   argument as string and other arguments as params, return a
@@ -93,16 +108,27 @@
       (println (instance? java.sql.PreparedStatement stmt)))
     ;; -> true
   "
-  [conn sqlvec]
-  {:pre [(instance? Connection conn)
-         (vector? sqlvec)]}
-  (let [connection  (:connection conn)
-        sql         (first sqlvec)
-        params      (rest sqlvec)
-        stmt        (.prepareStatement connection sql)]
-    (when (seq params)
-      (dorun (map-indexed #(.setObject stmt (inc %1) %2) params)))
-    stmt))
+  ([conn sqlvec] (make-prepared-statement conn sqlvec {}))
+  ([conn sqlvec {:keys [result-type result-concurency fetch-size max-rows holdability]
+                 :or {result-type :forward-only result-concurency :read-only}
+                 :as options}]
+   {:pre [(instance? Connection conn) (vector? sqlvec)]}
+   (let [connection (:connection conn)
+         sql        (first sqlvec)
+         params     (rest sqlvec)
+         stmt       (if holdability
+                      (.prepareStatement connection sql
+                                         (result-type resultset-constants)
+                                         (result-concurency resultset-constants)
+                                         (holdability resultset-constants))
+                      (.prepareStatement connection sql
+                                         (result-type resultset-constants)
+                                         (result-concurency resultset-constants)))]
+     (when fetch-size (.setFetchSize stmt fetch-size))
+     (when max-rows (.setMaxRows max-rows))
+     (when (seq params)
+       (dorun (map-indexed #(.setObject stmt (inc %1) %2) params)))
+     stmt)))
 
 (defn- wrap-isolation-level
   "Wraps and handles a isolation level for connection."
@@ -333,7 +359,7 @@
         (.addBatch stmt))
       (execute-statement stmt))))
 
-(defn result-set-lazyseq
+(defn result-set->lazyseq
   "Function that wraps result in a lazy seq. This function
   is part of public api but can not be used directly (you should pass
   this function as parameter to `query` function).
@@ -366,11 +392,24 @@
                         (cons (vec (values)) (lazy-seq (thisfn)))))]
     (if as-arrays? (rows) (records))))
 
-(defn result-set-vec
+(defn result-set->vector
   "Function that evaluates a result into one clojure persistent
-  vector. Accept same parameters as `result-set-lazyseq`."
+  vector. Accept same parameters as `result-set->lazyseq`."
   [& args]
-  (vec (doall (apply result-set-lazyseq args))))
+  (vec (apply result-set->lazyseq args)))
+
+
+(defn make-query-from-statement
+  "Given a statement instance, execute a query and return a result."
+  [conn statement]
+  {:pre [(and (not @(:in-transaction conn)) (not= (.getFetchSize statement) 0))]}
+  ;; (when (and (not @(:in-transaction conn)) (not= (.getFetchSize statement) 0))
+  ;;   (throw (RuntimeException. "Can not use cursor mode outside one transaction.")))
+  (let [fetch-size  (.getFetchSize statement)
+        rs          (.executeQuery statement)]
+    (if (= fetch-size 0)
+      (QueryResult. statement rs false (result-set->vector rs))
+      (QueryResult. statement rs true (result-set->lazyseq rs)))))
 
 (defn make-query
   "Given a connection and paramatrized sql, execute a query and
@@ -389,39 +428,41 @@
 
   - `:stmt` as PreparedStatement instance
   - `:rs` as ResultSet instance
-  - `:data` as lazy seq of results.
-
-  You can pass options on call `make-query` for make `:data` key as
-  evaluated (not lazy) instead of lazy sequence:
-
-    (with-open [result (make-query conn [\"SELECT foo FROM bar WHERE id = ?\" 1] {:lazy? false})]
-      (doseq [row (:data result)]
-        (println row)))
+  - `:data` as seq of results (can be lazy or not depending on additional parameters)
 
   NOTE: It strongly recommended not use this function directly and use a `with-query`
-  macro that manage resources for you and return directly a seq instead of a
-  QueryResult instance.
+  macro for make query thar returns large amount of data or simple ``query`` function
+  that returns directly a evaluated result.
   "
   ([conn sql-with-params] (make-query conn sql-with-params {}))
-  ([conn sql-with-params {:keys [lazy?] :or {lazy? false} :as options}]
-   {:pre [(or (instance? PreparedStatement sql-with-params)
-              (vector? sql-with-params))
+  ([conn sql-with-params {:keys [fetch-size] :or {fetch-size 0} :as options}]
+   {:pre [(vector? sql-with-params)
           (instance? Connection conn)]}
    (let [connection (:connection conn)
          stmt       (cond
-                      (instance? PreparedStatement sql-with-params)
-                      sql-with-params
-
                       (vector? sql-with-params)
-                      (make-prepared-statement conn sql-with-params)
+                      (make-prepared-statement conn sql-with-params options)
 
                       (string? sql-with-params)
-                      (make-prepared-statement conn [sql-with-params]))]
-     (let [rs (.executeQuery stmt)]
-       (if lazy?
-         (QueryResult. stmt rs (result-set-lazyseq rs))
-         (QueryResult. stmt rs (result-set-vec rs)))))))
+                      (make-prepared-statement conn [sql-with-params] options)
 
+                      :else
+                      (throw (IllegalArgumentException. "Invalid arguments")))]
+     (when (and (not @(:in-transaction conn)) (not= fetch-size 0))
+       (throw (RuntimeException. "Can not use cursor resultset without transaction")))
+
+     (let [rs (.executeQuery stmt)]
+       (if (= fetch-size 0)
+         (QueryResult. stmt rs false (result-set->vector rs))
+         (QueryResult. stmt rs true (result-set->lazyseq rs)))))))
+
+(defn query
+  "Perform a simple sql query and return a evaluated result."
+  [conn sqlvec]
+  {:pre [(vector? sqlvec)
+         (instance? Connection conn)]}
+  (with-open [result (make-query sqlvec {:fetch-size 0})]
+    (:data result)))
 
 (defmacro with-query
   "Idiomatic dsl macro for `query` function that automatically closes

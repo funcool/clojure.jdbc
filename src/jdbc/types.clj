@@ -20,7 +20,7 @@
   (close [this]
     (.close (:connection this))))
 
-(defrecord QueryResult [stmt rs data]
+(defrecord QueryResult [stmt rs lazy data]
   java.lang.AutoCloseable
   (close [this]
     (.close (:rs this))

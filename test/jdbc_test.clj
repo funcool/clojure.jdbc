@@ -75,17 +75,18 @@
       (is (instance? jdbc.types.QueryResult result))
       (is (instance? java.sql.ResultSet (:rs result)))
       (is (instance? java.sql.PreparedStatement (:stmt result)))
-      (is (instance? clojure.lang.PersistentVector (:data result)))
+      (is (vector? (:data result)))
       (is (= [{:foo 2}] (doall (:data result))))))
 
   (testing "Low level query result with lazy off"
-    (with-open [conn    (make-connection h2-dbspec3)
-                result  (make-query conn ["SELECT 1 + 1 as foo;"] {:lazy? false})]
-      (is (instance? jdbc.types.QueryResult result))
-      (is (instance? java.sql.ResultSet (:rs result)))
-      (is (instance? java.sql.PreparedStatement (:stmt result)))
-      (is (vector? (:data result)))
-      (is (= [{:foo 2}] (doall (:data result))))))
+    (with-open [conn    (make-connection h2-dbspec3)]
+      (with-transaction conn
+        (let [result  (make-query conn ["SELECT 1 + 1 as foo;"] {:fetch-size 10})]
+          (is (instance? jdbc.types.QueryResult result))
+          (is (instance? java.sql.ResultSet (:rs result)))
+          (is (instance? java.sql.PreparedStatement (:stmt result)))
+          (is (seq? (:data result)))
+          (is (= [{:foo 2}] (doall (:data result))))))))
 
   (testing "Execute prepared"
     (with-connection h2-dbspec3 conn
