@@ -25,6 +25,8 @@
   (:gen-class))
 
 (def ^:dynamic *default-isolation-level* (atom :none))
+(def ^:dynamic *default-fetch-size* 100)
+
 (def ^:private isolation-level-map
   {:none nil
    :read-commited (java.sql.Connection/TRANSACTION_READ_UNCOMMITTED)
@@ -457,7 +459,7 @@
          (QueryResult. stmt rs true (result-set->lazyseq rs)))))))
 
 (defn query
-  "Perform a simple sql query and return a evaluated result."
+  "Perform a simple sql query and return a evaluated result as vector."
   [conn sqlvec]
   {:pre [(vector? sqlvec)
          (instance? Connection conn)]}
@@ -465,8 +467,8 @@
     (:data result)))
 
 (defmacro with-query
-  "Idiomatic dsl macro for `query` function that automatically closes
-  all resources when context is reached.
+  "Idiomatic dsl macro for `query` function that handles well queries
+  what returns a huge amount of results.
 
   Example:
 
@@ -476,6 +478,7 @@
         (println row)))
   "
   [conn bindname sql-with-params & body]
-  `(with-open [rs# (make-query ~conn ~sql-with-params)]
-     (let [~bindname (:data rs#)]
-       ~@body)))
+  `(with-transaction ~conn
+     (with-open [rs# (make-query ~conn ~sql-with-params {:fetch-size *default-fetch-size*})]
+       (let [~bindname (:data rs#)]
+         ~@body))))
