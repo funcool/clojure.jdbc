@@ -45,7 +45,7 @@ As an example, you can pass a string containing a url with same data:
     "postgresql://user:password@localhost:5432/dbname"
 
 Also, there is another format using datasource, but this it is explained in the
-'Connection pools' section.
+:ref:`Connection pool <connection-pool>` section.
 
 
 Creating a connection
@@ -154,63 +154,28 @@ The previous code should execute these SQL statements:
 Make queries
 ============
 
-As usual, clj.jdbc offers two ways to send queries to a database, a low level
-and a high level way. In this case, the low level interface differs a litle
-from the high level one, because it returns an intermediate object: an instance
-of the ``QueryResult`` type, defined by clj.jdbc.
+As usual, clj.jdbc offers two ways to send queries to a database. But in this
+section only will be explained the basic and the most usual way to make queries:
+using a ``query`` function.
+
+
+.. code-block:: clojure
+
+    (let [sql       ["SELECT id, name FROM people WHERE age > ?", 2]
+          result    (query sql)]
+      (doseq [row results]
+        (println row))))
+
+``query`` function executes a query and returns a evaluated result as vector
+of records.
 
 .. note::
 
-    You can see the api documentation to know more about it, but mainly it is for mantaining a reference
-    to the original java jdbc objects which were used for executing a query.
+    This method seems usefull en most of cases but can not works well with
+    queries that returns a lot of results. For this purpose, exists cursor
+    type queries that are explained on :ref:`Advanced usage <cursor_queries>`
+    section.
 
-We will begin by explaining the high-level ``with-query`` macro for performing
-queries. The simplest way of explaining how it works is by seeing some
-examples:
-
-.. code-block:: clojure
-
-    (let [sql ["SELECT id, name FROM people WHERE age > ?", 2]]
-      (with-query sql results
-        (doseq [row results]
-          (println row))))
-
-``results`` is a var name where a ``with-query`` macro binds a lazy-seq with rows.
-
-Furthermore, the low level function, as mentioned before, returns a QueryResult
-instance that works as a Clojure map and contains three keys: ``:stmt``,
-``:rs`` and ``:data``.
-
-The value represented by the last key (``:data``) is the ``results`` of previous code.
-
-If you know how jdbc works, you should know that if you execute two queries and
-the second is executed while the results of the first haven't been completely
-consumed, the results of the first query are aborted. For this purpose you
-should use the ``make-query`` function with precaution.
-
-This is a simple example of use for the ``make-query`` function:
-
-.. code-block:: clojure
-
-    (let [sql    ["SELECT id, name FROM people WHERE age > ?", 2]
-          result (make-query conn sql)]
-      (doseq [row (:data result)]
-        (println row))
-      (.close result))
-
-QueryResult also implements the ``AutoClosable`` interface and you can use it
-with ``with-open`` macro.
-
-Another feature that ``make-query`` exposes that is not available on the
-``with-query`` macro is that you can request a non-lazy ``:data`` rows seq:
-
-.. code-block:: clojure
-
-    (let [sql ["SELECT id,name FROM people WHERE age > ?", 2]]
-      (with-open [result (make-query conn sql :lazy? false)]
-        (println (vector? (:data result)))))
-
-    ;; -> true
 
 Transactions
 ============
@@ -280,29 +245,3 @@ This is a list of supported options:
 You can read more about it on wikipedia_.
 
 .. _wikipedia: http://en.wikipedia.org/wiki/Isolation_(database_systems)
-
-
-Connection pool
-===============
-
-clj.jdbc by default goes with connection pools helpers. And, as all of things in clj.jdbc,
-if you need a connection pool you should do it explicitly.
-
-Java ecosystem comes with various connection pool implementations for jdbc and clj.jdbc
-add helpers for one of this: c3p0 (in near future will surely be implemented helpers for
-other implementations).
-
-A simple way to start using a connection pool is convert your plain dbspec with database
-connection parameters to dbspec with datasource instance:
-
-.. code-block:: clojure
-
-    (require '[jdbc.pool.c3p0 :as pool])
-
-    (def dbspec (pool/make-datasource-spec {:classname "org.postgresql.Driver"
-                                            :subprotocol "postgresql"
-                                            :subname "//localhost:5432/dbname"}))
-
-``dbspec`` now contains a ``:datasource`` key with ``javax.sql.DataSource`` instance as value
-instead of plain dbspec with database connection parameters. And it can be used as
-dbspec for create connection with ``with-connection`` macro or ``make-connection`` function.

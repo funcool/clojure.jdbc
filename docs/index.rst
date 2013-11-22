@@ -14,5 +14,6 @@ Documentation
     intro
     install
     user-guide
+    advanced
     dbspec
     faq
