@@ -56,6 +56,10 @@ Date: unreleased
 - Remove some taken code from clojure.java.jdbc
   that are licensed under epl.
 - Add ability to set the isolation level.
+- Add new ``query`` function.
+- Change default behavior for querying a database: now the default
+  behavior is evaluate a request because of all jdbc implementation
+  retrieves all resulset in memory and use lazy-seq is totally useless.
 
 Version 0.1-beta1
 ~~~~~~~~~~~~~~~~~
