@@ -161,8 +161,8 @@ using a ``query`` function.
 
 .. code-block:: clojure
 
-    (let [sql       ["SELECT id, name FROM people WHERE age > ?", 2]
-          result    (query sql)]
+    (let [sql    ["SELECT id, name FROM people WHERE age > ?", 2]
+          result (query sql)]
       (doseq [row results]
         (println row))))
 
