@@ -51,7 +51,7 @@ Changelog
 Version 0.1-beta2
 ~~~~~~~~~~~~~~~~~
 
-Date: unreleased
+Date: 2013/11/25
 
 - Remove some taken code from clojure.java.jdbc
   that are licensed under epl.
