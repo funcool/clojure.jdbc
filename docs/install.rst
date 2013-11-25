@@ -12,7 +12,7 @@ vector on ``project.clj``:
 
 .. code-block:: clojure
 
-    [be.niwi/clj.jdbc "0.1.0-beta1"]
+    [be.niwi/clj.jdbc "0.1.0-beta2"]
 
 Gradle
 -------
@@ -21,7 +21,7 @@ If you are using gradle, this is a dependency line for gradle dsl:
 
 .. code-block:: groovy
 
-    compile "be.niwi:clj.jdbc:0.1.0-beta1"
+    compile "be.niwi:clj.jdbc:0.1.0-beta2"
 
 Maven
 -----
@@ -34,7 +34,7 @@ this is a xml that you should put on dependency section on a maven config file:
     <dependency>
       <groupId>be.niwi</groupId>
       <artifactId>clj.jdbc</artifactId>
-      <version>0.1.0-beta1</version>
+      <version>0.1.0-beta2</version>
     </dependency>
 
 Get the Code
