@@ -10,13 +10,13 @@ Leiningen
 
 .. code-block:: clojure
 
-    [be.niwi/clj.jdbc "0.1.0-beta1"]
+    [be.niwi/clj.jdbc "0.1.0-beta2"]
 
 Gradle
 
 .. code-block:: groovy
 
-    compile "be.niwi:clj.jdbc:0.1.0-beta1"
+    compile "be.niwi:clj.jdbc:0.1.0-beta2"
 
 Maven
 
@@ -25,7 +25,7 @@ Maven
     <dependency>
       <groupId>be.niwi</groupId>
       <artifactId>clj.jdbc</artifactId>
-      <version>0.1.0-beta1</version>
+      <version>0.1.0-beta2</version>
     </dependency>
 
 
