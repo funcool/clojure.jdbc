@@ -64,10 +64,25 @@
          (execute! conn sql)
          (is (thrown? org.h2.jdbc.JdbcBatchUpdateException (execute! conn sql))))))
 
-  (testing "Simple query result"
+  (testing "Simple query result using with-query macro"
     (with-connection h2-dbspec3 conn
       (with-query conn results ["SELECT 1 + 1 as foo;"]
         (is (= [{:foo 2}] (doall results))))))
+
+  (testing "Simple query result using query function"
+    (with-connection h2-dbspec3 conn
+      (let [result (query conn ["SELECT 1 + 1 as foo;"])]
+        (is (= [{:foo 2}] result)))))
+
+  (testing "Simple query result using query function and string parameter"
+    (with-connection h2-dbspec3 conn
+      (let [result (query conn "SELECT 1 + 1 as foo;")]
+        (is (= [{:foo 2}] result)))))
+
+  (testing "Simple query result using query function as vectors of vectors"
+    (with-connection h2-dbspec3 conn
+      (let [result (query conn ["SELECT 1 + 1 as foo;"] {:as-rows? true})]
+        (is (= [2] (first result))))))
 
   (testing "Low level query result"
     (with-open [conn    (make-connection h2-dbspec3)
