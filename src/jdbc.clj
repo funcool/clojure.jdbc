@@ -459,8 +459,8 @@
 
      (let [rs (.executeQuery stmt)]
        (if (= fetch-size 0)
-         (QueryResult. stmt rs false (result-set->vector rs))
-         (QueryResult. stmt rs true (result-set->lazyseq rs)))))))
+         (QueryResult. stmt rs false (result-set->vector rs options))
+         (QueryResult. stmt rs true (result-set->lazyseq rs options)))))))
 
 (defn query
   "Perform a simple sql query and return a evaluated result as vector."
