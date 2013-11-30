@@ -442,7 +442,7 @@
   "
   ([conn sql-with-params] (make-query conn sql-with-params {}))
   ([conn sql-with-params {:keys [fetch-size] :or {fetch-size 0} :as options}]
-   {:pre [(vector? sql-with-params)
+   {:pre [(or (vector? sql-with-params) (string? sql-with-params))
           (instance? Connection conn)]}
    (let [connection (:connection conn)
          stmt       (cond
@@ -464,11 +464,12 @@
 
 (defn query
   "Perform a simple sql query and return a evaluated result as vector."
-  [conn sqlvec]
-  {:pre [(vector? sqlvec)
-         (instance? Connection conn)]}
-  (with-open [result (make-query sqlvec {:fetch-size 0})]
-    (:data result)))
+  ([conn sqlvec] (query conn sqlvec {}))
+  ([conn sqlvec options]
+   {:pre [(or (vector? sqlvec) (string? sqlvec))
+          (instance? Connection conn)]}
+   (with-open [result (make-query conn sqlvec (assoc options :fetch-size 0))]
+     (:data result))))
 
 (defmacro with-query
   "Idiomatic dsl macro for `query` function that handles well queries
