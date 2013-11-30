@@ -372,13 +372,15 @@
   Optional named parameters:
     :identifiers -> function that is applied for column name
                     when as-arrays? is false
-    :as-arrays?  -> by default this function return a lazy seq of
-                    records as map, but in certain circumstances you
-                    need results as array. With this keywork parameter
-                    you can set result as array instead map record.
+    :as-rows?    -> by default this function return a lazy seq of
+                    records (map), but in certain circumstances you
+                    need results as a lazy-seq of vectors. With this keywork
+                    parameter you can enable this behavior and return a lazy-seq
+                    of vectors instead of records (maps).
   "
-  [rs & {:keys [identifiers as-arrays?]
-         :or {identifiers str/lower-case as-arrays? false}}]
+  [rs & [{:keys [identifiers as-rows?]
+         :or {identifiers str/lower-case as-rows? false}
+         :as options}]]
 
   (let [metadata    (.getMetaData rs)
         idseq       (range 1 (inc (.getColumnCount metadata)))
@@ -392,7 +394,7 @@
         rows        (fn thisfn []
                       (when (.next rs)
                         (cons (vec (values)) (lazy-seq (thisfn)))))]
-    (if as-arrays? (rows) (records))))
+    (if as-rows? (rows) (records))))
 
 (defn result-set->vector
   "Function that evaluates a result into one clojure persistent
