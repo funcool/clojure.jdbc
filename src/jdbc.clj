@@ -402,9 +402,11 @@
   [& args]
   (vec (apply result-set->lazyseq args)))
 
-
 (defn make-query-from-statement
-  "Given a statement instance, execute a query and return a result."
+  "Given a statement instance, execute a query and return a result.
+
+  WARNING: untested
+  "
   [conn statement]
   {:pre [(and (not @(:in-transaction conn)) (not= (.getFetchSize statement) 0))]}
   ;; (when (and (not @(:in-transaction conn)) (not= (.getFetchSize statement) 0))
