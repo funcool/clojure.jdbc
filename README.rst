@@ -10,13 +10,13 @@ Leiningen
 
 .. code-block:: clojure
 
-    [be.niwi/clj.jdbc "0.1.0-beta2"]
+    [be.niwi/clj.jdbc "0.1.0-beta3"]
 
 Gradle
 
 .. code-block:: groovy
 
-    compile "be.niwi:clj.jdbc:0.1.0-beta2"
+    compile "be.niwi:clj.jdbc:0.1.0-beta3"
 
 Maven
 
@@ -25,7 +25,7 @@ Maven
     <dependency>
       <groupId>be.niwi</groupId>
       <artifactId>clj.jdbc</artifactId>
-      <version>0.1.0-beta2</version>
+      <version>0.1.0-beta3</version>
     </dependency>
 
 
@@ -47,6 +47,14 @@ Todo:
 
 Changelog
 ---------
+
+Version 0.1-beta3
+~~~~~~~~~~~~~~~~~
+
+- Minor code cleaning and function name consistency fixes.
+- Expose more private functions as public.
+- Fix wrong preconditions and some bugs introduced in previos version.
+- Add more tests.
 
 Version 0.1-beta2
 ~~~~~~~~~~~~~~~~~
