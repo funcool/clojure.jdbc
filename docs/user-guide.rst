@@ -34,7 +34,9 @@ This is a default aspect of one dbspec definition:
 
 Description of the parameters:
 
-- ``:classname`` This is a class location of JDBC driver. Each driver has one; in this example it is a path to a Postgresql JDBC driver.  This parameter can be omited;  in that case it is automatically resolved from a predefined list using ``:subprotocol``.
+- ``:classname`` This is a class location of JDBC driver. Each driver has one;
+  in this example it is a path to a Postgresql JDBC driver.  This parameter can be omited;
+  in that case it is automatically resolved from a predefined list using ``:subprotocol``.
 - ``:user`` and ``:password`` can be ommited if they are empty.
 
 dbspec has other formats which are ultimately parsed to the previously explained format.
@@ -64,7 +66,6 @@ used, for example). The second way is a higher level interface:
 ``with-connection`` creates a context in which the connection is available and,
 at the end of execution of the code within the context, the connection is
 closed automatically.
-
 
 .. note::
 
@@ -155,8 +156,8 @@ Make queries
 ============
 
 As usual, clj.jdbc offers two ways to send queries to a database. But in this
-section only will be explained the basic and the most usual way to make queries:
-using a ``query`` function.
+section only will be explained the basic and the most usual way to make queries
+using a ``query`` function:
 
 
 .. code-block:: clojure
@@ -165,6 +166,7 @@ using a ``query`` function.
           result (query sql)]
       (doseq [row results]
         (println row))))
+
 
 ``query`` function executes a query and returns a evaluated result as vector
 of records.
@@ -203,10 +205,13 @@ Or, alternatively, using the ``call-in-transaction`` function:
 
     (call-in-transaction conn do-things)
 
-**clj.jdbc** supports subtransactions well. As an example, if one of the
-functions used in the previous examples itself wrapped some code in a
-transaction block, clj.jdbc would automatically wrap it in one subtransaction
-(savepoint), making all the code wrapped in a transaction truly atomic.
+.. note::
+
+    **clj.jdbc** handles properly a subtransactions. As example: if one of
+    the functions used in previous example also wraps their body in a transaction
+    block, clj.jdbc detects it as nested transaction and switch to savepoints,
+    instead of put all statements in one big transaction. So making all code wrapped
+    in transaction block truly atomic.
 
 
 Isolation Level
