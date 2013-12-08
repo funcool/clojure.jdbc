@@ -3034,14 +3034,14 @@ net.brehaut.ClojureTools = (function (SH) {
     build_tree: build_tree
   };
 })(SyntaxHighlighter);
-</script><title>be.niwi/clj.jdbc -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name">be.niwi/clj.jdbc</h1><h2 class="project-version">0.1.0-beta2</h2><br /><p>Alternative implementation of jdbc wrapper for clojure.</p>
+</script><title>be.niwi/clj.jdbc -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name">be.niwi/clj.jdbc</h1><h2 class="project-version">0.1.0-beta3</h2><br /><p>Alternative implementation of jdbc wrapper for clojure.</p>
 
 <p>For this momment, the official wrapper <code>clojure.jdbc</code> has very unclear
 api and it doing a lot of implicit things such as connection management.</p>
 
 <p>This library intends make more simple and clear api to jdbc than the
 official library.</p>
-</div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">org.clojure/clojure</td><td class="dotted"><hr /></td><td class="dep-version">1.5.1</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#jdbc">jdbc</a></li><li><a href="#jdbc.pool">jdbc.pool</a></li><li><a href="#jdbc.pool.c3p0">jdbc.pool.c3p0</a></li><li><a href="#jdbc.sql">jdbc.sql</a></li><li><a href="#jdbc.types">jdbc.types</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#jdbc" name="jdbc"><h1 class="project-name">jdbc</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>Copyright 2013 Andrey Antukh <a href="&#x6d;&#97;&#x69;l&#116;&#111;&#58;&#110;&#105;&#119;&#105;&#64;n&#x69;&#x77;&#x69;&#x2e;&#98;&#x65;">n&#x69;&#x77;&#105;&#x40;&#x6e;&#105;&#119;&#x69;&#46;&#98;&#101;</a></p>
+</div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">org.clojure/clojure</td><td class="dotted"><hr /></td><td class="dep-version">1.5.1</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#jdbc">jdbc</a></li><li><a href="#jdbc.pool">jdbc.pool</a></li><li><a href="#jdbc.pool.c3p0">jdbc.pool.c3p0</a></li><li><a href="#jdbc.sql">jdbc.sql</a></li><li><a href="#jdbc.types">jdbc.types</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#jdbc" name="jdbc"><h1 class="project-name">jdbc</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>Copyright 2013 Andrey Antukh <a href="&#x6d;a&#x69;&#x6c;&#x74;&#111;&#58;&#x6e;&#x69;&#x77;&#x69;&#x40;&#x6e;i&#119;i&#x2e;&#98;&#x65;">n&#x69;&#119;&#105;@&#110;&#x69;&#119;i&#46;&#x62;&#101;</a></p>
 
 <p>Licensed under the Apache License, Version 2.0 (the "License")
 you may not use this file except in compliance with the License.
@@ -3084,8 +3084,10 @@ limitations under the License.</p>
   [level]
   {:pre [(keyword? level)
          (contains? isolation-level-map level)]}
-  (reset! *default-isolation-level* level))</pre></td></tr><tr><td class="docs"><p>Convert some dbspec options to java.utils.Properties instance.</p>
-</td><td class="codes"><pre class="brush: clojure">(defn- map-&gt;properties
+  (reset! *default-isolation-level* level))</pre></td></tr><tr><td class="docs"><p>Convert hash-map to java.utils.Properties instance. This method is used
+  internally for convert dbspec map to properties instance, but it can
+  be usefull for other purposes.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn map-&gt;properties
   [data]
   (let [p (Properties.)]
     (dorun (map (fn [[k v]] (.setProperty p (name k) (str v))) (seq data)))
@@ -3110,11 +3112,70 @@ limitations under the License.</p>
       :subprotocol scheme}
       (when userinfo
         (let [[user password] (str/split userinfo #&quot;:&quot;)]
-          {:user user :password password})))))</pre></td></tr><tr><td class="docs"><p>Execute a statement and return a result of update counts.</p>
-</td><td class="codes"><pre class="brush: clojure">(defn- execute-statement
+          {:user user :password password})))))</pre></td></tr><tr><td class="docs"><p>Function that wraps result in a lazy seq. This function
+  is part of public api but can not be used directly (you should pass
+  this function as parameter to <code>query</code> function).</p>
+
+<p>  Required parameters:
+    rs: ResultSet instance.</p>
+
+<p>  Optional named parameters:
+    :identifiers -> function that is applied for column name
+                    when as-arrays? is false
+    :as-rows?    -> by default this function return a lazy seq of
+                    records (map), but in certain circumstances you
+                    need results as a lazy-seq of vectors. With this keywork
+                    parameter you can enable this behavior and return a lazy-seq
+                    of vectors instead of records (maps).</p>
+</td><td class="codes"><pre class="brush: clojure">(defn result-set-&gt;lazyseq
+  [rs &amp; [{:keys [identifiers as-rows?]
+         :or {identifiers str/lower-case as-rows? false}
+         :as options}]]
+  (let [metadata    (.getMetaData rs)
+        idseq       (range 1 (inc (.getColumnCount metadata)))
+        keyseq      (-&gt;&gt; idseq
+                         (map (fn [i] (.getColumnLabel metadata i)))
+                         (map (comp keyword identifiers)))
+        values      (fn [] (map #(.getObject rs %) idseq))
+        records     (fn thisfn []
+                      (when (.next rs)
+                        (cons (zipmap keyseq (values)) (lazy-seq (thisfn)))))
+        rows        (fn thisfn []
+                      (when (.next rs)
+                        (cons (vec (values)) (lazy-seq (thisfn)))))]
+    (if as-rows? (rows) (records))))</pre></td></tr><tr><td class="docs"><p>Function that evaluates a result into one clojure persistent
+  vector. Accept same parameters as <code>result-set-&gt;lazyseq</code>.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn result-set-&gt;vector
+  [&amp; args]
+  (vec (apply result-set-&gt;lazyseq args)))</pre></td></tr><tr><td class="docs"><p>Given a plain statement instance, execute it throught its asociated
+  connection and return a raw seq of results.</p>
+
+<p>  This is a low level interface and should be used with precaution. This
+  function is used internally for execue raw sql such as CREATE/DROP
+  table.</p>
+
+<p>  Status: Alpha - Implementation and name of this method can change on
+  following versions.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn execute-statement
   [stmt]
   {:pre [(instance? Statement stmt)]}
-  (seq (.executeBatch stmt)))</pre></td></tr><tr><td class="docs">
+  (seq (.executeBatch stmt)))</pre></td></tr><tr><td class="docs"><p>Given a plain or prepared statement instance, return
+  a QueryResult instance.</p>
+
+<p>  This is a low level interface and should be used with precaution.</p>
+
+<p>  WARNING: untested</p>
+
+<p>  Status: Alpha - Implementation and name of this method can change on
+  following versions.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn execute-statement-&gt;query-result
+  ([conn statement] (execute-statement-&gt;query-result conn statement {}))
+  ([conn statement options]
+   (let [fetch-size  (.getFetchSize statement)
+         rs          (.executeQuery statement)]
+     (if (= fetch-size 0)
+       (QueryResult. statement rs false (result-set-&gt;vector rs))
+       (QueryResult. statement rs true (result-set-&gt;lazyseq rs))))))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(def ^:private resultset-constants
    ;; Type
   {:forward-only ResultSet/TYPE_FORWARD_ONLY
@@ -3125,52 +3186,21 @@ limitations under the License.</p>
    :close ResultSet/CLOSE_CURSORS_AT_COMMIT
    ;; Concurrency
    :read-only ResultSet/CONCUR_READ_ONLY
-   :updatable ResultSet/CONCUR_UPDATABLE})</pre></td></tr><tr><td class="docs"><p>Given connection and parametrized query as vector with first
-  argument as string and other arguments as params, return a
-  prepared statement.</p>
-
-<p>  Example:</p>
-
-<pre><code>(let [stmt (make-prepared-statement conn ["SELECT foo FROM bar WHERE id = ?" 1])]
-  (println (instance? java.sql.PreparedStatement stmt)))
-;; -&gt; true
-</code></pre>
-</td><td class="codes"><pre class="brush: clojure">(defn make-prepared-statement
-  ([conn sqlvec] (make-prepared-statement conn sqlvec {}))
-  ([conn sqlvec {:keys [result-type result-concurency fetch-size max-rows holdability]
-                 :or {result-type :forward-only result-concurency :read-only}
-                 :as options}]
-   {:pre [(instance? Connection conn) (vector? sqlvec)]}
-   (let [connection (:connection conn)
-         sql        (first sqlvec)
-         params     (rest sqlvec)
-         stmt       (if holdability
-                      (.prepareStatement connection sql
-                                         (result-type resultset-constants)
-                                         (result-concurency resultset-constants)
-                                         (holdability resultset-constants))
-                      (.prepareStatement connection sql
-                                         (result-type resultset-constants)
-                                         (result-concurency resultset-constants)))]
-     (when fetch-size (.setFetchSize stmt fetch-size))
-     (when max-rows (.setMaxRows max-rows))
-     (when (seq params)
-       (dorun (map-indexed #(.setObject stmt (inc %1) %2) params)))
-     stmt)))</pre></td></tr><tr><td class="docs"><p>Wraps and handles a isolation level for connection.</p>
+   :updatable ResultSet/CONCUR_UPDATABLE})</pre></td></tr><tr><td class="docs"><p>Wraps and handles a isolation level for connection.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn- wrap-isolation-level
   [dbspec conn]
-  (let [connection  (:connection conn)
-        dbspec-il   (:isolation-level dbspec)
-        default-il  (deref *default-isolation-level*)]
-    (if dbspec-il
-      (do
-        (when (dbspec-il isolation-level-map)
-          (.setTransactionIsolation connection (dbspec-il isolation-level-map)))
-        (assoc conn :isolation-level dbspec-il))
-      (do
-        (when (default-il isolation-level-map)
-          (.setTransactionIsolation connection (default-il isolation-level-map)))
-        (assoc conn :isolation-level default-il)))))</pre></td></tr><tr><td class="docs"><p>Given a url and optionally params, returns a raw jdbc connection.</p>
+  (let [raw-connection          (:connection conn)
+        dbspec-isolation-level  (:isolation-level dbspec)
+        default-isolation-level (deref *default-isolation-level*)
+        wrapped-connection      (atom (assoc conn :isolation-level :none))]
+    (if dbspec-isolation-level
+      (when-let [level (get isolation-level-map dbspec-isolation-level)]
+        (.setTransactionIsolation raw-connection level)
+        (swap! wrapped-connection assoc :isolation-level dbspec-isolation-level))
+      (when-let [level (get isolation-level-map default-isolation-level)]
+        (.setTransactionIsolation raw-connection level)
+        (swap! wrapped-connection assoc :isolation-level default-isolation-level)))
+    (deref wrapped-connection)))</pre></td></tr><tr><td class="docs"><p>Given a url and optionally params, returns a raw jdbc connection.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn- make-raw-connection-from-jdbcurl
   ([url opts] (DriverManager/getConnection url (map-&gt;properties opts)))
   ([url] (DriverManager/getConnection url)))</pre></td></tr><tr><td class="docs"><p>Given a plain dbspec, converts it to a valid jdbc url with
@@ -3333,11 +3363,11 @@ limitations under the License.</p>
     (with-open [stmt (.createStatement connection)]
       (dorun (map (fn [command]
                     (.addBatch stmt command)) commands))
-      (execute-statement stmt))))</pre></td></tr><tr><td class="docs"><p>Same as <code>execute!</code> function, but works with prepared statements
-  instead with raw sql.</p>
+      (execute-statement stmt))))</pre></td></tr><tr><td class="docs"><p>Same as <code>execute!</code> function, but works with PreparedStatement
+  instead with plain Statement.</p>
 
 <p>  With this you can execute multiple operations throught
-  one call.</p>
+  one call, such as bulk update.</p>
 
 <p>  Example:</p>
 
@@ -3359,50 +3389,44 @@ This code should send this sql sentences:
       (doseq [param-group param-groups]
         (dorun (map-indexed #(.setObject stmt (inc %1) %2) param-group))
         (.addBatch stmt))
-      (execute-statement stmt))))</pre></td></tr><tr><td class="docs"><p>Function that wraps result in a lazy seq. This function
-  is part of public api but can not be used directly (you should pass
-  this function as parameter to <code>query</code> function).</p>
+      (execute-statement stmt))))</pre></td></tr><tr><td class="docs"><p>Given connection and parametrized query as vector with first
+  argument as string and other arguments as params, return a
+  prepared statement.</p>
 
-<p>  Required parameters:
-    rs: ResultSet instance.</p>
+<p>  Example:</p>
 
-<p>  Optional named parameters:
-    :identifiers -> function that is applied for column name
-                    when as-arrays? is false
-    :as-arrays?  -> by default this function return a lazy seq of
-                    records as map, but in certain circumstances you
-                    need results as array. With this keywork parameter
-                    you can set result as array instead map record.</p>
-</td><td class="codes"><pre class="brush: clojure">(defn result-set-&gt;lazyseq
-  [rs &amp; {:keys [identifiers as-arrays?]
-         :or {identifiers str/lower-case as-arrays? false}}]
-  (let [metadata    (.getMetaData rs)
-        idseq       (range 1 (inc (.getColumnCount metadata)))
-        keyseq      (-&gt;&gt; idseq
-                         (map (fn [i] (.getColumnLabel metadata i)))
-                         (map (comp keyword identifiers)))
-        values      (fn [] (map #(.getObject rs %) idseq))
-        records     (fn thisfn []
-                      (when (.next rs)
-                        (cons (zipmap keyseq (values)) (lazy-seq (thisfn)))))
-        rows        (fn thisfn []
-                      (when (.next rs)
-                        (cons (vec (values)) (lazy-seq (thisfn)))))]
-    (if as-arrays? (rows) (records))))</pre></td></tr><tr><td class="docs"><p>Function that evaluates a result into one clojure persistent
-  vector. Accept same parameters as <code>result-set-&gt;lazyseq</code>.</p>
-</td><td class="codes"><pre class="brush: clojure">(defn result-set-&gt;vector
-  [&amp; args]
-  (vec (apply result-set-&gt;lazyseq args)))</pre></td></tr><tr><td class="docs"><p>Given a statement instance, execute a query and return a result.</p>
-</td><td class="codes"><pre class="brush: clojure">(defn make-query-from-statement
-  [conn statement]
-  {:pre [(and (not @(:in-transaction conn)) (not= (.getFetchSize statement) 0))]}
-  ;; (when (and (not @(:in-transaction conn)) (not= (.getFetchSize statement) 0))
-  ;;   (throw (RuntimeException. &quot;Can not use cursor mode outside one transaction.&quot;)))
-  (let [fetch-size  (.getFetchSize statement)
-        rs          (.executeQuery statement)]
-    (if (= fetch-size 0)
-      (QueryResult. statement rs false (result-set-&gt;vector rs))
-      (QueryResult. statement rs true (result-set-&gt;lazyseq rs)))))</pre></td></tr><tr><td class="docs"><p>Given a connection and paramatrized sql, execute a query and
+<pre><code>(let [stmt (make-prepared-statement conn ["SELECT foo FROM bar WHERE id = ?" 1])]
+  (println (instance? java.sql.PreparedStatement stmt)))
+;; -&gt; true
+</code></pre>
+</td><td class="codes"><pre class="brush: clojure">(defn make-prepared-statement
+  ([conn sqlvec] (make-prepared-statement conn sqlvec {}))
+  ([conn sqlvec {:keys [result-type result-concurency fetch-size max-rows holdability lazy]
+                 :or {result-type :forward-only result-concurency :read-only fetch-size *default-fetch-size*}
+                 :as options}]
+   {:pre [(instance? Connection conn) (vector? sqlvec)]}
+   (let [connection (:connection conn)
+         sql        (first sqlvec)
+         params     (rest sqlvec)
+         stmt       (if holdability
+                      (.prepareStatement connection sql
+                                         (result-type resultset-constants)
+                                         (result-concurency resultset-constants)
+                                         (holdability resultset-constants))
+                      (.prepareStatement connection sql
+                                         (result-type resultset-constants)
+                                         (result-concurency resultset-constants)))]
+     ;; Lazy resultset works with database cursors ant them can not be used
+     ;; without one transaction
+     (when (and (not @(:in-transaction conn)) lazy)
+       (throw (RuntimeException. &quot;Can not use cursor resultset without transaction&quot;)))
+     ;; Overwrite default jdbc driver fetch-size when user
+     ;; wants lazy result set.
+     (when lazy (.setFetchSize stmt fetch-size))
+     (when max-rows (.setMaxRows max-rows))
+     (when (seq params)
+       (dorun (map-indexed #(.setObject stmt (inc %1) %2) params)))
+     stmt)))</pre></td></tr><tr><td class="docs"><p>Given a connection and paramatrized sql, execute a query and
   return a instance of QueryResult that works as stantard clojure
   map but implements a closable interface.</p>
 
@@ -3428,8 +3452,8 @@ that returns directly a evaluated result.</p></li>
 </ul>
 </td><td class="codes"><pre class="brush: clojure">(defn make-query
   ([conn sql-with-params] (make-query conn sql-with-params {}))
-  ([conn sql-with-params {:keys [fetch-size] :or {fetch-size 0} :as options}]
-   {:pre [(vector? sql-with-params)
+  ([conn sql-with-params {:keys [fetch-size lazy] :or {lazy false} :as options}]
+   {:pre [(or (vector? sql-with-params) (string? sql-with-params))
           (instance? Connection conn)]}
    (let [connection (:connection conn)
          stmt       (cond
@@ -3439,33 +3463,35 @@ that returns directly a evaluated result.</p></li>
                       (make-prepared-statement conn [sql-with-params] options)
                       :else
                       (throw (IllegalArgumentException. &quot;Invalid arguments&quot;)))]
-     (when (and (not @(:in-transaction conn)) (not= fetch-size 0))
-       (throw (RuntimeException. &quot;Can not use cursor resultset without transaction&quot;)))
      (let [rs (.executeQuery stmt)]
-       (if (= fetch-size 0)
-         (QueryResult. stmt rs false (result-set-&gt;vector rs))
-         (QueryResult. stmt rs true (result-set-&gt;lazyseq rs)))))))</pre></td></tr><tr><td class="docs"><p>Perform a simple sql query and return a evaluated result as vector.</p>
+       (if (not lazy)
+         (QueryResult. stmt rs false (result-set-&gt;vector rs options))
+         (QueryResult. stmt rs true (result-set-&gt;lazyseq rs options)))))))</pre></td></tr><tr><td class="docs"><p>Perform a simple sql query and return a evaluated result as vector.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn query
-  [conn sqlvec]
-  {:pre [(vector? sqlvec)
-         (instance? Connection conn)]}
-  (with-open [result (make-query sqlvec {:fetch-size 0})]
-    (:data result)))</pre></td></tr><tr><td class="docs"><p>Idiomatic dsl macro for <code>query</code> function that handles well queries
+  ([conn sqlvec] (query conn sqlvec {}))
+  ([conn sqlvec options]
+   {:pre [(or (vector? sqlvec) (string? sqlvec))
+          (instance? Connection conn)]}
+   (with-open [result (make-query conn sqlvec (assoc options :lazy false))]
+     (:data result))))</pre></td></tr><tr><td class="docs"><p>Idiomatic dsl macro for <code>query</code> function that handles well queries
   what returns a huge amount of results.</p>
+
+<p>  This method ensueres a query in one implicit transaction or
+  subtransaction.</p>
 
 <p>  Example:</p>
 
 <pre><code>(with-query conn results
-  ['SELECT name FROM people WHERE id = ?' [1]]
+  ["SELECT name FROM people WHERE id = ?" 1]
   (doseq [row results]
     (println row)))
 </code></pre>
 </td><td class="codes"><pre class="brush: clojure">(defmacro with-query
   [conn bindname sql-with-params &amp; body]
   `(with-transaction ~conn
-     (with-open [rs# (make-query ~conn ~sql-with-params {:fetch-size *default-fetch-size*})]
+     (with-open [rs# (make-query ~conn ~sql-with-params {:lazy true})]
        (let [~bindname (:data rs#)]
-         ~@body))))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#jdbc.pool" name="jdbc.pool"><h1 class="project-name">jdbc.pool</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>Copyright 2013 Andrey Antukh <a href="&#x6d;&#97;&#x69;&#x6c;&#x74;&#x6f;&#58;&#110;&#x69;&#x77;&#x69;&#64;&#x6e;&#x69;wi&#x2e;&#x62;&#101;">&#110;i&#x77;&#105;@&#x6e;&#105;&#119;&#105;&#x2e;b&#101;</a></p>
+         ~@body))))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#jdbc.pool" name="jdbc.pool"><h1 class="project-name">jdbc.pool</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>Copyright 2013 Andrey Antukh <a href="&#109;&#x61;&#105;&#x6c;&#x74;&#x6f;&#x3a;&#110;&#105;&#x77;&#x69;&#64;&#110;&#105;w&#x69;.&#98;&#101;">n&#105;&#119;&#105;@&#x6e;&#x69;&#119;&#105;&#x2e;&#x62;&#x65;</a></p>
 
 <p>Licensed under the Apache License, Version 2.0 (the "License")
 you may not use this file except in compliance with the License.
@@ -3511,7 +3537,7 @@ limitations under the License.</p>
   function should be implemented in concrete connection
   pool namespaces</p>
 </td><td class="codes"><pre class="brush: clojure">(defn make-datasource-spec
-  [dbspec] dbspec)</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#jdbc.pool.c3p0" name="jdbc.pool.c3p0"><h1 class="project-name">jdbc.pool.c3p0</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>Copyright 2013 Andrey Antukh <a href="&#x6d;&#x61;&#x69;&#108;&#116;&#x6f;&#58;&#110;&#105;&#119;i&#64;&#110;&#x69;&#119;&#x69;&#x2e;&#98;&#101;">&#x6e;&#105;&#119;&#105;@n&#105;&#119;&#x69;&#x2e;&#98;&#101;</a></p>
+  [dbspec] dbspec)</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#jdbc.pool.c3p0" name="jdbc.pool.c3p0"><h1 class="project-name">jdbc.pool.c3p0</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>Copyright 2013 Andrey Antukh <a href="&#109;&#x61;&#x69;&#x6c;&#116;&#111;&#x3a;&#x6e;&#105;&#x77;&#x69;&#x40;&#x6e;&#x69;w&#x69;&#46;&#98;&#101;">&#x6e;&#105;&#119;&#105;&#x40;n&#x69;&#x77;&#x69;&#46;&#98;&#101;</a></p>
 
 <p>Licensed under the Apache License, Version 2.0 (the "License")
 you may not use this file except in compliance with the License.
@@ -3552,7 +3578,7 @@ limitations under the License.</p>
                    (.setIdleConnectionTestPeriod (:idle-connection-test-period normalized 0))
                    (.setTestConnectionOnCheckin (:test-connection-on-checkin normalized false))
                    (.setTestConnectionOnCheckout (:test-connection-on-checkout normalized false))
-                   (.setPreferredTestQuery (:test-connection-query normalized nil)))}))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#jdbc.sql" name="jdbc.sql"><h1 class="project-name">jdbc.sql</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>Copyright 2013 Andrey Antukh <a href="&#x6d;&#97;&#x69;&#108;&#116;&#x6f;&#58;&#110;&#105;&#119;&#105;&#64;&#x6e;&#105;&#119;&#x69;&#x2e;&#x62;e">&#110;&#105;&#x77;&#x69;&#64;n&#105;&#119;&#x69;&#x2e;&#x62;&#x65;</a></p>
+                   (.setPreferredTestQuery (:test-connection-query normalized nil)))}))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#jdbc.sql" name="jdbc.sql"><h1 class="project-name">jdbc.sql</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>Copyright 2013 Andrey Antukh <a href="&#x6d;&#97;&#105;&#108;&#x74;&#x6f;&#x3a;&#110;&#105;&#119;i&#x40;&#x6e;&#x69;&#x77;&#105;&#x2e;b&#x65;">&#110;&#x69;&#119;&#105;@&#x6e;&#105;&#119;&#x69;&#46;&#x62;&#x65;</a></p>
 
 <p>Licensed under the Apache License, Version 2.0 (the "License")
 you may not use this file except in compliance with the License.
@@ -3596,7 +3622,7 @@ This should return:
                               (str/join &quot;,&quot; (map name columns))
                               (str/join &quot;,&quot; (repeat (count columns) &quot;?&quot;)))]
     {:stmt-sql final-sql
-     :param-groups (doall (map order-values records))}))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#jdbc.types" name="jdbc.types"><h1 class="project-name">jdbc.types</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>Copyright 2013 Andrey Antukh <a href="&#x6d;a&#105;&#108;t&#111;&#x3a;&#x6e;i&#x77;&#x69;&#64;&#x6e;&#105;&#119;&#105;&#x2e;&#x62;&#x65;">&#x6e;&#x69;&#119;&#x69;&#x40;&#x6e;&#105;w&#105;&#x2e;&#98;&#101;</a></p>
+     :param-groups (doall (map order-values records))}))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#jdbc.types" name="jdbc.types"><h1 class="project-name">jdbc.types</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>Copyright 2013 Andrey Antukh <a href="&#109;a&#105;&#x6c;&#116;o&#58;&#110;&#x69;&#x77;&#105;&#64;&#110;&#x69;&#x77;&#105;&#46;&#x62;&#x65;">&#x6e;&#105;&#x77;i&#64;&#110;&#105;&#x77;&#105;&#46;&#x62;&#101;</a></p>
 
 <p>Licensed under the Apache License, Version 2.0 (the "License")
 you may not use this file except in compliance with the License.
