@@ -120,6 +120,20 @@
                                    ["foo", 1]  ["bar", 2])]
         (is (= res (seq [1 1])))))))
 
+(deftest db-commands-bytes
+  (testing "Insert bytes"
+    (let [buffer       (byte-array (map byte (range 0 10)))
+          inputStream  (java.io.ByteArrayInputStream. buffer)
+          sql          "CREATE TABLE foo (id integer, data bytea);"]
+      (with-connection h2-dbspec3 conn
+        (execute! conn sql)
+        (let [res (execute-prepared! conn "INSERT INTO foo (id, data) VALUES (?, ?);" [1 inputStream])]
+          (is (= res '(1))))
+
+        (let [res (query conn "SELECT * FROM foo")
+              res (first res)]
+          (is (instance? (Class/forName "[B") (:data res)))
+          (is (= (get (:data res) 2) 2)))))))
 
 (deftest db-pool
   (testing "C3P0 connection pool testing."
