@@ -241,12 +241,10 @@
               (make-raw-connection-from-dbspec (uri->dbspec dbspec))
             :else
               (throw (IllegalArgumentException. "Invalid dbspec format")))
-        vendor (.getDatabaseProductName (.getMetaData c))]
-    (wrap-isolation-level dbspec (Connection.
-                                    c                ;; :connection
-                                    (atom false)     ;; :in-transaction
-                                    (atom false)     ;; :rollback-only
-                                    vendor))))
+        metadata (atom {:vendor (.getDatabaseProductName (.getMetaData c))
+                        :in-transaction false
+                        :rollback-only false})]
+    (wrap-isolation-level dbspec (Connection. c metadata))))
 
 (defmacro with-connection
   "Given database connection paramers (dbspec), creates
@@ -281,20 +279,23 @@
   "
   [conn]
   {:pre [(instance? Connection conn)]}
-  (reset! (:rollback-only conn) true))
+  (let [metadata (:metadata conn)]
+    (swap! metadata update-in :rollback-only (fn [_] true))))
 
 (defn unmark-rollback-only!
   "Revert flag setted by `mark-as-rollback-only!`."
   [conn]
   {:pre [(instance? Connection conn)]}
-  (reset! (:rollback-only conn) false))
+  (let [metadata (:metadata conn)]
+    (swap! metadata update-in :rollback-only (fn [_] false))))
 
 (defn is-rollback-only?
   "Check if a `:rollback-only` flag is set on the
   current connection."
   [conn]
   {:pre [(instance? Connection conn)]}
-  (deref (:rollback-only conn)))
+  (let [metadata (:metadata conn)]
+    (:rollback-only @metadata)))
 
 (defn call-in-transaction
   "Wrap function in one transaction. If current connection is already in
@@ -312,11 +313,12 @@
   "
   [conn func & {:keys [savepoints] :or {savepoints true} :as opts}]
   {:pre [(instance? Connection conn)]}
-  (when (and @(:in-transaction conn) (not savepoints))
+  (when (and (:in-transaction @(:metadata conn)) (not savepoints))
     (throw (RuntimeException. "Savepoints explicitly disabled.")))
   (let [connection      (:connection conn)
-        in-transaction  (:in-transaction conn)]
-    (if @in-transaction
+        metadata        (:metadata conn)
+        in-transaction  (:in-transaction @metadata)]
+    (if in-transaction
       (let [savepoint (.setSavepoint connection)]
         (try
           (apply func [conn])
@@ -325,19 +327,19 @@
             (.rollback connection savepoint)
             (throw t))))
       (let [current-autocommit (.getAutoCommit connection)
-            rollback-only      (:rollback-only conn)]
-        (swap! in-transaction not)
+            rollback-only      (:rollback-only @metadata)]
+        (swap! metadata update-in [:in-transaction] not)
         (.setAutoCommit connection false)
         (try
           (apply func [conn])
-          (if @rollback-only
+          (if rollback-only
             (.rollback connection)
             (.commit connection))
           (catch Throwable t
             (.rollback connection)
             (throw t))
           (finally
-            (swap! in-transaction not)
+            (swap! metadata update-in [:in-transaction] not)
             (.setAutoCommit connection current-autocommit)))))))
 
 (defmacro with-transaction
@@ -428,6 +430,7 @@
                  :as options}]
    {:pre [(instance? Connection conn) (vector? sqlvec)]}
    (let [connection (:connection conn)
+         metadata   (:metadata conn)
          sql        (first sqlvec)
          params     (rest sqlvec)
          stmt       (if holdability
@@ -440,7 +443,7 @@
                                          (result-concurency resultset-constants)))]
      ;; Lazy resultset works with database cursors ant them can not be used
      ;; without one transaction
-     (when (and (not @(:in-transaction conn)) lazy)
+     (when (and (not (:in-transaction @metadata)) lazy)
        (throw (RuntimeException. "Can not use cursor resultset without transaction")))
 
      ;; Overwrite default jdbc driver fetch-size when user
