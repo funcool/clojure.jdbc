@@ -82,6 +82,16 @@
         (let [[user password] (str/split userinfo #":")]
           {:user user :password password})))))
 
+(defprotocol ISQLType
+  (as-sql-type [_ conn] "Convert a value to jdbc compatible value"))
+
+(extend-protocol ISQLType
+  Object
+  (as-sql-type [this conn] this)
+
+  nil
+  (as-sql-type [this conn] nil))
+
 (defn result-set->lazyseq
   "Function that wraps result in a lazy seq. This function
   is part of public api but can not be used directly (you should pass
@@ -396,7 +406,7 @@
   (let [connection (:connection conn)]
     (with-open [stmt (.prepareStatement connection sql)]
       (doseq [param-group param-groups]
-        (dorun (map-indexed #(.setObject stmt (inc %1) %2) param-group))
+        (dorun (map-indexed #(.setObject stmt (inc %1) (as-sql-type %2 conn)) param-group))
         (.addBatch stmt))
       (execute-statement stmt))))
 
@@ -438,7 +448,7 @@
      (when lazy (.setFetchSize stmt fetch-size))
      (when max-rows (.setMaxRows max-rows))
      (when (seq params)
-       (dorun (map-indexed #(.setObject stmt (inc %1) %2) params)))
+       (dorun (map-indexed #(.setObject stmt (inc %1) (as-sql-type %2 conn)) params)))
      stmt)))
 
 (defn make-query
