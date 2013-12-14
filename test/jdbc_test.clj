@@ -129,6 +129,31 @@
         (is (instance? jdbc.types.Connection conn))
         (is (instance? java.sql.Connection (:connection conn)))))))
 
+(defrecord DummyTransactionStrategy []
+  ITransactionStrategy
+  (begin [_ conn opts] conn)
+  (rollback [_ conn opts] conn)
+  (commit [_ conn opts] conn))
+
+(deftest db-transaction-strategy
+  (let [sql1 "CREATE TABLE foo (name varchar(255), age integer);"
+        sql2 "INSERT INTO foo (name,age) VALUES (?, ?);"
+        sql3 "SELECT age FROM foo;"]
+    (testing "Test dummy transaction strategy"
+      (with-connection h2-dbspec3 conn
+        (with-transaction-strategy conn (DummyTransactionStrategy.)
+          (is (instance? DummyTransactionStrategy (:transaction-strategy conn)))
+          (execute! conn sql1)
+          (try
+            (with-transaction conn
+              (execute-prepared! conn sql2 ["foo", 1]  ["bar", 2])
+              (let [results (query conn sql3)]
+                (is (= (count results) 2))
+                (throw (RuntimeException. "Fooo"))))
+            (catch Exception e
+              (let [results (query conn sql3)]
+                (is (= (count results) 2))))))))))
+
 (deftest db-transactions
   (let [sql1 "CREATE TABLE foo (name varchar(255), age integer);"
         sql2 "INSERT INTO foo (name,age) VALUES (?, ?);"

@@ -343,7 +343,11 @@
   "
   [conn func & {:keys [savepoints strategy] :or {savepoints true} :as opts}]
   {:pre [(instance? Connection conn)]}
-  (let [transaction-strategy (if strategy strategy (DefaultTransactionStrategy.))]
+  (let [conn-tx-strategy     (:transaction-strategy conn)
+        transaction-strategy (cond
+                                strategy strategy
+                                conn-tx-strategy conn-tx-strategy
+                               :else (DefaultTransactionStrategy.))]
     (when (and (:in-transaction conn) (not savepoints))
       (throw (RuntimeException. "Savepoints explicitly disabled.")))
     (let [conn (begin transaction-strategy conn opts)]
@@ -356,6 +360,16 @@
         (catch Throwable t
           (rollback transaction-strategy conn opts)
           (throw t))))))
+
+(defmacro with-transaction-strategy
+  "Set some transaction strategy connection in the current context
+  scope.
+
+  This method not uses thread-local dynamic variables and
+  connection preserves a transaction strategy throught threads."
+  [conn strategy & body]
+  `(let [~conn (assoc ~conn :transaction-strategy ~strategy)]
+     ~@body))
 
 (defmacro with-transaction
   "Creates a context that evaluates in transaction (or nested transaction).
