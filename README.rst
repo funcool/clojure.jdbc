@@ -68,6 +68,9 @@ Version 0.1-beta4
   clear defined side-effect: commit/rollback/setAutoCommit operations. Rollback flag is more limited
   side-effect that only change state of connection for current transaction.
 
+- Simplify isolation level setting. Now only can set isolation level on dbspec or on creating connection.
+  All global state is removed.
+
 Version 0.1-beta3
 ~~~~~~~~~~~~~~~~~
 
