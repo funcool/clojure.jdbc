@@ -104,6 +104,8 @@ dbspec for create connection with ``with-connection`` macro or ``make-connection
 Transaction strategy
 --------------------
 
+.. versionadded:: 0.1-beta4
+
 clj.jdbc transaction management is very flexible and accepts user customizations.
 
 Default transaction management is implemented on ``DefaultTransactionStrategy`` record (that implements
@@ -147,6 +149,8 @@ This is a same example but using more low level interface:
 
 User defined types
 ------------------
+
+.. versionadded:: 0.1-beta4
 
 In some circumstances, you want pass custom types as sql parameters. clj.jdbc exposes ``ISQLType`` protocol
 that can be extended for your type.
