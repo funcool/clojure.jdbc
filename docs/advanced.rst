@@ -143,3 +143,33 @@ This is a same example but using more low level interface:
     (with-open [conn (-> (make-connection dbspec)
                          (wrap-transaction-strategy (DummyTransactionStrategy.)))]
       (do-some-thing conn))
+
+
+User defined types
+------------------
+
+In some circumstances, you want pass custom types as sql parameters. clj.jdbc exposes ``ISQLType`` protocol
+that can be extended for your type.
+
+This is a simple example of how to add support for string array:
+
+.. code-block:: clojure
+
+    (extend-protocol ISQLType
+      (class (into-array String []))
+      (as-sql-type [this conn]
+        (let [raw-conn (:connection conn)
+              array    (.createArrayOf raw-conn "text" this)]
+          array)))
+
+
+Now, you can pass a string arrays as jdbc parameters for database text arrays fields. This
+is a simple example of store a string array to postresql text array field:
+
+.. code-block:: clojure
+
+    (with-connection pg-dbspec conn
+      (execute! conn "CREATE TABLE arrayfoo (id integer, data text[]);")
+      (let [mystringarray (into-array String ["foo" "bar"])]
+        (execute-prepared! conn "INSERT INTO arrayfoo VALUES (?, ?);"
+                           [1, mystringarray])))
