@@ -156,6 +156,37 @@
         (is (instance? jdbc.types.Connection conn))
         (is (instance? java.sql.Connection (:connection conn)))))))
 
+(defrecord BasicTransactionStrategy []
+  ITransactionStrategy
+  (begin [_ conn opts]
+    (let [depth    (:depth-level conn)
+          raw-conn (:connection conn)]
+      (if depth
+        (assoc conn :depth-level (inc (:depth-level conn)))
+        (let [prev-autocommit-state (.getAutoCommit raw-conn)]
+          (.setAutoCommit raw-conn false)
+          (assoc conn :depth-level 0 :prev-autocommit-state prev-autocommit-state)))))
+
+  (rollback [_ conn opts]
+    (let [depth    (:depth-level conn)
+          raw-conn (:connection conn)]
+      (if (= depth 0)
+        (do
+          (.rollback raw-conn)
+          (.setAutoCommit raw-conn (:prev-autocommit-state conn))
+          (dissoc conn :depth-level :prev-autocommit-state))
+        conn)))
+
+  (commit [_ conn opts]
+    (let [depth    (:depth-level conn)
+          raw-conn (:connection conn)]
+      (if (= depth 0)
+        (do
+          (.commit raw-conn)
+          (.setAutoCommit raw-conn (:prev-autocommit-state conn))
+          (dissoc :depth-level :prev-autocommit-state))
+        conn))))
+
 (defrecord DummyTransactionStrategy []
   ITransactionStrategy
   (begin [_ conn opts] conn)
@@ -179,7 +210,25 @@
                 (throw (RuntimeException. "Fooo"))))
             (catch Exception e
               (let [results (query conn sql3)]
-                (is (= (count results) 2))))))))))
+                (is (= (count results) 2))))))))
+    (testing "Test simple transaction strategy"
+      (with-open [conn (-> (make-connection h2-dbspec3)
+                           (wrap-transaction-strategy (BasicTransactionStrategy.)))]
+        (is (instance? BasicTransactionStrategy (:transaction-strategy conn)))
+        (execute! conn sql1)
+        (try
+          (with-transaction conn
+            (execute-prepared! conn sql2 ["foo", 1]  ["bar", 2])
+            (is (= (:depth-level conn) 0))
+            (with-transaction conn
+              (is (= (:depth-level conn) 1))
+              (let [results (query conn sql3)]
+                (is (= (count results) 2))
+                (throw (RuntimeException. "Fooo")))))
+          (catch Exception e
+            (let [results (query conn sql3)]
+              (is (= (count results) 0)))))))))
+
 
 (deftest db-transactions
   (let [sql1 "CREATE TABLE foo (name varchar(255), age integer);"
