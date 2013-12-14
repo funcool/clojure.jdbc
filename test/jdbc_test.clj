@@ -31,25 +31,11 @@
       (is (instance? jdbc.types.Connection conn)))))
 
 (deftest db-isolation-level
-  (testing "Set/Unset isolation level"
-    (is (= (deref *default-isolation-level*) :none))
-    (set-default-isolation-level! :serializable)
-    (is (= (deref *default-isolation-level*) :serializable))
-    (set-default-isolation-level! :none)
-    (is (= (deref *default-isolation-level*) :none))
-    (is (thrown? AssertionError (set-default-isolation-level! :foobar))))
   (testing "Using dbspec with :isolation-level"
     (let [c1 (make-connection h2-dbspec4)
           c2 (make-connection h2-dbspec3)]
       (is (= (:isolation-level c1) :serializable))
-      (is (= (:isolation-level c2) :none))))
-  (testing "Create connection with modified default isolation level"
-    (set-default-isolation-level! :repeatable-read)
-    (let [c1 (make-connection h2-dbspec4)
-          c2 (make-connection h2-dbspec3)]
-      (is (= (:isolation-level c1) :serializable))
-      (is (= (:isolation-level c2) :repeatable-read)))
-    (set-default-isolation-level! :none)))
+      (is (= (:isolation-level c2) :none)))))
 
 (deftest db-commands
   (testing "Simple create table"

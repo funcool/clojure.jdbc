@@ -24,27 +24,11 @@
   (:refer-clojure :exclude [resultset-seq])
   (:gen-class))
 
-(def ^:dynamic *default-isolation-level* (atom :none))
-
 (def ^:private isolation-level-map
   {:none nil
    :read-commited (java.sql.Connection/TRANSACTION_READ_UNCOMMITTED)
    :repeatable-read (java.sql.Connection/TRANSACTION_REPEATABLE_READ)
    :serializable (java.sql.Connection/TRANSACTION_SERIALIZABLE)})
-
-(defn set-default-isolation-level!
-  "Set a default isolation level for each new
-  created connection.
-
-  By default no isolation level is set. You can obtain
-  a current default isolation level with:
-
-    (deref *default-isolation-level*)
-  "
-  [level]
-  {:pre [(keyword? level)
-         (contains? isolation-level-map level)]}
-  (reset! *default-isolation-level* level))
 
 (defn map->properties
   "Convert hash-map to java.utils.Properties instance. This method is used
@@ -225,19 +209,13 @@
 (defn- wrap-isolation-level
   "Wraps and handles a isolation level for connection."
   [dbspec conn]
-  (let [raw-connection          (:connection conn)
-        dbspec-isolation-level  (:isolation-level dbspec)
-        default-isolation-level (deref *default-isolation-level*)
-        wrapped-connection      (atom (assoc conn :isolation-level :none))]
-
-    (if dbspec-isolation-level
-      (when-let [level (get isolation-level-map dbspec-isolation-level)]
-        (.setTransactionIsolation raw-connection level)
-        (swap! wrapped-connection assoc :isolation-level dbspec-isolation-level))
-      (when-let [level (get isolation-level-map default-isolation-level)]
-        (.setTransactionIsolation raw-connection level)
-        (swap! wrapped-connection assoc :isolation-level default-isolation-level)))
-    (deref wrapped-connection)))
+  (let [raw-connection  (:connection conn)
+        isolation-level (:isolation-level dbspec)]
+    (if-let [isolation-level-value (get isolation-level-map isolation-level)]
+      (do
+        (.setTransactionIsolation raw-connection isolation-level-value)
+        (assoc conn :isolation-level isolation-level))
+      (assoc conn :isolation-level :none))))
 
 (defn- make-raw-connection-from-jdbcurl
   "Given a url and optionally params, returns a raw jdbc connection."
