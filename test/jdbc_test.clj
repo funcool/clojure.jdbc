@@ -17,6 +17,10 @@
                  :subname "mem:"
                  :isolation-level :serializable})
 
+(def pg-dbspec {:classname "org.postgresql.Driver"
+                :subprotocol "postgresql"
+                :subname "//localhost:5432/test"})
+
 (deftest db-specs
   (testing "Create connection with distinct dbspec"
     (let [c1 (make-connection h2-dbspec1)
@@ -120,6 +124,29 @@
               res (first res)]
           (is (instance? (Class/forName "[B") (:data res)))
           (is (= (get (:data res) 2) 2)))))))
+
+(extend-protocol ISQLType
+  (class (into-array String []))
+  (as-sql-type [this conn]
+    (let [raw-conn (:connection conn)
+          array    (.createArrayOf raw-conn "text" this)]
+      array)))
+
+(deftest db-commands-custom-types
+  (testing "Test use arrays"
+    (with-connection pg-dbspec conn
+      (with-transaction conn
+        (let [sql "CREATE TABLE arrayfoo (id integer, data text[]);"
+              dat (into-array String ["foo", "bar"])]
+          (execute! conn sql)
+          (let [res (execute-prepared! conn "INSERT INTO arrayfoo (id, data) VALUES (?, ?);" [1, dat])]
+            (is (= res '(1))))
+          (let [res (first (query conn "SELECT * FROM arrayfoo"))]
+
+            (let [rr (.getArray (:data res))]
+              (is (= (count rr) 2))
+              (is (= (get rr 0) "foo"))
+              (is (= (get rr 1) "bar")))))))))
 
 (deftest db-pool
   (testing "C3P0 connection pool testing."
