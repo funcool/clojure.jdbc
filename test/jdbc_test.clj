@@ -143,7 +143,6 @@
         (is (instance? jdbc.types.Connection conn))
         (is (instance? java.sql.Connection (:connection conn)))))))
 
-
 (deftest db-transactions
   (let [sql1 "CREATE TABLE foo (name varchar(255), age integer);"
         sql2 "INSERT INTO foo (name,age) VALUES (?, ?);"
@@ -162,6 +161,66 @@
           (catch Exception e
             (with-query conn results [sql3]
               (is (= (count results) 0)))))))
+
+    (testing "Immutability"
+      (with-connection h2-dbspec3 conn
+        (with-transaction conn
+          (is (:in-transaction conn))
+          (is (:rollback conn))
+          (is (false? @(:rollback conn)))
+          (is (nil? (:savepoint conn))))
+        (is (= (:in-transaction conn) nil))
+        (is (= (:rollback conn) nil))))
+
+    (testing "Set savepoint"
+      (with-connection h2-dbspec3 conn
+        (with-transaction conn
+          (is (:in-transaction conn))
+          (with-transaction conn
+            (is (not= (:savepoint conn) nil))))))
+
+    (testing "Set rollback 01"
+      (with-connection h2-dbspec3 conn
+        (execute! conn sql1)
+
+        (with-transaction conn
+          (execute-prepared! conn sql2 ["foo", 1]  ["bar", 2])
+          (is (false? @(:rollback conn)))
+
+          (with-transaction conn
+            (execute-prepared! conn sql2 ["foo", 1]  ["bar", 2])
+            (set-rollback! conn)
+
+            (is (true? @(:rollback conn)))
+
+            (let [results (query conn sql3)]
+              (is (= (count results) 4))))
+
+          (with-query conn results [sql3]
+            (is (= (count results) 2))))))
+
+    (testing "Set rollback 02"
+      (with-connection h2-dbspec3 conn
+        (execute! conn sql1)
+
+        (with-transaction conn
+          (set-rollback! conn)
+          (execute-prepared! conn sql2 ["foo", 1]  ["bar", 2])
+
+          (is (true? @(:rollback conn)))
+
+          (with-transaction conn
+            (is (false? @(:rollback conn)))
+
+            (execute-prepared! conn sql2 ["foo", 1]  ["bar", 2])
+            (let [results (query conn sql3)]
+              (is (= (count results) 4))))
+
+          (with-query conn results [sql3]
+            (is (= (count results) 2))))
+
+        (with-query conn results [sql3]
+            (is (= (count results) 0)))))
 
     (testing "Subtransactions"
       (with-connection h2-dbspec3 conn

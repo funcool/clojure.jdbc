@@ -92,6 +92,48 @@
   nil
   (as-sql-type [this conn] nil))
 
+(defprotocol ITransactionStrategy
+  (begin [_ conn opts] "Starts a transaction")
+  (rollback [_ conn opts] "Rollbacks a transaction")
+  (commit [_ conn opts] "Commits a transaction"))
+
+(defrecord DefaultTransactionStrategy []
+  ITransactionStrategy
+  (begin [_ conn opts]
+    (let [raw-connection (:connection conn)
+          conn           (assoc conn :rollback (atom false))]
+      (if (:in-transaction conn)
+        (assoc conn :savepoint (.setSavepoint raw-connection))
+        (let [prev-autocommit-state (.getAutoCommit raw-connection)]
+          (.setAutoCommit raw-connection false)
+          (assoc conn :prev-autocommit-state prev-autocommit-state
+                      :in-transaction true)))))
+  (rollback [_ conn opts]
+    (let [raw-connection        (:connection conn)
+          savepoint             (:savepoint conn)
+          prev-autocommit-state (:prev-autocommit-state conn)]
+      (if savepoint
+        (do
+          (.rollback raw-connection savepoint)
+          (dissoc conn :savepoint :rollback))
+        (do
+          (.rollback raw-connection)
+          (.setAutoCommit raw-connection prev-autocommit-state)
+          (dissoc conn :prev-autocommit-state :rollback)))))
+
+  (commit [_ conn opts]
+    (let [connection            (:connection conn)
+          savepoint             (:savepoint conn)
+          prev-autocommit-state (:prev-autocommit-state conn)]
+      (if savepoint
+        (do
+          (.releaseSavepoint connection savepoint)
+          (dissoc conn :savepoint :rollback))
+        (do
+          (.commit connection)
+          (.setAutoCommit connection prev-autocommit-state)
+          (dissoc conn :prev-autocommit-state :in-transaction :rollback))))))
+
 (defn result-set->lazyseq
   "Function that wraps result in a lazy seq. This function
   is part of public api but can not be used directly (you should pass
@@ -241,9 +283,7 @@
               (make-raw-connection-from-dbspec (uri->dbspec dbspec))
             :else
               (throw (IllegalArgumentException. "Invalid dbspec format")))
-        metadata (atom {:vendor (.getDatabaseProductName (.getMetaData c))
-                        :in-transaction false
-                        :rollback-only false})]
+        metadata {:vendor (.getDatabaseProductName (.getMetaData c))}]
     (wrap-isolation-level dbspec (Connection. c metadata))))
 
 (defmacro with-connection
@@ -264,83 +304,81 @@
   `(with-open [~bindname (make-connection ~dbspec)]
      ~@body))
 
-(defn mark-as-rollback-only!
-  "Mark a current connection with `:rollback-only` flag.
+(defn set-rollback!
+  "Mark a current connection for rollback.
 
-  If a code runs inside a transaction, this ensures that on
-  the successful end of execution of your code executes rollback
-  instead of commit.
+  It ensures that on the end of the current transaction
+  instead of commit changes, rollback them.
+
+  This function should be used inside of a transaction
+  block, otherwise this function does nothing.
 
   Example:
 
     (with-transaction conn
       (make-some-queries-without-changes conn)
-      (mark-as-rollback-only! conn))
+      (set-rollback! conn))
   "
   [conn]
   {:pre [(instance? Connection conn)]}
-  (let [metadata (:metadata conn)]
-    (swap! metadata update-in :rollback-only (fn [_] true))))
+  (when-let [rollback-flag (:rollback conn)]
+    (swap! rollback-flag (fn [_] true))))
 
-(defn unmark-rollback-only!
-  "Revert flag setted by `mark-as-rollback-only!`."
+(defn unset-rollback!
+  "Revert flag setted by `set-rollback!` function.
+
+  This function should be used inside of a transaction
+  block, otherwise this function does nothing."
   [conn]
   {:pre [(instance? Connection conn)]}
-  (let [metadata (:metadata conn)]
-    (swap! metadata update-in :rollback-only (fn [_] false))))
+  (when-let [rollback-flag (:rollback conn)]
+    (swap! rollback-flag (fn [_] false))))
 
-(defn is-rollback-only?
-  "Check if a `:rollback-only` flag is set on the
-  current connection."
+(defn is-rollback-set?
+  "Check if a current connection in one transaction
+  is marked for rollback.
+
+  This should be used in one transaction, in other case this
+  function always return false.
+  "
   [conn]
   {:pre [(instance? Connection conn)]}
-  (let [metadata (:metadata conn)]
-    (:rollback-only @metadata)))
+  (if-let [rollback-flag (:rollback conn)]
+    (deref rollback)
+    false))
 
 (defn call-in-transaction
-  "Wrap function in one transaction. If current connection is already in
+  "Wrap function in one transaction.
+
+  This function accepts as a parameter a transaction strategy. If no one
+  is specified, ``DefaultTransactionStrategy`` is used.
+
+  With ``DefaultTransactionStrategy``, if current connection is already in
   transaction, it uses truly nested transactions for properly handle it.
   The availability of this feature depends on database support for it.
 
-  Passed function will reive a connection as first parameter.
-
   Example:
 
-  (with-connection dbspec conn
-    (call-in-transaction conn (fn [conn] (execute! conn 'DROP TABLE foo;'))))
+    (with-connection dbspec conn
+      (call-in-transaction conn (fn [conn] (execute! conn 'DROP TABLE foo;'))))
 
   For more idiomatic code, you should use `with-transaction` macro.
   "
-  [conn func & {:keys [savepoints] :or {savepoints true} :as opts}]
+  [conn func & {:keys [savepoints strategy] :or {savepoints true} :as opts}]
   {:pre [(instance? Connection conn)]}
-  (when (and (:in-transaction @(:metadata conn)) (not savepoints))
-    (throw (RuntimeException. "Savepoints explicitly disabled.")))
-  (let [connection      (:connection conn)
-        metadata        (:metadata conn)
-        in-transaction  (:in-transaction @metadata)]
-    (if in-transaction
-      (let [savepoint (.setSavepoint connection)]
-        (try
-          (apply func [conn])
-          (.releaseSavepoint connection savepoint)
-          (catch Throwable t
-            (.rollback connection savepoint)
-            (throw t))))
-      (let [current-autocommit (.getAutoCommit connection)
-            rollback-only      (:rollback-only @metadata)]
-        (swap! metadata update-in [:in-transaction] not)
-        (.setAutoCommit connection false)
-        (try
-          (apply func [conn])
-          (if rollback-only
-            (.rollback connection)
-            (.commit connection))
-          (catch Throwable t
-            (.rollback connection)
-            (throw t))
-          (finally
-            (swap! metadata update-in [:in-transaction] not)
-            (.setAutoCommit connection current-autocommit)))))))
+  (let [transaction-strategy (if strategy strategy (DefaultTransactionStrategy.))]
+    (when (and (:in-transaction conn) (not savepoints))
+      (throw (RuntimeException. "Savepoints explicitly disabled.")))
+    (let [conn (begin transaction-strategy conn opts)]
+      (try
+        (let [returnvalue (func conn)]
+          (if (:rollback conn)
+            (rollback transaction-strategy conn opts)
+            (commit transaction-strategy conn opts))
+          returnvalue)
+        (catch Throwable t
+          (rollback transaction-strategy conn opts)
+          (throw t))))))
 
 (defmacro with-transaction
   "Creates a context that evaluates in transaction (or nested transaction).
@@ -355,7 +393,7 @@
       (execute! conn 'DROP TABLE bar;'))
   "
   [conn & body]
-  `(let [func# (fn [c#] ~@body)]
+  `(let [func# (fn [c#] (let [~conn c#] ~@body))]
      (apply call-in-transaction [~conn func#])))
 
 (defn execute!
@@ -430,7 +468,6 @@
                  :as options}]
    {:pre [(instance? Connection conn) (vector? sqlvec)]}
    (let [connection (:connection conn)
-         metadata   (:metadata conn)
          sql        (first sqlvec)
          params     (rest sqlvec)
          stmt       (if holdability
@@ -443,7 +480,7 @@
                                          (result-concurency resultset-constants)))]
      ;; Lazy resultset works with database cursors ant them can not be used
      ;; without one transaction
-     (when (and (not (:in-transaction @metadata)) lazy)
+     (when (and (not (:in-transaction conn)) lazy)
        (throw (RuntimeException. "Can not use cursor resultset without transaction")))
 
      ;; Overwrite default jdbc driver fetch-size when user
