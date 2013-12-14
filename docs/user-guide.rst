@@ -220,10 +220,6 @@ Isolation Level
 clj.jdbc by default does nothing with isolation level and keep it with default values. But
 provides a simple way to use a specific isolation level if a user requires it.
 
-You have two ways to change a isolation level. Setting it on your dbspec or setting
-programatically a globally default that will be applied automatically on each new created
-connection.
-
 As example, each connection created with this dbspec automatically set
 a isolation level to SERIALIZABLE:
 
@@ -232,13 +228,6 @@ a isolation level to SERIALIZABLE:
     (def dbsoec {:subprotocol "h2"
                  :subname "mem:"
                  :isolation-level :serializable})
-
-Also, clj.jdbc provides a simple function ``set-default-isolation-level!`` that you can
-use, to set it globally:
-
-.. code-block:: clojure
-
-    (set-default-isolation-level! :read-commited)
 
 This is a list of supported options:
 
