@@ -36,14 +36,6 @@ Doc
 
 **ApiDoc:** http://niwibe.github.io/clj.jdbc/api/
 
-Todo:
------
-
-- helper for work with binary data
-- helper for create table.
-- helper for drop table.
-- access to more low level options of connection, resultset or statement.
-
 
 Changelog
 ---------
