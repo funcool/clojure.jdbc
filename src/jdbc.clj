@@ -117,6 +117,30 @@
           (.setAutoCommit connection prev-autocommit-state)
           (dissoc conn :prev-autocommit-state :in-transaction :rollback))))))
 
+(defn wrap-transaction-strategy
+  "Simple helper function that associate a strategy
+  to a connection and return a new connection object
+  with wrapped stragy.
+
+  Example:
+
+    (let [conn (wrap-transaction-strategy simplecon (MyStrategy.))]
+      (use-your-new-conn conn))
+  "
+  [conn strategy]
+  (assoc conn :transaction-strategy strategy))
+
+(defn- wrap-isolation-level
+  "Wraps and handles a isolation level for connection."
+  [dbspec conn]
+  (let [raw-connection  (:connection conn)
+        isolation-level (:isolation-level dbspec)]
+    (if-let [isolation-level-value (get isolation-level-map isolation-level)]
+      (do
+        (.setTransactionIsolation raw-connection isolation-level-value)
+        (assoc conn :isolation-level isolation-level))
+      (assoc conn :isolation-level :none))))
+
 (defn result-set->lazyseq
   "Function that wraps result in a lazy seq. This function
   is part of public api but can not be used directly (you should pass
@@ -206,17 +230,6 @@
    :read-only ResultSet/CONCUR_READ_ONLY
    :updatable ResultSet/CONCUR_UPDATABLE})
 
-(defn- wrap-isolation-level
-  "Wraps and handles a isolation level for connection."
-  [dbspec conn]
-  (let [raw-connection  (:connection conn)
-        isolation-level (:isolation-level dbspec)]
-    (if-let [isolation-level-value (get isolation-level-map isolation-level)]
-      (do
-        (.setTransactionIsolation raw-connection isolation-level-value)
-        (assoc conn :isolation-level isolation-level))
-      (assoc conn :isolation-level :none))))
-
 (defn- make-raw-connection-from-jdbcurl
   "Given a url and optionally params, returns a raw jdbc connection."
   ([url opts] (DriverManager/getConnection url (map->properties opts)))
@@ -262,24 +275,6 @@
               (throw (IllegalArgumentException. "Invalid dbspec format")))
         metadata {:vendor (.getDatabaseProductName (.getMetaData c))}]
     (wrap-isolation-level dbspec (Connection. c metadata))))
-
-(defmacro with-connection
-  "Given database connection paramers (dbspec), creates
-  a context with new connection to database that are closed
-  at end of code block.
-
-  If dbspec has datasource (connection pool), instead of create
-  a new connection, get it from connection pool and release it
-  at the end.
-
-  Example:
-
-    (with-connection dbspec conn
-      (do-something-with conn))
-  "
-  [dbspec bindname & body]
-  `(with-open [~bindname (make-connection ~dbspec)]
-     ~@body))
 
 (defn set-rollback!
   "Mark a current connection for rollback.
@@ -360,32 +355,6 @@
         (catch Throwable t
           (rollback transaction-strategy conn opts)
           (throw t))))))
-
-(defmacro with-transaction-strategy
-  "Set some transaction strategy connection in the current context
-  scope.
-
-  This method not uses thread-local dynamic variables and
-  connection preserves a transaction strategy throught threads."
-  [conn strategy & body]
-  `(let [~conn (assoc ~conn :transaction-strategy ~strategy)]
-     ~@body))
-
-(defmacro with-transaction
-  "Creates a context that evaluates in transaction (or nested transaction).
-
-  This is a more idiomatic way to execute some database operations in
-  atomic way.
-
-  Example:
-
-    (with-transaction conn
-      (execute! conn 'DROP TABLE foo;')
-      (execute! conn 'DROP TABLE bar;'))
-  "
-  [conn & body]
-  `(let [func# (fn [c#] (let [~conn c#] ~@body))]
-     (apply call-in-transaction [~conn func#])))
 
 (defn execute!
   "Run arbitrary number of raw sql commands such as: CREATE TABLE,
@@ -552,3 +521,47 @@
      (with-open [rs# (make-query ~conn ~sql-with-params {:lazy true})]
        (let [~bindname (:data rs#)]
          ~@body))))
+
+(defmacro with-transaction-strategy
+  "Set some transaction strategy connection in the current context
+  scope.
+
+  This method not uses thread-local dynamic variables and
+  connection preserves a transaction strategy throught threads."
+  [conn strategy & body]
+  `(let [~conn (wrap-transaction-strategy ~conn ~strategy)]
+     ~@body))
+
+(defmacro with-transaction
+  "Creates a context that evaluates in transaction (or nested transaction).
+
+  This is a more idiomatic way to execute some database operations in
+  atomic way.
+
+  Example:
+
+    (with-transaction conn
+      (execute! conn 'DROP TABLE foo;')
+      (execute! conn 'DROP TABLE bar;'))
+  "
+  [conn & body]
+  `(let [func# (fn [c#] (let [~conn c#] ~@body))]
+     (apply call-in-transaction [~conn func#])))
+
+(defmacro with-connection
+  "Given database connection paramers (dbspec), creates
+  a context with new connection to database that are closed
+  at end of code block.
+
+  If dbspec has datasource (connection pool), instead of create
+  a new connection, get it from connection pool and release it
+  at the end.
+
+  Example:
+
+    (with-connection dbspec conn
+      (do-something-with conn))
+  "
+  [dbspec bindname & body]
+  `(with-open [~bindname (make-connection ~dbspec)]
+     ~@body))
