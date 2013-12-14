@@ -48,6 +48,26 @@ Todo:
 Changelog
 ---------
 
+Version 0.1-beta4
+~~~~~~~~~~~~~~~~~
+
+- Now transaction management is extensible. ITransactionStrategy is exposed and DefaultTransactionStrategy
+  is a default implementation that, cases with previous transaction behavior. If you want other transaction
+  strategy, just implement ITransactionStrategy protocol and pass it to ``call-in-transaction`` function.
+
+- Custom sql types nos supported. Extend your type wit ISQLType protcol and implement ``as-sql-type``
+  function for it, that should return database compatible type.
+
+- Backward incompatible change: ``mark-as-rollback-only!``, ``unmark-rollback-only!`` and ``is-rollback-only?``
+  are renamed to more concise names: ``set-rollback!``, ``unset-rollback!`` and ``is-rollback-set?``
+
+- Rollback behavior changed. Now rollback functions only affects a current transaction or subtransaction and
+  it never interferes in parent transactions.
+
+- Ensuers inmutablity on connection instance on transaction blocks. Now transaction blocks has only one
+  clear defined side-effect: commit/rollback/setAutoCommit operations. Rollback flag is more limited
+  side-effect that only change state of connection for current transaction.
+
 Version 0.1-beta3
 ~~~~~~~~~~~~~~~~~
 
