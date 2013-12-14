@@ -43,6 +43,8 @@ Changelog
 Version 0.1-beta4
 ~~~~~~~~~~~~~~~~~
 
+Date: Unreleased
+
 - Now transaction management is extensible. ITransactionStrategy is exposed and DefaultTransactionStrategy
   is a default implementation that, cases with previous transaction behavior. If you want other transaction
   strategy, just implement ITransactionStrategy protocol and pass it to ``call-in-transaction`` function.
@@ -66,6 +68,8 @@ Version 0.1-beta4
 Version 0.1-beta3
 ~~~~~~~~~~~~~~~~~
 
+Date: 2013-12-08
+
 - Minor code cleaning and function name consistency fixes.
 - Expose more private functions as public.
 - Fix wrong preconditions and some bugs introduced in previos version.
@@ -74,7 +78,7 @@ Version 0.1-beta3
 Version 0.1-beta2
 ~~~~~~~~~~~~~~~~~
 
-Date: 2013/11/25
+Date: 2013-11-25
 
 - Remove some taken code from clojure.java.jdbc
   that are licensed under epl.
@@ -87,6 +91,6 @@ Date: 2013/11/25
 Version 0.1-beta1
 ~~~~~~~~~~~~~~~~~
 
-Date: 2013/11/14
+Date: 2013-11-14
 
 - Initial relase
