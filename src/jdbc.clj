@@ -25,7 +25,6 @@
   (:gen-class))
 
 (def ^:dynamic *default-isolation-level* (atom :none))
-(def ^:dynamic *default-fetch-size* 100)
 
 (def ^:private isolation-level-map
   {:none nil
@@ -464,7 +463,7 @@
   "
   ([conn sqlvec] (make-prepared-statement conn sqlvec {}))
   ([conn sqlvec {:keys [result-type result-concurency fetch-size max-rows holdability lazy]
-                 :or {result-type :forward-only result-concurency :read-only fetch-size *default-fetch-size*}
+                 :or {result-type :forward-only result-concurency :read-only fetch-size 100}
                  :as options}]
    {:pre [(instance? Connection conn) (vector? sqlvec)]}
    (let [connection (:connection conn)
