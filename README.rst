@@ -10,13 +10,13 @@ Leiningen
 
 .. code-block:: clojure
 
-    [be.niwi/clj.jdbc "0.1.0-beta3"]
+    [be.niwi/clj.jdbc "0.1.0-beta4"]
 
 Gradle
 
 .. code-block:: groovy
 
-    compile "be.niwi:clj.jdbc:0.1.0-beta3"
+    compile "be.niwi:clj.jdbc:0.1.0-beta4"
 
 Maven
 
@@ -25,7 +25,7 @@ Maven
     <dependency>
       <groupId>be.niwi</groupId>
       <artifactId>clj.jdbc</artifactId>
-      <version>0.1.0-beta3</version>
+      <version>0.1.0-beta4</version>
     </dependency>
 
 
@@ -43,7 +43,7 @@ Changelog
 Version 0.1-beta4
 ~~~~~~~~~~~~~~~~~
 
-Date: Unreleased
+Date: 2013-12-14
 
 - Now transaction management is extensible. ITransactionStrategy is exposed and DefaultTransactionStrategy
   is a default implementation that, cases with previous transaction behavior. If you want other transaction
