@@ -35,7 +35,6 @@ of data. Example:
 Low level query interface
 -------------------------
 
-
 All functions that finally executes a query, uses a ``make-query`` function, that is a low
 level interface for access to query functionallity. This function has distinct behavior in
 comparison with his high level siblings: returns a ``QueryResult`` instance that works
@@ -73,6 +72,7 @@ This is a simple example of use for the ``make-query`` function:
 QueryResult also implements the ``AutoClosable`` interface and you can use it
 with ``with-open`` macro.
 
+
 .. _connection-pool:
 
 Connection pool
@@ -99,3 +99,47 @@ connection parameters to dbspec with datasource instance:
 ``dbspec`` now contains a ``:datasource`` key with ``javax.sql.DataSource`` instance as value
 instead of plain dbspec with database connection parameters. And it can be used as
 dbspec for create connection with ``with-connection`` macro or ``make-connection`` function.
+
+
+Transaction strategy
+--------------------
+
+clj.jdbc transaction management is very flexible and accepts user customizations.
+
+Default transaction management is implemented on ``DefaultTransactionStrategy`` record (that implements
+``ITransactionStrategy`` protocol). If you want change the default behavior or reimplement it, you should
+define yout record or type that should implement ``ITransactionStrategy`` protocol.
+
+The ``ITransactionStrategy`` protocol is very simple, and cosist on these three methods: ``begin``, ``commit``
+and ``rollback``.
+
+.. This is a simple example that imitates a clojure.java.jdbc behavior (all subtransactions are grouped in
+.. a first transaction):
+
+This is a simple dummy transaction strategy that disables all transaction management:
+
+.. code-block:: clojure
+
+    (defrecord DummyTransactionStrategy []
+      ITransactionStrategy
+      (begin [_ conn opts] conn)
+      (rollback [_ conn opts] conn)
+      (commit [_ conn opts] conn))
+
+
+And it can be used in these ways:
+
+.. code-block:: clojure
+
+    (with-connection dbspec conn
+      (with-transaction-strategy conn (DummyTransactionStrategy.)
+        (do-some-thing conn)))
+
+
+This is a same example but using more low level interface:
+
+.. code-block:: clojure
+
+    (with-open [conn (-> (make-connection dbspec)
+                         (wrap-transaction-strategy (DummyTransactionStrategy.)))]
+      (do-some-thing conn))
