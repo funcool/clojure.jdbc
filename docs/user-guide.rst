@@ -20,7 +20,7 @@ like this.
 
 ``dbspec`` is a simple Clojure way to define the database connection parameters
 that are used to create a new database connection or create a new datasource
-(connection pool).
+(connection pool) using plain clojure data structure.
 
 This is a default aspect of one dbspec definition:
 
@@ -34,9 +34,10 @@ This is a default aspect of one dbspec definition:
 
 Description of the parameters:
 
-- ``:classname`` This is a class location of JDBC driver. Each driver has one;
-  in this example it is a path to a Postgresql JDBC driver.  This parameter can be omited;
-  in that case it is automatically resolved from a predefined list using ``:subprotocol``.
+- ``:classname`` This is a class location of JDBC driver. Each driver has one; in
+  this example it is a path to a Postgresql JDBC driver.  This parameter can be
+  omited and in that case it is automatically resolved from a predefined list
+  using ``:subprotocol`` key.
 - ``:user`` and ``:password`` can be ommited if they are empty.
 
 dbspec has other formats which are ultimately parsed to the previously explained format.
@@ -46,16 +47,14 @@ As an example, you can pass a string containing a url with same data:
 
     "postgresql://user:password@localhost:5432/dbname"
 
-Also, there is another format using datasource, but this it is explained in the
-:ref:`Connection pool <connection-pool>` section.
-
 
 Creating a connection
 ---------------------
 
 In clj.jdbc, every function that interacts with a database takes a connection
-instance as parameter, in contrast to clojure.java.jdbc. clj.jdbc requires
-connections to be explicitly opened.
+instance as parameter. In contrast to clojure.java.jdbc, clj.jdbc requires
+connections to be explicitly opened before use (you can not use dbspec map
+as connection).
 
 For this purpose, clj.jdbc exposes two ways to create new connections:
 then ``make-connection`` function and the ``with-connection`` macro.
@@ -66,6 +65,12 @@ used, for example). The second way is a higher level interface:
 ``with-connection`` creates a context in which the connection is available and,
 at the end of execution of the code within the context, the connection is
 closed automatically.
+
+.. node::
+
+    clj.jdbc can not use any global/thread-local state, and always try ensure
+    immutability.
+
 
 .. note::
 

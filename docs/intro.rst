@@ -17,7 +17,7 @@ All contributions to **clj.jdbc** should keep these important rules in mind.
 License
 -------
 
-clj.jdbc are writen from scarch and is licensed under Apache 2.0 license:
+clj.jdbc are writen from scratch and is licensed under Apache 2.0 license:
 
 .. code-block:: text
 
@@ -39,8 +39,8 @@ clj.jdbc are writen from scarch and is licensed under Apache 2.0 license:
 You can see a full license on "LICENSE" on the project root.
 
 Some initial ideas are taken from clojure.java.jdbc library (version 0.2)
-but now clj.jdbc is entirelly written from scrach and not contains any original
-code.
+but now clj.jdbc is entirelly written from scratch and not contains any
+original code.
 
 This is a original license agreement taken from clojure.java.jdbc for give
 thanks for all offors for that library:
