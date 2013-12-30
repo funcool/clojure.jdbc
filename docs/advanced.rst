@@ -147,28 +147,40 @@ This is a same example but using more low level interface:
       (do-some-thing conn))
 
 
-User defined types
-------------------
+Extend sql types
+----------------
 
 .. versionadded:: 0.1-beta4
 
-In some circumstances, you want pass custom types as sql parameters. clj.jdbc exposes ``ISQLType`` protocol
-that can be extended for your type.
+.. versionchanged:: 0.1-beta5
 
-This is a simple example of how to add support for string array:
+    Allow backward conversions (sqltype to user type)
+
+clj.jdbc exposes a simple way to extend your types allowing make some transformations
+before set them to prepared statement or after retrieve them from result set throught
+``ISQLType`` and ``ISQLResultSetReadColumn`` protocol.
+
+As examle, we go to extend string array type for make it compatible with
+postgresql array type:
 
 .. code-block:: clojure
 
     (extend-protocol ISQLType
+
+      ;; Obtain a class for string array
       (class (into-array String []))
-      (as-sql-type [this conn]
-        (let [raw-conn (:connection conn)
-              array    (.createArrayOf raw-conn "text" this)]
-          array)))
+
+      (set-stmt-parameter! [this conn stmt index]
+        (let [raw-conn        (:connection conn)
+              prepared-value  (as-sql-type this conn)
+              array           (.createArrayOf raw-conn "text" prepared-value)]
+          (.setArray stmt index array)))
+
+      (as-sql-type [this conn] this))
 
 
-Now, you can pass a string arrays as jdbc parameters for database text arrays fields. This
-is a simple example of store a string array to postresql text array field:
+Now, you can pass a string array as jdbc parameter that is automaticlay converted
+to sql array and assigned properly to prepared statement:
 
 .. code-block:: clojure
 
@@ -177,3 +189,10 @@ is a simple example of store a string array to postresql text array field:
       (let [mystringarray (into-array String ["foo" "bar"])]
         (execute-prepared! conn "INSERT INTO arrayfoo VALUES (?, ?);"
                            [1, mystringarray])))
+
+
+Detailed documentation for ``ISQLType`` methods
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- ``as-sql-type`` convers a user type to sql type. Default implementation return a object as is.
+- ``set-stmt-parameter!`` is used for properly set a value to prepared statement.

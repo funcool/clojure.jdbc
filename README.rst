@@ -40,6 +40,15 @@ Doc
 Changelog
 ---------
 
+Version 0.1-beta5
+~~~~~~~~~~~~~~~~~
+
+Date: unreleased
+
+- Add ``from-sql-type`` method for ``ISQLType`` for allow extend backward type conversion, from sql type
+  to user type.
+
+
 Version 0.1-beta4
 ~~~~~~~~~~~~~~~~~
 
@@ -49,7 +58,7 @@ Date: 2013-12-14
   is a default implementation that cases with previous transaction behavior. If you want other transaction
   strategy, just implement ITransactionStrategy protocol and pass it to ``call-in-transaction`` function.
 
-- Custom sql types now supported. Extend your type wit ISQLType protocol and implement ``as-sql-type``
+- Custom sql types now supported. Extend your type with ISQLType protocol and implement ``as-sql-type``
   function for it, that should return database compatible type.
 
 - Backward incompatible change: ``mark-as-rollback-only!``, ``unmark-rollback-only!`` and ``is-rollback-only?``

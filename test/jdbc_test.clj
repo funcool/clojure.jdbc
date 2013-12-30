@@ -127,10 +127,14 @@
 
 (extend-protocol ISQLType
   (class (into-array String []))
-  (as-sql-type [this conn]
-    (let [raw-conn (:connection conn)
-          array    (.createArrayOf raw-conn "text" this)]
-      array)))
+
+  (set-stmt-parameter! [this conn stmt index]
+    (let [raw-conn        (:connection conn)
+          prepared-value  (as-sql-type this conn)
+          array           (.createArrayOf raw-conn "text" prepared-value)]
+      (.setArray stmt index array)))
+
+  (as-sql-type [this conn] this))
 
 (deftest db-commands-custom-types
   (testing "Test use arrays"

@@ -66,14 +66,41 @@
           {:user user :password password})))))
 
 (defprotocol ISQLType
-  (as-sql-type [_ conn] "Convert a value to jdbc compatible value"))
+  "Protocol that exposes uniform way for convert user
+  types to sql/jdbc compatible types and uniform set parameters
+  to prepared statement instance. Default implementation available
+  for Object and nil values."
+
+  (as-sql-type [_ conn] "Convert user type to sql type.")
+  (set-stmt-parameter! [this conn stmt index] "Set value to statement."))
+
+(defprotocol ISQLResultSetReadColumn
+  "Protocol that exposes uniform way to convert values
+  obtained from result set to user types. Default implementation
+  available for Object, Boolean, and nil."
+
+  (from-sql-type [_ conn metadata index] "Convert sql type to user type."))
 
 (extend-protocol ISQLType
   Object
   (as-sql-type [this conn] this)
+  (set-stmt-parameter! [this conn stmt index]
+    (.setObject stmt index (as-sql-type this conn)))
 
   nil
-  (as-sql-type [this conn] nil))
+  (as-sql-type [this conn] nil)
+  (set-stmt-parameter! [this conn stmt index]
+    (.setObject stmt index (as-sql-type nil conn))))
+
+(extend-protocol ISQLResultSetReadColumn
+  Object
+  (from-sql-type [this conn metadata i] this)
+
+  Boolean
+  (from-sql-type [this conn metadata i] (if (true? this) this false))
+
+  nil
+  (from-sql-type [this conn metadata i] nil))
 
 (defprotocol ITransactionStrategy
   (begin [_ conn opts] "Starts a transaction")
@@ -158,16 +185,15 @@
                     parameter you can enable this behavior and return a lazy-seq
                     of vectors instead of records (maps).
   "
-  [rs & [{:keys [identifiers as-rows?]
+  [conn rs & [{:keys [identifiers as-rows?]
          :or {identifiers str/lower-case as-rows? false}
          :as options}]]
-
   (let [metadata    (.getMetaData rs)
         idseq       (range 1 (inc (.getColumnCount metadata)))
         keyseq      (->> idseq
                          (map (fn [i] (.getColumnLabel metadata i)))
                          (map (comp keyword identifiers)))
-        values      (fn [] (map #(.getObject rs %) idseq))
+        values      (fn [] (map (fn [i] (from-sql-type (.getObject rs i) conn metadata i)) idseq))
         records     (fn thisfn []
                       (when (.next rs)
                         (cons (zipmap keyseq (values)) (lazy-seq (thisfn)))))
@@ -213,8 +239,8 @@
    (let [fetch-size  (.getFetchSize statement)
          rs          (.executeQuery statement)]
      (if (= fetch-size 0)
-       (QueryResult. statement rs false (result-set->vector rs))
-       (QueryResult. statement rs true (result-set->lazyseq rs))))))
+       (QueryResult. statement rs false (result-set->vector conn rs))
+       (QueryResult. statement rs true (result-set->lazyseq conn rs))))))
 
 (def ^:private resultset-constants
    ;; Type
@@ -255,8 +281,7 @@
 
     ;; Using raw jdbc connection url
     (with-open [c (make-connection \"postgresql://user:pass@localhost/test\")]
-      (do-somethin-with-connection c))
-  "
+      (do-somethin-with-connection c))"
   [{:keys [connection-uri subprotocol subname
            datasource user password]
     :as dbspec}]
@@ -289,8 +314,7 @@
 
     (with-transaction conn
       (make-some-queries-without-changes conn)
-      (set-rollback! conn))
-  "
+      (set-rollback! conn))"
   [conn]
   {:pre [(instance? Connection conn)]}
   (when-let [rollback-flag (:rollback conn)]
@@ -406,10 +430,9 @@
   (let [connection (:connection conn)]
     (with-open [stmt (.prepareStatement connection sql)]
       (doseq [param-group param-groups]
-        (dorun (map-indexed #(.setObject stmt (inc %1) (as-sql-type %2 conn)) param-group))
+        (dorun (map-indexed (fn [index value] (set-stmt-parameter! value conn stmt (inc index))) param-group))
         (.addBatch stmt))
       (execute-statement stmt))))
-
 
 (defn make-prepared-statement
   "Given connection and parametrized query as vector with first
@@ -490,8 +513,8 @@
                       (throw (IllegalArgumentException. "Invalid arguments")))]
      (let [rs (.executeQuery stmt)]
        (if (not lazy)
-         (QueryResult. stmt rs false (result-set->vector rs options))
-         (QueryResult. stmt rs true (result-set->lazyseq rs options)))))))
+         (QueryResult. stmt rs false (result-set->vector conn rs options))
+         (QueryResult. stmt rs true (result-set->lazyseq conn rs options)))))))
 
 (defn query
   "Perform a simple sql query and return a evaluated result as vector."
