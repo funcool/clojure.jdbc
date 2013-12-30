@@ -45,8 +45,8 @@ Version 0.1-beta5
 
 Date: unreleased
 
-- Add ``from-sql-type`` method for ``ISQLType`` for allow extend backward type conversion, from sql type
-  to user type.
+- Add ability to extend all behavior between some type is set as parameter to prepared statement
+  and retrieved from resultset thanks to ``ISQLType`` and ``ISQLResultSetReadColumn``.
 
 
 Version 0.1-beta4
