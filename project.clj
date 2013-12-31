@@ -20,9 +20,8 @@ official library."
   ;; :main ^:skip-aot jdbc.core
   :plugins [[lein-marginalia "0.7.1"]
             [codox "0.6.6"]]
-  :codox {:exclude [jdbc.types]
-          :output-dir "docs/codox"
+  :codox {:output-dir "docs/codox"
           :src-dir-uri "http://github.com/niwibe/clj.jdbc/blob/master/"
           :src-linenum-anchor-prefix "L"}
-  :aot [jdbc.types]
+  :aot [jdbc.types.connection jdbc.types.resultset]
   :target-path "target/%s")
