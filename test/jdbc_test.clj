@@ -1,5 +1,7 @@
 (ns jdbc-test
   (:require [jdbc :refer :all]
+            [jdbc.transaction :refer :all]
+            [jdbc.types :refer :all]
             [jdbc.pool.c3p0 :as pool-c3p0]
             [clojure.test :refer :all]))
 

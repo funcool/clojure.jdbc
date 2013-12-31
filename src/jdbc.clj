@@ -21,7 +21,9 @@
            (javax.sql DataSource))
   (:require [clojure.string :as str]
             [jdbc.types.connection :refer [->Connection is-connection?]]
-            [jdbc.types.resultset :refer [->ResultSet]])
+            [jdbc.types.resultset :refer [->ResultSet]]
+            [jdbc.types :as types]
+            [jdbc.transaction :as tx])
   (:refer-clojure :exclude [resultset-seq])
   (:gen-class))
 
@@ -66,98 +68,6 @@
         (let [[user password] (str/split userinfo #":")]
           {:user user :password password})))))
 
-(defprotocol ISQLType
-  "Protocol that exposes uniform way for convert user
-  types to sql/jdbc compatible types and uniform set parameters
-  to prepared statement instance. Default implementation available
-  for Object and nil values."
-
-  (as-sql-type [_ conn] "Convert user type to sql type.")
-  (set-stmt-parameter! [this conn stmt index] "Set value to statement."))
-
-(defprotocol ISQLResultSetReadColumn
-  "Protocol that exposes uniform way to convert values
-  obtained from result set to user types. Default implementation
-  available for Object, Boolean, and nil."
-
-  (from-sql-type [_ conn metadata index] "Convert sql type to user type."))
-
-(extend-protocol ISQLType
-  Object
-  (as-sql-type [this conn] this)
-  (set-stmt-parameter! [this conn stmt index]
-    (.setObject stmt index (as-sql-type this conn)))
-
-  nil
-  (as-sql-type [this conn] nil)
-  (set-stmt-parameter! [this conn stmt index]
-    (.setObject stmt index (as-sql-type nil conn))))
-
-(extend-protocol ISQLResultSetReadColumn
-  Object
-  (from-sql-type [this conn metadata i] this)
-
-  Boolean
-  (from-sql-type [this conn metadata i] (if (true? this) this false))
-
-  nil
-  (from-sql-type [this conn metadata i] nil))
-
-(defprotocol ITransactionStrategy
-  (begin [_ conn opts] "Starts a transaction")
-  (rollback [_ conn opts] "Rollbacks a transaction")
-  (commit [_ conn opts] "Commits a transaction"))
-
-(defrecord DefaultTransactionStrategy []
-  ITransactionStrategy
-  (begin [_ conn opts]
-    (let [raw-connection (:connection conn)
-          conn           (assoc conn :rollback (atom false))]
-      (if (:in-transaction conn)
-        (assoc conn :savepoint (.setSavepoint raw-connection))
-        (let [prev-autocommit-state (.getAutoCommit raw-connection)]
-          (.setAutoCommit raw-connection false)
-          (assoc conn :prev-autocommit-state prev-autocommit-state
-                      :in-transaction true)))))
-  (rollback [_ conn opts]
-    (let [raw-connection        (:connection conn)
-          savepoint             (:savepoint conn)
-          prev-autocommit-state (:prev-autocommit-state conn)]
-      (if savepoint
-        (do
-          (.rollback raw-connection savepoint)
-          (dissoc conn :savepoint :rollback))
-        (do
-          (.rollback raw-connection)
-          (.setAutoCommit raw-connection prev-autocommit-state)
-          (dissoc conn :prev-autocommit-state :rollback)))))
-
-  (commit [_ conn opts]
-    (let [connection            (:connection conn)
-          savepoint             (:savepoint conn)
-          prev-autocommit-state (:prev-autocommit-state conn)]
-      (if savepoint
-        (do
-          (.releaseSavepoint connection savepoint)
-          (dissoc conn :savepoint :rollback))
-        (do
-          (.commit connection)
-          (.setAutoCommit connection prev-autocommit-state)
-          (dissoc conn :prev-autocommit-state :in-transaction :rollback))))))
-
-(defn wrap-transaction-strategy
-  "Simple helper function that associate a strategy
-  to a connection and return a new connection object
-  with wrapped stragy.
-
-  Example:
-
-    (let [conn (wrap-transaction-strategy simplecon (MyStrategy.))]
-      (use-your-new-conn conn))
-  "
-  [conn strategy]
-  (assoc conn :transaction-strategy strategy))
-
 (defn- wrap-isolation-level
   "Wraps and handles a isolation level for connection."
   [dbspec conn]
@@ -194,7 +104,7 @@
         keyseq      (->> idseq
                          (map (fn [i] (.getColumnLabel metadata i)))
                          (map (comp keyword identifiers)))
-        values      (fn [] (map (fn [i] (from-sql-type (.getObject rs i) conn metadata i)) idseq))
+        values      (fn [] (map (fn [i] (types/from-sql-type (.getObject rs i) conn metadata i)) idseq))
         records     (fn thisfn []
                       (when (.next rs)
                         (cons (zipmap keyseq (values)) (lazy-seq (thisfn)))))
@@ -304,89 +214,11 @@
         connection      (->Connection raw-connection metadata)]
     (wrap-isolation-level dbspec connection)))
 
-(defn set-rollback!
-  "Mark a current connection for rollback.
-
-  It ensures that on the end of the current transaction
-  instead of commit changes, rollback them.
-
-  This function should be used inside of a transaction
-  block, otherwise this function does nothing.
-
-  Example:
-
-    (with-transaction conn
-      (make-some-queries-without-changes conn)
-      (set-rollback! conn))"
-  [conn]
-  {:pre [(is-connection? conn)]}
-  (when-let [rollback-flag (:rollback conn)]
-    (swap! rollback-flag (fn [_] true))))
-
-(defn unset-rollback!
-  "Revert flag setted by `set-rollback!` function.
-
-  This function should be used inside of a transaction
-  block, otherwise this function does nothing."
-  [conn]
-  {:pre [(is-connection? conn)]}
-  (when-let [rollback-flag (:rollback conn)]
-    (swap! rollback-flag (fn [_] false))))
-
-(defn is-rollback-set?
-  "Check if a current connection in one transaction
-  is marked for rollback.
-
-  This should be used in one transaction, in other case this
-  function always return false.
-  "
-  [conn]
-  {:pre [(is-connection? conn)]}
-  (if-let [rollback-flag (:rollback conn)]
-    (deref rollback)
-    false))
-
-(defn call-in-transaction
-  "Wrap function in one transaction.
-
-  This function accepts as a parameter a transaction strategy. If no one
-  is specified, ``DefaultTransactionStrategy`` is used.
-
-  With ``DefaultTransactionStrategy``, if current connection is already in
-  transaction, it uses truly nested transactions for properly handle it.
-  The availability of this feature depends on database support for it.
-
-  Example:
-
-    (with-connection dbspec conn
-      (call-in-transaction conn (fn [conn] (execute! conn 'DROP TABLE foo;'))))
-
-  For more idiomatic code, you should use `with-transaction` macro.
-  "
-  [conn func & {:keys [savepoints strategy] :or {savepoints true} :as opts}]
-  {:pre [(is-connection? conn)]}
-  (let [conn-tx-strategy     (:transaction-strategy conn)
-        transaction-strategy (cond
-                                strategy strategy
-                                conn-tx-strategy conn-tx-strategy
-                               :else (DefaultTransactionStrategy.))]
-    (when (and (:in-transaction conn) (not savepoints))
-      (throw (RuntimeException. "Savepoints explicitly disabled.")))
-    (let [conn (begin transaction-strategy conn opts)]
-      (try
-        (let [returnvalue (func conn)]
-          (if (:rollback conn)
-            (rollback transaction-strategy conn opts)
-            (commit transaction-strategy conn opts))
-          returnvalue)
-        (catch Throwable t
-          (rollback transaction-strategy conn opts)
-          (throw t))))))
-
 (defn execute!
   "Run arbitrary number of raw sql commands such as: CREATE TABLE,
   DROP TABLE, etc... If your want transactions, you can wrap this
-  call in transaction using `with-transaction` context block macro.
+  call in transaction using `with-transaction` context block macro
+  that is available in  ``jdbc.transaction`` namespace.
 
   Warning: not all database servers support ddl in transactions.
 
@@ -398,7 +230,7 @@
 
     ;; In one transaction
     (with-connection dbspec conn
-      (with-transaction conn
+      (tx/with-transaction conn
         (execute! conn 'CREATE TABLE foo (id serial, name text);')))
   "
   [conn & commands]
@@ -433,7 +265,7 @@
   (let [connection (:connection conn)]
     (with-open [stmt (.prepareStatement connection sql)]
       (doseq [param-group param-groups]
-        (dorun (map-indexed (fn [index value] (set-stmt-parameter! value conn stmt (inc index))) param-group))
+        (dorun (map-indexed (fn [index value] (types/set-stmt-parameter! value conn stmt (inc index))) param-group))
         (.addBatch stmt))
       (execute-statement stmt))))
 
@@ -474,7 +306,7 @@
      (when lazy (.setFetchSize stmt fetch-size))
      (when max-rows (.setMaxRows max-rows))
      (when (seq params)
-       (dorun (map-indexed #(.setObject stmt (inc %1) (as-sql-type %2 conn)) params)))
+       (dorun (map-indexed #(.setObject stmt (inc %1) (types/as-sql-type %2 conn)) params)))
      stmt)))
 
 (defn make-query
@@ -543,36 +375,10 @@
         (println row)))
   "
   [conn bindname sql-with-params & body]
-  `(with-transaction ~conn
+  `(tx/with-transaction ~conn
      (with-open [rs# (make-query ~conn ~sql-with-params {:lazy true})]
        (let [~bindname (:data rs#)]
          ~@body))))
-
-(defmacro with-transaction-strategy
-  "Set some transaction strategy connection in the current context
-  scope.
-
-  This method not uses thread-local dynamic variables and
-  connection preserves a transaction strategy throught threads."
-  [conn strategy & body]
-  `(let [~conn (wrap-transaction-strategy ~conn ~strategy)]
-     ~@body))
-
-(defmacro with-transaction
-  "Creates a context that evaluates in transaction (or nested transaction).
-
-  This is a more idiomatic way to execute some database operations in
-  atomic way.
-
-  Example:
-
-    (with-transaction conn
-      (execute! conn 'DROP TABLE foo;')
-      (execute! conn 'DROP TABLE bar;'))
-  "
-  [conn & body]
-  `(let [func# (fn [c#] (let [~conn c#] ~@body))]
-     (apply call-in-transaction [~conn func#])))
 
 (defmacro with-connection
   "Given database connection paramers (dbspec), creates

@@ -51,6 +51,7 @@ Date: unreleased
   automatically convert them to custom types when are retrieved from resultset).
 - Refactored jdbc.types namespace (rename QueryResult to ResultSet and put each type in their own
   namespace and add additional util functions for each type).
+- Move all transactions logic to separate namespace, removing it from a main jdbc namespace (breaking change).
 
 
 Version 0.1-beta4
