@@ -22,16 +22,7 @@
   Each wrapped connection pool interface only implements
   one function: `make-datasource-spec` that receves a default
   plain dbspec and returns other dbspect with datasource
-  instance.
-
-  Example:
-
-    (require '(jdbc.pool.c3p0 :refer [make-datasource-spec]))
-    (def dbspec (atom {:classname \"org.postgresql.Driver\"
-                       :subprotocol \"postgresql\"
-                       :subname \"//localhost:5432/test\"}))
-    (swap! dbspec make-datasource-spec)
-  "
+  instance."
   (:require [jdbc :refer [uri->dbspec]])
   (:import (java.net URI))
   (:gen-class))

@@ -26,13 +26,13 @@
     (let [c1 (make-connection h2-dbspec1)
           c2 (make-connection h2-dbspec2)
           c3 (make-connection h2-dbspec3)]
-      (is (instance? jdbc.types.Connection c1))
-      (is (instance? jdbc.types.Connection c2))
-      (is (instance? jdbc.types.Connection c3))))
+      (is (instance? jdbc.types.connection.Connection c1))
+      (is (instance? jdbc.types.connection.Connection c2))
+      (is (instance? jdbc.types.connection.Connection c3))))
 
   (testing "Using macro with-connection"
     (with-connection h2-dbspec3 conn
-      (is (instance? jdbc.types.Connection conn)))))
+      (is (instance? jdbc.types.connection.Connection conn)))))
 
 (deftest db-isolation-level
   (testing "Using dbspec with :isolation-level"
@@ -77,7 +77,7 @@
   (testing "Low level query result"
     (with-open [conn    (make-connection h2-dbspec3)
                 result  (make-query conn ["SELECT 1 + 1 as foo;"])]
-      (is (instance? jdbc.types.QueryResult result))
+      (is (instance? jdbc.types.resultset.ResultSet result))
       (is (instance? java.sql.ResultSet (:rs result)))
       (is (instance? java.sql.PreparedStatement (:stmt result)))
       (is (vector? (:data result)))
@@ -87,7 +87,7 @@
     (with-open [conn    (make-connection h2-dbspec3)]
       (with-transaction conn
         (let [result  (make-query conn ["SELECT 1 + 1 as foo;"] {:lazy true})]
-          (is (instance? jdbc.types.QueryResult result))
+          (is (instance? jdbc.types.resultset.ResultSet result))
           (is (instance? java.sql.ResultSet (:rs result)))
           (is (instance? java.sql.PreparedStatement (:stmt result)))
           (is (seq? (:data result)))
@@ -157,7 +157,7 @@
     (let [spec (pool-c3p0/make-datasource-spec h2-dbspec3)]
       (is (instance? javax.sql.DataSource (:datasource spec)))
       (with-open [conn (make-connection spec)]
-        (is (instance? jdbc.types.Connection conn))
+        (is (instance? jdbc.types.connection.Connection conn))
         (is (instance? java.sql.Connection (:connection conn)))))))
 
 (defrecord BasicTransactionStrategy []

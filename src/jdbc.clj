@@ -18,9 +18,10 @@
            (java.sql BatchUpdateException DriverManager
                      PreparedStatement ResultSet SQLException Statement Types)
            (java.util Hashtable Map Properties)
-           (javax.sql DataSource)
-           (jdbc.types Connection QueryResult))
-  (:require [clojure.string :as str])
+           (javax.sql DataSource))
+  (:require [clojure.string :as str]
+            [jdbc.types.connection :refer [->Connection is-connection?]]
+            [jdbc.types.resultset :refer [->ResultSet]])
   (:refer-clojure :exclude [resultset-seq])
   (:gen-class))
 
@@ -225,7 +226,7 @@
 
 (defn execute-statement->query-result
   "Given a plain or prepared statement instance, return
-  a QueryResult instance.
+  a ResultSet instance.
 
   This is a low level interface and should be used with precaution.
 
@@ -239,8 +240,8 @@
    (let [fetch-size  (.getFetchSize statement)
          rs          (.executeQuery statement)]
      (if (= fetch-size 0)
-       (QueryResult. statement rs false (result-set->vector conn rs))
-       (QueryResult. statement rs true (result-set->lazyseq conn rs))))))
+       (->ResultSet statement rs false (result-set->vector conn rs))
+       (->ResultSet statement rs true (result-set->lazyseq conn rs))))))
 
 (def ^:private resultset-constants
    ;; Type
@@ -283,23 +284,25 @@
     (with-open [c (make-connection \"postgresql://user:pass@localhost/test\")]
       (do-somethin-with-connection c))"
   [{:keys [connection-uri subprotocol subname
-           datasource user password]
+           datasource user password read-only schema]
+    :or {read-only false schema nil}
     :as dbspec}]
-  (let [c (cond
-            (and datasource user password)
-              (.getConnection datasource user password)
-            (and datasource)
-              (.getConnection datasource)
-            (and subprotocol subname)
-              (make-raw-connection-from-dbspec dbspec)
-            (and connection-uri)
-              (make-raw-connection-from-jdbcurl connection-uri)
-            (or (string? dbspec) (instance? URI dbspec))
-              (make-raw-connection-from-dbspec (uri->dbspec dbspec))
-            :else
-              (throw (IllegalArgumentException. "Invalid dbspec format")))
-        metadata {:vendor (.getDatabaseProductName (.getMetaData c))}]
-    (wrap-isolation-level dbspec (Connection. c metadata))))
+  (let [raw-connection  (cond
+                          (and datasource user password)
+                            (.getConnection datasource user password)
+                          (and datasource)
+                            (.getConnection datasource)
+                          (and subprotocol subname)
+                            (make-raw-connection-from-dbspec dbspec)
+                          (and connection-uri)
+                            (make-raw-connection-from-jdbcurl connection-uri)
+                          (or (string? dbspec) (instance? URI dbspec))
+                            (make-raw-connection-from-dbspec (uri->dbspec dbspec))
+                          :else
+                            (throw (IllegalArgumentException. "Invalid dbspec format")))
+        metadata        (.getMetaData raw-connection)
+        connection      (->Connection raw-connection metadata)]
+    (wrap-isolation-level dbspec connection)))
 
 (defn set-rollback!
   "Mark a current connection for rollback.
@@ -316,7 +319,7 @@
       (make-some-queries-without-changes conn)
       (set-rollback! conn))"
   [conn]
-  {:pre [(instance? Connection conn)]}
+  {:pre [(is-connection? conn)]}
   (when-let [rollback-flag (:rollback conn)]
     (swap! rollback-flag (fn [_] true))))
 
@@ -326,7 +329,7 @@
   This function should be used inside of a transaction
   block, otherwise this function does nothing."
   [conn]
-  {:pre [(instance? Connection conn)]}
+  {:pre [(is-connection? conn)]}
   (when-let [rollback-flag (:rollback conn)]
     (swap! rollback-flag (fn [_] false))))
 
@@ -338,7 +341,7 @@
   function always return false.
   "
   [conn]
-  {:pre [(instance? Connection conn)]}
+  {:pre [(is-connection? conn)]}
   (if-let [rollback-flag (:rollback conn)]
     (deref rollback)
     false))
@@ -361,7 +364,7 @@
   For more idiomatic code, you should use `with-transaction` macro.
   "
   [conn func & {:keys [savepoints strategy] :or {savepoints true} :as opts}]
-  {:pre [(instance? Connection conn)]}
+  {:pre [(is-connection? conn)]}
   (let [conn-tx-strategy     (:transaction-strategy conn)
         transaction-strategy (cond
                                 strategy strategy
@@ -399,7 +402,7 @@
         (execute! conn 'CREATE TABLE foo (id serial, name text);')))
   "
   [conn & commands]
-  {:pre [(instance? Connection conn)]}
+  {:pre [(is-connection? conn)]}
   (let [connection (:connection conn)]
     (with-open [stmt (.createStatement connection)]
       (dorun (map (fn [command]
@@ -426,7 +429,7 @@
       UPDATE TABLE foo SET x = 3 WHERE y = 4;
   "
   [conn sql & param-groups]
-  {:pre [(instance? Connection conn)]}
+  {:pre [(is-connection? conn)]}
   (let [connection (:connection conn)]
     (with-open [stmt (.prepareStatement connection sql)]
       (doseq [param-group param-groups]
@@ -449,7 +452,7 @@
   ([conn sqlvec {:keys [result-type result-concurency fetch-size max-rows holdability lazy]
                  :or {result-type :forward-only result-concurency :read-only fetch-size 100}
                  :as options}]
-   {:pre [(instance? Connection conn) (vector? sqlvec)]}
+   {:pre [(is-connection? conn) (vector? sqlvec)]}
    (let [connection (:connection conn)
          sql        (first sqlvec)
          params     (rest sqlvec)
@@ -476,7 +479,7 @@
 
 (defn make-query
   "Given a connection and paramatrized sql, execute a query and
-  return a instance of QueryResult that works as stantard clojure
+  return a instance of ResultSet that works as stantard clojure
   map but implements a closable interface.
 
   This functions indents be a low level access for making queries
@@ -487,7 +490,7 @@
       (doseq [row (:data result)]
         (println row)))
 
-  A QueryResult contains a these keys:
+  A ResultSet contains a these keys:
 
   - ``:stmt`` as PreparedStatement instance
   - ``:rs`` as ResultSet instance
@@ -500,7 +503,7 @@
   ([conn sql-with-params] (make-query conn sql-with-params {}))
   ([conn sql-with-params {:keys [fetch-size lazy] :or {lazy false} :as options}]
    {:pre [(or (vector? sql-with-params) (string? sql-with-params))
-          (instance? Connection conn)]}
+          (is-connection? conn)]}
    (let [connection (:connection conn)
          stmt       (cond
                       (vector? sql-with-params)
@@ -513,15 +516,15 @@
                       (throw (IllegalArgumentException. "Invalid arguments")))]
      (let [rs (.executeQuery stmt)]
        (if (not lazy)
-         (QueryResult. stmt rs false (result-set->vector conn rs options))
-         (QueryResult. stmt rs true (result-set->lazyseq conn rs options)))))))
+         (->ResultSet stmt rs false (result-set->vector conn rs options))
+         (->ResultSet stmt rs true (result-set->lazyseq conn rs options)))))))
 
 (defn query
   "Perform a simple sql query and return a evaluated result as vector."
   ([conn sqlvec] (query conn sqlvec {}))
   ([conn sqlvec options]
    {:pre [(or (vector? sqlvec) (string? sqlvec))
-          (instance? Connection conn)]}
+          (is-connection? conn)]}
    (with-open [result (make-query conn sqlvec (assoc options :lazy false))]
      (:data result))))
 

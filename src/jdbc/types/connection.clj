@@ -12,16 +12,28 @@
 ;; See the License for the specific language governing permissions and
 ;; limitations under the License.
 
-(ns jdbc.types
-  (:gen-class))
+(ns jdbc.types.connection)
 
 (defrecord Connection [connection metadata]
   java.lang.AutoCloseable
   (close [this]
     (.close (:connection this))))
 
-(defrecord QueryResult [stmt rs lazy data]
-  java.lang.AutoCloseable
-  (close [this]
-    (.close (:rs this))
-    (.close (:stmt this))))
+(defn vendor-name
+  "Get connection vendor name."
+  [^Connection c]
+  {:pre [(instance? Connection c)]}
+  (.getDatabaseProductName (:metadata c)))
+
+(defn is-readonly?
+  "Returns true if a current connection is
+  in read-only model."
+  [^Connection c]
+  {:pre [(instance? Connection c)]}
+  (.isReadOnly (:connection c)))
+
+(defn is-connection?
+  "Test if a value is a connection
+  instance."
+  [c]
+  (instance? Connection c))

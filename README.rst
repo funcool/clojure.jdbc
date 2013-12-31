@@ -47,6 +47,8 @@ Date: unreleased
 
 - Add ability to extend all behavior between some type is set as parameter to prepared statement
   and retrieved from resultset thanks to ``ISQLType`` and ``ISQLResultSetReadColumn``.
+- Refactored jdbc.types namespace (rename QueryResult to ResultSet and put each type in their own
+  namespace and add additional util functions for each type).
 
 
 Version 0.1-beta4
