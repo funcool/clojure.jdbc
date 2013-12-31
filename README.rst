@@ -47,8 +47,8 @@ Date: unreleased
 
 - Add ability to extend all behavior between some type is set as parameter to prepared statement
   and retrieved from resultset thanks to ``ISQLType`` and ``ISQLResultSetReadColumn`` (this allows
-  extend user types, making it compatible for pass as paramater to jdbc nad extend sql types for
-  automatically convert them to user types when are retrieved from resultset).
+  extend not default types, making it compatible for pass as paramater to jdbc and extend sql types for
+  automatically convert them to custom types when are retrieved from resultset).
 - Refactored jdbc.types namespace (rename QueryResult to ResultSet and put each type in their own
   namespace and add additional util functions for each type).
 
