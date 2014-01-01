@@ -52,6 +52,7 @@ Date: unreleased
 - Refactored jdbc.types namespace (rename QueryResult to ResultSet and put each type in their own
   namespace and add additional util functions for each type).
 - Move all transactions logic to separate namespace, removing it from a main jdbc namespace (breaking change).
+- Rename ``execute-statement`` to ``execute-statement!`` for more concise function naming.
 
 
 Version 0.1-beta4

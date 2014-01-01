@@ -119,7 +119,7 @@
   [& args]
   (vec (apply result-set->lazyseq args)))
 
-(defn execute-statement
+(defn execute-statement!
   "Given a plain statement instance, execute it throught its asociated
   connection and return a raw seq of results.
 
@@ -239,7 +239,7 @@
     (with-open [stmt (.createStatement connection)]
       (dorun (map (fn [command]
                     (.addBatch stmt command)) commands))
-      (execute-statement stmt))))
+      (execute-statement! stmt))))
 
 (defn execute-prepared!
   "Same as `execute!` function, but works with PreparedStatement
@@ -267,7 +267,7 @@
       (doseq [param-group param-groups]
         (dorun (map-indexed (fn [index value] (types/set-stmt-parameter! value conn stmt (inc index))) param-group))
         (.addBatch stmt))
-      (execute-statement stmt))))
+      (execute-statement! stmt))))
 
 (defn make-prepared-statement
   "Given connection and parametrized query as vector with first
