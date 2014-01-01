@@ -108,11 +108,13 @@ Execute database commands
 clj.jdbc has many methods for executing database commands, like creating
 tables, inserting data or simply executing stored procedures.
 
+
 Execute raw sql statements
 --------------------------
 
 The simplest way to execute a raw SQL is using the ``execute!`` function. It
-receives a connection as the first parameter, and one or more SQL strings.
+receives a connection as the first parameter followed by variable list
+of sql sentences:
 
 .. code-block:: clojure
 
@@ -124,6 +126,7 @@ receives a connection as the first parameter, and one or more SQL strings.
     (with-connection dbspec conn
       (with-transaction conn
         (execute! conn "CREATE TABLE foo (id serial, name text);")))
+
 
 Execute parametrized SQL statements
 -----------------------------------
@@ -157,13 +160,17 @@ The previous code should execute these SQL statements:
     INSERT INTO foo VALUES ('Foo', 2);
     INSERT INTO foo VALUES ('Bar', 3);
 
+
 Make queries
 ============
 
 As usual, clj.jdbc offers two ways to send queries to a database. But in this
 section only will be explained the basic and the most usual way to make queries
-using a ``query`` function:
+using a ``query`` function.
 
+``query`` function, given a active connection and vector with sql query as string
+with optional parameters, executes it and returns a evaluated result as vector of
+records:
 
 .. code-block:: clojure
 
@@ -172,9 +179,6 @@ using a ``query`` function:
       (doseq [row results]
         (println row))))
 
-
-``query`` function executes a query and returns a evaluated result as vector
-of records.
 
 .. note::
 
@@ -192,38 +196,52 @@ application, and delaying it to the end is not a good approach. Managing
 transactions implicitly, trusting your "web framework" to do it for you, is
 another very bad approach.
 
-**clj.jdbc** offers (as usually) two ways of managing transactions: the
-``with-transaction`` macro and the ``call-in-transaction`` function.
-
-Making some code transactional (so that executes in one transaction) is as
-simple as wrapping the code in a transaction context block:
+All transactions related functions are exposed on ``jdbc.transaction`` namespace
+and if you need transactions, you should import that namespace:
 
 .. code-block:: clojure
 
-    (with-transaction conn
+    (ns some.my.ns
+      (:require [jdbc.transaction :as tx]))
+
+
+The most idiomatic way to wrap some code in transaction, is using ``with-transaction``
+macro:
+
+.. code-block:: clojure
+
+    (tx/with-transaction conn
        (do-thing-first conn)
        (do-thing-second conn))
 
-Or, alternatively, using the ``call-in-transaction`` function:
+Also, **clj.jdbc** exposes a more low level iterface, that permits a execute some
+function in a transaction, using ``call-in-transaction`` function (``with-transaction``
+macro uses this function internally).
+
+Example:
 
 .. code-block:: clojure
 
-    (call-in-transaction conn do-things)
+    (tx/call-in-transaction conn (fn [conn] (do-something-with conn)))
+
+
+A callback function passwd to call-in-transaction should accept almost one parameter:
+a connection.
 
 .. note::
 
-    **clj.jdbc** handles properly a subtransactions. As example: if one of
-    the functions used in previous example also wraps their body in a transaction
-    block, clj.jdbc detects it as nested transaction and switch to savepoints,
-    instead of put all statements in one big transaction. So making all code wrapped
-    in transaction block truly atomic.
+    clj.jdbc in contrast to java.jdbc, handles well nested transactions. So making all
+    code wrapped in transaction block truly atomic independenty of transaction nesting.
+
+    If you want extend o change a default transaction strategy, see
+    :ref:`Transaction Strategy section <transaction-strategy>`.
 
 
 Isolation Level
 ---------------
 
 clj.jdbc by default does nothing with isolation level and keep it with default values. But
-provides a simple way to use a specific isolation level if a user requires it.
+provides a simple way to set specific isolation level if is needed.
 
 As example, each connection created with this dbspec automatically set
 a isolation level to SERIALIZABLE:

@@ -6,22 +6,19 @@ Advanced usage
 Server Side Cursors
 -------------------
 
-If you have an extremely large result set to retrieve from your database, or you would like to iterate through
-a tables records without first retrieving the entire table a cursor queries is exactly what you need.
+By default, most of jdbc drivers prefetches all results in memory that make totally useless use lazy
+structures for fetching data. For solve this, some databases implements server side cursors that
+avoids a prefetch all results of a query in memory.
 
-.. note::
+If you have an extremely large result set to retrieve from your database, is exactly what you need.
 
-    By default, most of jdbc drivers prefetches all results in memory that make totally useless use lazy
-    structures for fetching data. For solve this, some databases implements server side cursors
-    that avoids a prefetch all results of a quiery in memory.
-
-For this purpose, exists ``with-query`` macro that hace some special behavior for querying large set
-of data. Example:
+**clj.jdbc**, for this purpose, has ``with-query`` macro that uses server side cursors inside
+and exposes a lazy seq of records (instead of full evaluated vector) in a created macro context:
 
 .. code-block:: clojure
 
     (let [sql ["SELECT id, name FROM people;"]]
-      (with-query sql results
+      (with-query conn sql results
         (doseq [row results]
           (println row))))
 
@@ -36,13 +33,15 @@ Low level query interface
 -------------------------
 
 All functions that finally executes a query, uses a ``make-query`` function, that is a low
-level interface for access to query functionallity. This function has distinct behavior in
-comparison with his high level siblings: returns a ``QueryResult`` instance that works
-as clojure persistent map that contains these keys:
+level interface for access to query functionallity.
 
-- ``:stmt`` key contains a statement instance used for make a query
-- ``:rs`` key contains a raw ``java.sql.ResultSet`` instance
-- ``:data`` key contains a real results as lazy-seq or vector
+This function has distinct behavior in comparison with his high level siblings: it returns a
+``jdbc.types.resultset.ResultSet`` instance that works as clojure persistent map that
+contains these keys:
+
+- ``:stmt`` key contains a statement instance used for make a query.
+- ``:rs`` key contains a raw ``java.sql.ResultSet`` instance.
+- ``:data`` key contains a real results as lazy-seq or vector depending on parameters.
 
 .. note::
 
@@ -59,7 +58,7 @@ as clojure persistent map that contains these keys:
     For this purpose you should use the ``make-query`` function with precaution.
 
 
-This is a simple example of use for the ``make-query`` function:
+This is a simple example of use ``make-query`` function:
 
 .. code-block:: clojure
 
@@ -69,7 +68,7 @@ This is a simple example of use for the ``make-query`` function:
         (println row))
       (.close result))
 
-QueryResult also implements the ``AutoClosable`` interface and you can use it
+ResultSet also implements the ``java.lang.AutoClosable`` interface and you can use it
 with ``with-open`` macro.
 
 
@@ -100,6 +99,8 @@ connection parameters to dbspec with datasource instance:
 instead of plain dbspec with database connection parameters. And it can be used as
 dbspec for create connection with ``with-connection`` macro or ``make-connection`` function.
 
+
+.. _transaction-strategy:
 
 Transaction strategy
 --------------------
@@ -154,14 +155,15 @@ Extend sql types
 
 .. versionchanged:: 0.1-beta5
 
-    Allow backward conversions (sqltype to user type)
+    Allow backward conversions (sqltype to user type) and move all to wheir own namespace.
 
-clj.jdbc exposes a simple way to extend your types allowing make some transformations
-before set them to prepared statement or after retrieve them from result set throught
-``ISQLType`` and ``ISQLResultSetReadColumn`` protocol.
+All related to type handling/conversion are exposed on ``jdbc.types`` namespace.
 
-As examle, we go to extend string array type for make it compatible with
-postgresql array type:
+If you want extend some type/class for use it as jdbc parameter without explicit conversion
+to sql compatible type, you should extend your type with ``jdbc.types/ISQLType`` protocol.
+
+This is a sample example to extend a java String[] (string array) for pass it as parameter
+to database field that correspons to postgresql text array on a database:
 
 .. code-block:: clojure
 
@@ -191,8 +193,22 @@ to sql array and assigned properly to prepared statement:
                            [1, mystringarray])))
 
 
+clj.jdbc also exposes ``jdbc.types/ISQLResultSetReadColumn`` protocol that encapsulates
+a backward conversions from sql types to user defined types.
+
+Example:
+
+TODO
+
+
 Detailed documentation for ``ISQLType`` methods
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- ``as-sql-type`` convers a user type to sql type. Default implementation return a object as is.
-- ``set-stmt-parameter!`` is used for properly set a value to prepared statement.
+- ``as-sql-type`` converts a extended type to sql type. Default implementation return a object as is.
+- ``set-stmt-parameter!`` encapsulates logic for extended type of how set self as parameter to
+  prepared statement. By default it uses ``setObject`` prepared statement method.
+
+Detailed documention for ``ISQLResultSetReadColumn`` methods
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- ``from-sql-type`` encapsulates logic for convert extended type to some specific (not sql) type.
