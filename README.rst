@@ -53,6 +53,9 @@ Date: unreleased
   namespace and add additional util functions for each type).
 - Move all transactions logic to separate namespace, removing it from a main jdbc namespace (breaking change).
 - Rename ``execute-statement`` to ``execute-statement!`` for more concise function naming.
+- Remove untested and unused ``execute-statement->query-result`` function.
+- ``make-query``, ``query`` and ``with-query`` now accepts prepared statements as parameter instead of
+  plain or parametrized sql.
 
 
 Version 0.1-beta4
