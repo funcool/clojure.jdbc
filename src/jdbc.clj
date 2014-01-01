@@ -134,25 +134,6 @@
   {:pre [(instance? Statement stmt)]}
   (seq (.executeBatch stmt)))
 
-(defn execute-statement->query-result
-  "Given a plain or prepared statement instance, return
-  a ResultSet instance.
-
-  This is a low level interface and should be used with precaution.
-
-  WARNING: untested
-
-  Status: Alpha - Implementation and name of this method can change on
-  following versions.
-  "
-  ([conn statement] (execute-statement->query-result conn statement {}))
-  ([conn statement options]
-   (let [fetch-size  (.getFetchSize statement)
-         rs          (.executeQuery statement)]
-     (if (= fetch-size 0)
-       (->ResultSet statement rs false (result-set->vector conn rs))
-       (->ResultSet statement rs true (result-set->lazyseq conn rs))))))
-
 (def ^:private resultset-constants
    ;; Type
   {:forward-only ResultSet/TYPE_FORWARD_ONLY
