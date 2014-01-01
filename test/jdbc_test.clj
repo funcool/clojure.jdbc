@@ -76,6 +76,12 @@
       (let [result (query conn ["SELECT 1 + 1 as foo;"] {:as-rows? true})]
         (is (= [2] (first result))))))
 
+  (testing "Pass prepared statement."
+    (with-connection h2-dbspec3 conn
+      (let [stmt    (make-prepared-statement conn ["SELECT 1 + 1 as foo;"])
+            result  (query conn stmt {:as-rows? true})]
+        (is (= [2] (first result))))))
+
   (testing "Low level query result"
     (with-open [conn    (make-connection h2-dbspec3)
                 result  (make-query conn ["SELECT 1 + 1 as foo;"])]

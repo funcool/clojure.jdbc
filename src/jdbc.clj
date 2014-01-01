@@ -295,28 +295,38 @@
   return a instance of ResultSet that works as stantard clojure
   map but implements a closable interface.
 
+  A returned ``jdbc.types.resultset.ResultSet`` works as a wrapper
+  around a prepared statement and java.sql.ResultSet mostly used for
+  server side cursors properly resource management.
+
   This functions indents be a low level access for making queries
-  and it delegate to a user the resource management. You should
-  use ``with-open`` macro for store a result as example:
+  and it delegate to a user the resource management.
+
+  NOTE: It strongly recommended not use this function directly and use a ``with-query``
+  macro for make query thar returns large amount of data or simple ``query`` function
+  that returns directly a evaluated result.
+
+  Example using parametrized sql:
 
     (with-open [result (make-query conn [\"SELECT foo FROM bar WHERE id = ?\" 1])]
       (doseq [row (:data result)]
         (println row)))
 
-  A ResultSet contains a these keys:
+  Example using plain sql (without parameters):
 
-  - ``:stmt`` as PreparedStatement instance
-  - ``:rs`` as ResultSet instance
-  - ``:data`` as seq of results (can be lazy or not depending on additional parameters)
+    (with-open [result (make-query conn \"SELECT version();\")]
+      (doseq [row (:data result)]
+        (println row)))
 
-  NOTE: It strongly recommended not use this function directly and use a ``with-query``
-  macro for make query thar returns large amount of data or simple ``query`` function
-  that returns directly a evaluated result.
-  "
+  Example using extern prepared statement:
+
+    (let [stmt (make-prepared-statement conn [\"SELECT foo FROM bar WHERE id = ?\" 1])]
+      (with-open [result (make-query conn stmt)]
+        (doseq [row (:data result)]
+          (println row))))"
   ([conn sql-with-params] (make-query conn sql-with-params {}))
   ([conn sql-with-params {:keys [fetch-size lazy] :or {lazy false} :as options}]
-   {:pre [(or (vector? sql-with-params) (string? sql-with-params))
-          (is-connection? conn)]}
+   {:pre [(is-connection? conn)]}
    (let [connection (:connection conn)
          stmt       (cond
                       (vector? sql-with-params)
@@ -324,6 +334,9 @@
 
                       (string? sql-with-params)
                       (make-prepared-statement conn [sql-with-params] options)
+
+                      (instance? PreparedStatement sql-with-params)
+                      sql-with-params
 
                       :else
                       (throw (IllegalArgumentException. "Invalid arguments")))]
@@ -333,11 +346,30 @@
          (->ResultSet stmt rs true (result-set->lazyseq conn rs options)))))))
 
 (defn query
-  "Perform a simple sql query and return a evaluated result as vector."
+  "Perform a simple sql query and return a evaluated result as vector.
+
+  ``sqlvec`` parameter can be: parametrized sql (vector format), plain sql
+  (simple sql string) or prepared statement instance.
+
+  Example using parametrized sql:
+
+    (doseq [row (query conn [\"SELECT foo FROM bar WHERE id = ?\" 1])]
+      (println row))
+
+  Example using plain sql (without parameters):
+
+    (doseq [row (query conn \"SELECT version();\")]
+      (println row))
+
+  Example using extern prepared statement:
+
+    (let [stmt (make-prepared-statement conn [\"SELECT foo FROM bar WHERE id = ?\" 1])]
+      (doseq [row (query conn stmt)]
+        (println row)))
+  "
   ([conn sqlvec] (query conn sqlvec {}))
   ([conn sqlvec options]
-   {:pre [(or (vector? sqlvec) (string? sqlvec))
-          (is-connection? conn)]}
+   {:pre [(is-connection? conn)]}
    (with-open [result (make-query conn sqlvec (assoc options :lazy false))]
      (:data result))))
 
@@ -345,8 +377,9 @@
   "Idiomatic dsl macro for ``query`` function that handles well queries
   what returns a huge amount of results.
 
-  This method ensueres a query in one implicit transaction or
-  subtransaction.
+  ``sqlvec`` can be in same formats as in ``query`` function.
+
+  NOTE: This method ensueres a query in one implicit transaction.
 
   Example:
 
@@ -355,9 +388,9 @@
       (doseq [row results]
         (println row)))
   "
-  [conn bindname sql-with-params & body]
+  [conn bindname sqlvec & body]
   `(tx/with-transaction ~conn
-     (with-open [rs# (make-query ~conn ~sql-with-params {:lazy true})]
+     (with-open [rs# (make-query ~conn ~sqlvec {:lazy true})]
        (let [~bindname (:data rs#)]
          ~@body))))
 
