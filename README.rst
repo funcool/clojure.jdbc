@@ -112,3 +112,9 @@ Version 0.1-beta1
 Date: 2013-11-14
 
 - Initial relase
+
+
+.. image:: https://d2weczhvl823v0.cloudfront.net/niwibe/clj.jdbc/trend.png
+   :alt: Bitdeli badge
+   :target: https://bitdeli.com/free
+
