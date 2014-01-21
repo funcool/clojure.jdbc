@@ -10,13 +10,13 @@ Leiningen
 
 .. code-block:: clojure
 
-    [be.niwi/clj.jdbc "0.1.0-beta4"]
+    [be.niwi/clj.jdbc "0.1.0-beta5"]
 
 Gradle
 
 .. code-block:: groovy
 
-    compile "be.niwi:clj.jdbc:0.1.0-beta4"
+    compile "be.niwi:clj.jdbc:0.1.0-beta5"
 
 Maven
 
@@ -25,7 +25,7 @@ Maven
     <dependency>
       <groupId>be.niwi</groupId>
       <artifactId>clj.jdbc</artifactId>
-      <version>0.1.0-beta4</version>
+      <version>0.1.0-beta5</version>
     </dependency>
 
 
@@ -43,8 +43,11 @@ Changelog
 Version 0.1-beta5
 ~~~~~~~~~~~~~~~~~
 
-Date: unreleased
+Date: 2014-01-21
 
+Note: this should be a last beta release.
+
+- Query functions (make-query, query and with-query) now accepts prepared statements.
 - Add ability to extend all behavior between some type is set as parameter to prepared statement
   and retrieved from resultset thanks to ``ISQLType`` and ``ISQLResultSetReadColumn`` (this allows
   extend not default types, making it compatible for pass as paramater to jdbc and extend sql types for
