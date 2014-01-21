@@ -14,6 +14,12 @@ Five most important rules:
 
 All contributions to **clj.jdbc** should keep these important rules in mind.
 
+Project Maturity
+----------------
+
+**clj.jdbc** is a young project and can have some bugs. After the beta5 api
+is considered stable and there should not be any change that breaks compatibility.
+
 License
 -------
 
