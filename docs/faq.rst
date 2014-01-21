@@ -60,3 +60,21 @@ This is a fork of clojure.java.jdbc?
 ====================================
 
 No. Is just a alternative implementation.
+
+How to contribute?
+==================
+
+**clj.jdbc** unlike clojure and other clojure contrib libs, does not have much
+restrictions for contribute. Just follow the following steps depending on the
+situation:
+
+**Bugfix**:
+
+- Fork github repo.
+- Fix a bug/typo on new branch.
+- Make a pull-request to master.
+
+**New feature**:
+
+- Open new issue with new feature purpose.
+- If it is accepted, follow same steps as "bugfix".

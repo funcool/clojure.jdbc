@@ -66,7 +66,7 @@ used, for example). The second way is a higher level interface:
 at the end of execution of the code within the context, the connection is
 closed automatically.
 
-.. node::
+.. note::
 
     clj.jdbc can not use any global/thread-local state, and always try ensure
     immutability.
