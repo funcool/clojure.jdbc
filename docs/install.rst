@@ -4,6 +4,17 @@ Install
 This part of the documentation covers the installation of **clj.jdbc** using abitual
 tools of clojure ecosystem.
 
+Requirements
+------------
+
+``clj.jdbc`` after ``0.1.0-rc1`` version is now compatible with jdk6.
+
+Tested platforms:
+
+- OpenJDK7
+- OracleJDK7
+- OpenJDK6
+
 Leiningen
 ---------
 
