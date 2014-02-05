@@ -15,7 +15,7 @@
 (ns jdbc.types.resultset)
 
 (defrecord ResultSet [stmt rs lazy data]
-  java.lang.AutoCloseable
+  java.io.Closeable
   (close [this]
     (.close (:rs this))
     (.close (:stmt this))))

@@ -21,7 +21,7 @@
    :serializable (java.sql.Connection/TRANSACTION_SERIALIZABLE)})
 
 (defrecord Connection [connection metadata]
-  java.lang.AutoCloseable
+  java.io.Closeable
   (close [this]
     (.close (:connection this))))
 
