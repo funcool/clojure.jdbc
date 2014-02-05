@@ -66,6 +66,11 @@
       (let [result (query conn ["SELECT 1 + 1 as foo;"])]
         (is (= [{:foo 2}] result)))))
 
+  (testing "Simple query result using query function"
+    (with-connection h2-dbspec3 conn
+      (let [result (query conn ["SELECT 1 + 1 as foo;"] {:identifiers identity})]
+        (is (= [{:FOO 2}] result)))))
+
   (testing "Simple query result using query function and string parameter"
     (with-connection h2-dbspec3 conn
       (let [result (query conn "SELECT 1 + 1 as foo;")]
