@@ -47,7 +47,7 @@ Changelog
 Version 0.1-rc1
 ~~~~~~~~~~~~~~~
 
-- jdk6 (openjdk6 & oracle jdk6) support (`java.lang.AutoCloseable` interface is replaced
+- jdk6 support added (`java.lang.AutoCloseable` interface is replaced
   with `java.io.Closeable` interface)
 - Minor change: identifiers now uses `identity` instead of `str/lower-case`.
 
