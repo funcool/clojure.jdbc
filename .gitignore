@@ -12,3 +12,6 @@ pom.xml.asc
 docs/_build*
 docs/codox*
 docs/uberdoc.html
+\#*\#
+.\#*
+*~
