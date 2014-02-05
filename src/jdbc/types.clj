@@ -32,6 +32,9 @@
 
   (from-sql-type [_ conn metadata index] "Convert sql type to user type."))
 
+(defprotocol ISQLStatement
+  (normalize [this conn options]))
+
 (extend-protocol ISQLType
   Object
   (as-sql-type [this conn] this)

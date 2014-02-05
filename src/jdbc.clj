@@ -290,6 +290,19 @@
        (dorun (map-indexed #(.setObject stmt (inc %1) (types/as-sql-type %2 conn)) params)))
      stmt)))
 
+(extend-protocol types/ISQLStatement
+  clojure.lang.APersistentVector
+  (normalize [sql-with-params conn options]
+    (make-prepared-statement conn sql-with-params options))
+
+  String
+  (normalize [sql conn options]
+    (make-prepared-statement conn [sql] options))
+
+  PreparedStatement
+  (normalize [prepared-stmt conn options]
+    prepared-stmt))
+
 (defn make-query
   "Given a connection and paramatrized sql, execute a query and
   return a instance of ResultSet that works as stantard clojure
@@ -328,18 +341,7 @@
   ([conn sql-with-params {:keys [fetch-size lazy] :or {lazy false} :as options}]
    {:pre [(is-connection? conn)]}
    (let [connection (:connection conn)
-         stmt       (cond
-                      (vector? sql-with-params)
-                      (make-prepared-statement conn sql-with-params options)
-
-                      (string? sql-with-params)
-                      (make-prepared-statement conn [sql-with-params] options)
-
-                      (instance? PreparedStatement sql-with-params)
-                      sql-with-params
-
-                      :else
-                      (throw (IllegalArgumentException. "Invalid arguments")))]
+         stmt       (types/normalize sql-with-params conn options)]
      (let [rs (.executeQuery stmt)]
        (if (not lazy)
          (->ResultSet stmt rs false (result-set->vector conn rs options))
