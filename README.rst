@@ -49,7 +49,6 @@ Version 0.1-rc1
 
 - jdk6 support added (`java.lang.AutoCloseable` interface is replaced
   with `java.io.Closeable` interface)
-- Minor change: identifiers now uses `identity` instead of `str/lower-case`.
 
 Version 0.1-beta5
 ~~~~~~~~~~~~~~~~~
