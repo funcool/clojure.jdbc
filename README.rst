@@ -3,6 +3,10 @@ clj.jdbc
 
 Alternative jdbc wrapper for clojure.
 
+.. image:: https://travis-ci.org/niwibe/clj.jdbc.png?branch=master
+    :target: https://travis-ci.org/niwibe/clj.jdbc
+
+
 Install
 -------
 
