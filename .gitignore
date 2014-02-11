@@ -9,9 +9,8 @@ pom.xml.asc
 /.lein-*
 /.nrepl-port
 *.db
-docs/_build*
-docs/codox*
-docs/uberdoc.html
+doc/index.html
+doc/api*
 \#*\#
 .\#*
 *~
