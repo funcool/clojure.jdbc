@@ -36,9 +36,7 @@ Maven
 Doc
 ---
 
-**Documentation:** http://cljjdbc.readthedocs.org/en/latest/
-
-**ApiDoc:** http://niwibe.github.io/clj.jdbc/api/
+**Documentation:** http://niwibe.github.io/clj.jdbc/
 
 
 Changelog
