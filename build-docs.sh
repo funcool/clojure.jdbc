@@ -1,13 +1,18 @@
 #!/bin/sh
-lein marg
 lein doc
-cp docs/uberdoc.html /tmp/uberdoc.html
-cp -r docs/codox /tmp/codox
+(cd doc; make)
+cp -vr doc/index.html /tmp/index.html;
+cp -vr doc/static /tmp/static
+mv -v doc/api /tmp/api
 git checkout gh-pages;
 
-rm -rf api
-mv /tmp/uberdoc.html index.html
-mv /tmp/codox api
+rm -rf *
+mv -fv /tmp/static .
+mv -fv /tmp/index.html .
+mv -fv /tmp/api .
+
 git add --all index.html
 git add --all api
-git commit -m "Update doc"
+git add --all static
+
+git commit -a -m "Update doc"

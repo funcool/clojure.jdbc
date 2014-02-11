@@ -17,7 +17,7 @@ official library."
                  [com.mchange/c3p0 "0.9.5-pre6"]]
   :plugins [[lein-marginalia "0.7.1"]
             [codox "0.6.6"]]
-  :codox {:output-dir "docs/codox"
+  :codox {:output-dir "doc/api"
           :src-dir-uri "http://github.com/niwibe/clj.jdbc/blob/master/"
           :src-linenum-anchor-prefix "L"}
   :target-path "target/%s")
