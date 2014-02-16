@@ -1,7 +1,7 @@
 clj.jdbc documentation
 ======================
 Andrey Antukh, <niwi@niwi.be>
-0.1.0, 2014-02-11
+0.1.0, 2014-02-16
 
 :toc:
 :numbered:
@@ -57,7 +57,7 @@ vector of your *_project.clj_* file:
 ._on project.clj_
 [source,clojure]
 ----
-[be.niwi/clj.jdbc "0.1.0-beta5"]
+[be.niwi/clj.jdbc "0.1.0-rc1"]
 ----
 
 Gradle
@@ -67,7 +67,7 @@ If you are using gradle, this is a dependency line for gradle dsl:
 
 [source,groovy]
 ----
-compile "be.niwi:clj.jdbc:0.1.0-beta5"
+compile "be.niwi:clj.jdbc:0.1.0-rc1"
 ----
 
 Maven
@@ -91,7 +91,7 @@ this is a xml that you should put on dependency section on a maven config file:
 <dependency>
   <groupId>be.niwi</groupId>
   <artifactId>clj.jdbc</artifactId>
-  <version>0.1.0-beta5</version>
+  <version>0.1.0-rc1</version>
 </dependency>
 ----
 
