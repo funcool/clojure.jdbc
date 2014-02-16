@@ -11,10 +11,16 @@ official library."
             :url "http://www.apache.org/licenses/LICENSE-2.0.txt"}
   :dependencies [[org.clojure/clojure "1.5.1"]]
   :profiles {:uberjar {:aot :all}
+             :bench {:source-paths ["bench/"]
+                     :main jdbc.bench
+                     :dependencies [[org.clojure/java.jdbc "0.3.3"]
+                                    [postgresql "9.1-901.jdbc4"]]}
              :test {:dependencies [[com.h2database/h2 "1.3.170"]
                                    [postgresql "9.1-901.jdbc4"]]}}
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [com.mchange/c3p0 "0.9.5-pre6"]]
+  :aot [jdbc.types.connection
+        jdbc.types.resultset]
   :plugins [[lein-marginalia "0.7.1"]
             [codox "0.6.6"]]
   :codox {:output-dir "doc/api"
