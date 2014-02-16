@@ -48,6 +48,7 @@ Version 0.1-rc1
 - jdk6 support added (`java.lang.AutoCloseable` interface is replaced
   with `java.io.Closeable` interface)
 - Add ISQLStatement protocol for make easy extend query (and friends) function parameter.
+- Performance improvements (with micro bench suite)
 
 Version 0.1-beta5
 ~~~~~~~~~~~~~~~~~
