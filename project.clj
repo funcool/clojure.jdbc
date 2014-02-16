@@ -10,8 +10,7 @@ official library."
   :license {:name "Apache 2.0"
             :url "http://www.apache.org/licenses/LICENSE-2.0.txt"}
   :dependencies [[org.clojure/clojure "1.5.1"]]
-  :profiles {:uberjar {:aot :all}
-             :bench {:source-paths ["bench/"]
+  :profiles {:bench {:source-paths ["bench/"]
                      :main jdbc.bench
                      :dependencies [[org.clojure/java.jdbc "0.3.3"]
                                     [postgresql "9.1-901.jdbc4"]]}
