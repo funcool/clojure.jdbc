@@ -196,7 +196,7 @@ works like `with-open` clojure macro. And this is an equivalent piece of code us
 
 [source,clojure]
 ----
-(with-connection dbspec conn
+(with-connection [conn dbspec]
   (do-something-with conn))
 ----
 
@@ -217,7 +217,7 @@ of sql sentences:
 
 [source,clojure]
 ----
-(with-connection dbspec conn
+(with-connection [conn dbspec]
   (execute! conn "CREATE TABLE foo (id serial, name text);"))
 ----
 
@@ -493,7 +493,7 @@ For use it, _clj.jdbc_ exposes two ways:
 .Using `with-transaction-strategy` macro
 [source,clojure]
 ----
-(with-connection dbspec conn
+(with-connection [conn dbspec]
   (with-transaction-strategy conn (DummyTransactionStrategy.)
     (do-some-thing conn)))
 ----
@@ -537,7 +537,7 @@ to sql array and assigned properly to prepared statement:
 
 [source,clojure]
 ----
-(with-connection pg-dbspec conn
+(with-connection [conn pg-dbspec]
   (execute! conn "CREATE TABLE arrayfoo (id integer, data text[]);")
   (let [mystringarray (into-array String ["foo" "bar"])]
     (execute-prepared! conn "INSERT INTO arrayfoo VALUES (?, ?);"

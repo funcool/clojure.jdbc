@@ -399,18 +399,28 @@
 
 (defmacro with-connection
   "Given database connection paramers (dbspec), creates
-  a context with new connection to database that are closed
-  at end of code block.
+a context with new connection to database that are closed
+at end of code block.
 
-  If dbspec has datasource (connection pool), instead of create
-  a new connection, get it from connection pool and release it
-  at the end.
+If dbspec has datasource (connection pool), instead of create
+a new connection, get it from connection pool and release it
+at the end.
 
-  Example:
+Example:
 
-    (with-connection dbspec conn
-      (do-something-with conn))
+  (with-connection [conn dbspec]
+    (do-somethin-with-connection conn))
+
+Deprecated but yet working example (this behavior should be
+removed on 1.1 version):
+
+  (with-connection dbspec conn
+    (do-something-with conn))
   "
-  [dbspec bindname & body]
-  `(with-open [~bindname (make-connection ~dbspec)]
-     ~@body))
+  [dbspec & body]
+  (if (vector? dbspec)
+    `(with-open [con# (make-connection ~(second dbspec))]
+       (let [~(first dbspec) con#]
+         ~@body))
+    `(with-open [~(first body) (make-connection ~dbspec)]
+       ~@(rest body))))

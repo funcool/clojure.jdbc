@@ -49,6 +49,8 @@ Version 0.1-rc1
   with `java.io.Closeable` interface)
 - Add ISQLStatement protocol for make easy extend query (and friends) function parameter.
 - Performance improvements (with micro bench suite)
+- Changed syntax for `with-connection` for more idiomatic way (previous behavior
+  mantained for backward compatibility).
 
 Version 0.1-beta5
 ~~~~~~~~~~~~~~~~~
