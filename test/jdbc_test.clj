@@ -66,6 +66,11 @@
       (let [result (query conn ["SELECT 1 + 1 as foo;"])]
         (is (= [{:foo 2}] result)))))
 
+  (testing "More complex query using query funcion"
+    (with-connection [conn pg-dbspec]
+      (let [result (query conn ["SELECT * FROM generate_series(1, ?) LIMIT 1 OFFSET 3;" 10])]
+        (is (= (count result) 1)))))
+
   (testing "Simple query result using query function overwriting identifiers parameter."
     (with-connection h2-dbspec3 conn
       (let [result (query conn ["SELECT 1 + 1 as foo;"] {:identifiers identity})]
