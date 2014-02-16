@@ -611,6 +611,33 @@ This is a incomplete list of reasons:
 - Much more documentation ;) (a project without documentation is a project that doesn't
   really exist).
 
+clj.jdbc has better performance than java.jdbc?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Mostly **Yes**, _clj.jdbc_  by default has better performance than java.jdbc. You can
+run the micho benchmark code on your environment with: `lein with-profile bench run`
+
+On my environments, the result is:
+
+[source,text]
+----
+[3/5.0.5]niwi@niwi:~/clj.jdbc> lein with-profile bench run
+Simple query without connection overhead.
+java.jdbc:
+"Elapsed time: 673.890131 msecs"
+clj.jdbc:
+"Elapsed time: 450.329706 msecs"
+Simple query with connection overhead.
+java.jdbc:
+"Elapsed time: 2490.233925 msecs"
+clj.jdbc:
+"Elapsed time: 2239.524395 msecs"
+Simple query with transaction.
+java.jdbc:
+"Elapsed time: 532.151667 msecs"
+clj.jdbc:
+"Elapsed time: 475.982354 msecs"
+----
 
 Why clj.jdbc does not include dsl for working with sql as clojure.java.jdbc 0.3?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
