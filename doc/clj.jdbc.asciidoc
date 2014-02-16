@@ -615,7 +615,7 @@ clj.jdbc has better performance than java.jdbc?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Mostly **Yes**, _clj.jdbc_  by default has better performance than java.jdbc. You can
-run the micho benchmark code on your environment with: `lein with-profile bench run`
+run the micro benchmark code on your environment with: `lein with-profile bench run`
 
 On my environments, the result is:
 
