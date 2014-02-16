@@ -18,7 +18,8 @@
            (java.sql BatchUpdateException DriverManager
                      PreparedStatement ResultSet SQLException Statement Types)
            (java.util Hashtable Map Properties)
-           (javax.sql DataSource))
+           (javax.sql DataSource)
+           (jdbc.types.connection Connection))
   (:require [clojure.string :as str]
             [jdbc.types.connection :refer [->Connection is-connection?]]
             [jdbc.types.resultset :refer [->ResultSet]]
@@ -96,15 +97,15 @@
                     parameter you can enable this behavior and return a lazy-seq
                     of vectors instead of records (maps).
   "
-  [conn rs & [{:keys [identifiers as-rows?]
-         :or {identifiers str/lower-case as-rows? false}
-         :as options}]]
+  [^Connection conn, ^ResultSet rs & [{:keys [identifiers as-rows?]
+                                       :or {identifiers str/lower-case as-rows? false}
+                                       :as options}]]
   (let [metadata    (.getMetaData rs)
         idseq       (range 1 (inc (.getColumnCount metadata)))
         keyseq      (->> idseq
-                         (map (fn [i] (.getColumnLabel metadata i)))
+                         (map (fn [^long i] (.getColumnLabel metadata i)))
                          (map (comp keyword identifiers)))
-        values      (fn [] (map (fn [i] (types/from-sql-type (.getObject rs i) conn metadata i)) idseq))
+        values      (fn [] (map (fn [^long i] (types/from-sql-type (.getObject rs i) conn metadata i)) idseq))
         records     (fn thisfn []
                       (when (.next rs)
                         (cons (zipmap keyseq (values)) (lazy-seq (thisfn)))))
@@ -339,10 +340,9 @@
           (println row))))"
   ([conn sql-with-params] (make-query conn sql-with-params {}))
   ([conn sql-with-params {:keys [fetch-size lazy] :or {lazy false} :as options}]
-   {:pre [(is-connection? conn)]}
    (let [connection (:connection conn)
          stmt       (types/normalize sql-with-params conn options)]
-     (let [rs (.executeQuery stmt)]
+     (let [^ResultSet rs (.executeQuery stmt)]
        (if (not lazy)
          (->ResultSet stmt rs false (result-set->vector conn rs options))
          (->ResultSet stmt rs true (result-set->lazyseq conn rs options)))))))
@@ -370,10 +370,11 @@
         (println row)))
   "
   ([conn sqlvec] (query conn sqlvec {}))
-  ([conn sqlvec options]
-   {:pre [(is-connection? conn)]}
-   (with-open [result (make-query conn sqlvec (assoc options :lazy false))]
-     (:data result))))
+  ([conn sqlvec {:keys [lazy] :or {lazy false} :as options}]
+   (let [connection (:connection conn)
+         stmt       (types/normalize sqlvec conn options)]
+     (let [^ResultSet rs (.executeQuery stmt)]
+       (result-set->vector conn rs options)))))
 
 (defmacro with-query
   "Idiomatic dsl macro for ``query`` function that handles well queries
