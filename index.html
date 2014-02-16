@@ -22,7 +22,7 @@ asciidoc.install(2);
 <span id="author">Andrey Antukh,</span><br>
 <span id="email" class="monospaced">&lt;<a href="mailto:niwi@niwi.be">niwi@niwi.be</a>&gt;</span><br>
 <span id="revnumber">version 0.1.0,</span>
-<span id="revdate">2014-02-11</span>
+<span id="revdate">2014-02-16</span>
 <div id="toc">
   <div id="toctitle">Table of Contents</div>
   <noscript><p><b>JavaScript must be enabled in your browser to display the table of contents.</b></p></noscript>
@@ -106,14 +106,14 @@ Oracle JDK7
 vector of your <strong><em>project.clj</em></strong> file:</p></div>
 <div class="listingblock">
 <div class="title"><em>on project.clj</em></div>
-<div class="content"><div class="highlight"><pre><span class="p">[</span><span class="nv">be.niwi/clj.jdbc</span> <span class="s">&quot;0.1.0-beta5&quot;</span><span class="p">]</span>
+<div class="content"><div class="highlight"><pre><span class="p">[</span><span class="nv">be.niwi/clj.jdbc</span> <span class="s">&quot;0.1.0-rc1&quot;</span><span class="p">]</span>
 </pre></div></div></div>
 </div>
 <div class="sect2">
 <h3 id="_gradle">3.3. Gradle</h3>
 <div class="paragraph"><p>If you are using gradle, this is a dependency line for gradle dsl:</p></div>
 <div class="listingblock">
-<div class="content"><div class="highlight"><pre><span class="n">compile</span> <span class="s2">&quot;be.niwi:clj.jdbc:0.1.0-beta5&quot;</span>
+<div class="content"><div class="highlight"><pre><span class="n">compile</span> <span class="s2">&quot;be.niwi:clj.jdbc:0.1.0-rc1&quot;</span>
 </pre></div></div></div>
 </div>
 <div class="sect2">
@@ -132,7 +132,7 @@ this is a xml that you should put on dependency section on a maven config file:<
 <div class="content"><div class="highlight"><pre><span class="nt">&lt;dependency&gt;</span>
   <span class="nt">&lt;groupId&gt;</span>be.niwi<span class="nt">&lt;/groupId&gt;</span>
   <span class="nt">&lt;artifactId&gt;</span>clj.jdbc<span class="nt">&lt;/artifactId&gt;</span>
-  <span class="nt">&lt;version&gt;</span>0.1.0-beta5<span class="nt">&lt;/version&gt;</span>
+  <span class="nt">&lt;version&gt;</span>0.1.0-rc1<span class="nt">&lt;/version&gt;</span>
 <span class="nt">&lt;/dependency&gt;</span>
 </pre></div></div></div>
 </div>
@@ -227,7 +227,7 @@ closed and is strongly recommended use of <span class="monospaced">with-open</sp
 works like <span class="monospaced">with-open</span> clojure macro. And this is an equivalent piece of code using
 <span class="monospaced">with-connection</span> macro:</p></div>
 <div class="listingblock">
-<div class="content"><div class="highlight"><pre><span class="p">(</span><span class="nf">with-connection</span> <span class="nv">dbspec</span> <span class="nv">conn</span>
+<div class="content"><div class="highlight"><pre><span class="p">(</span><span class="nf">with-connection</span> <span class="p">[</span><span class="nv">conn</span> <span class="nv">dbspec</span><span class="p">]</span>
   <span class="p">(</span><span class="nf">do-something-with</span> <span class="nv">conn</span><span class="p">))</span>
 </pre></div></div></div>
 </div>
@@ -242,7 +242,7 @@ tables, inserting data or simply executing stored procedures.</p></div>
 receives a connection as the first parameter followed by variable list
 of sql sentences:</p></div>
 <div class="listingblock">
-<div class="content"><div class="highlight"><pre><span class="p">(</span><span class="nf">with-connection</span> <span class="nv">dbspec</span> <span class="nv">conn</span>
+<div class="content"><div class="highlight"><pre><span class="p">(</span><span class="nf">with-connection</span> <span class="p">[</span><span class="nv">conn</span> <span class="nv">dbspec</span><span class="p">]</span>
   <span class="p">(</span><span class="nf">execute!</span> <span class="nv">conn</span> <span class="s">&quot;CREATE TABLE foo (id serial, name text);&quot;</span><span class="p">))</span>
 </pre></div></div></div>
 </div>
@@ -530,7 +530,7 @@ strategy for your application.</p></div>
 <div class="paragraph"><p>For use it, <em>clj.jdbc</em> exposes two ways:</p></div>
 <div class="listingblock">
 <div class="title">Using <span class="monospaced">with-transaction-strategy</span> macro</div>
-<div class="content"><div class="highlight"><pre><span class="p">(</span><span class="nf">with-connection</span> <span class="nv">dbspec</span> <span class="nv">conn</span>
+<div class="content"><div class="highlight"><pre><span class="p">(</span><span class="nf">with-connection</span> <span class="p">[</span><span class="nv">conn</span> <span class="nv">dbspec</span><span class="p">]</span>
   <span class="p">(</span><span class="nf">with-transaction-strategy</span> <span class="nv">conn</span> <span class="p">(</span><span class="nf">DummyTransactionStrategy.</span><span class="p">)</span>
     <span class="p">(</span><span class="nf">do-some-thing</span> <span class="nv">conn</span><span class="p">)))</span>
 </pre></div></div></div>
@@ -564,7 +564,7 @@ to database field that correspons to postgresql text array on a database:</p></d
 <div class="paragraph"><p>Now, you can pass a string array as jdbc parameter that is automaticlay converted
 to sql array and assigned properly to prepared statement:</p></div>
 <div class="listingblock">
-<div class="content"><div class="highlight"><pre><span class="p">(</span><span class="nf">with-connection</span> <span class="nv">pg-dbspec</span> <span class="nv">conn</span>
+<div class="content"><div class="highlight"><pre><span class="p">(</span><span class="nf">with-connection</span> <span class="p">[</span><span class="nv">conn</span> <span class="nv">pg-dbspec</span><span class="p">]</span>
   <span class="p">(</span><span class="nf">execute!</span> <span class="nv">conn</span> <span class="s">&quot;CREATE TABLE arrayfoo (id integer, data text[]);&quot;</span><span class="p">)</span>
   <span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">mystringarray</span> <span class="p">(</span><span class="nb">into-array </span><span class="nv">String</span> <span class="p">[</span><span class="s">&quot;foo&quot;</span> <span class="s">&quot;bar&quot;</span><span class="p">])]</span>
     <span class="p">(</span><span class="nf">execute-prepared!</span> <span class="nv">conn</span> <span class="s">&quot;INSERT INTO arrayfoo VALUES (?, ?);&quot;</span>
@@ -690,7 +690,31 @@ Much more documentation ;) (a project without documentation is a project that do
 </ul></div>
 </div>
 <div class="sect2">
-<h3 id="_why_clj_jdbc_does_not_include_dsl_for_working_with_sql_as_clojure_java_jdbc_0_3">7.2. Why clj.jdbc does not include dsl for working with sql as clojure.java.jdbc 0.3?</h3>
+<h3 id="_clj_jdbc_has_better_performance_than_java_jdbc">7.2. clj.jdbc has better performance than java.jdbc?</h3>
+<div class="paragraph"><p>Mostly <strong>Yes</strong>, <em>clj.jdbc</em>  by default has better performance than java.jdbc. You can
+run the micro benchmark code on your environment with: <span class="monospaced">lein with-profile bench run</span></p></div>
+<div class="paragraph"><p>On my environments, the result is:</p></div>
+<div class="listingblock">
+<div class="content"><div class="highlight"><pre>[3/5.0.5]niwi@niwi:~/clj.jdbc&gt; lein with-profile bench run
+Simple query without connection overhead.
+java.jdbc:
+&quot;Elapsed time: 673.890131 msecs&quot;
+clj.jdbc:
+&quot;Elapsed time: 450.329706 msecs&quot;
+Simple query with connection overhead.
+java.jdbc:
+&quot;Elapsed time: 2490.233925 msecs&quot;
+clj.jdbc:
+&quot;Elapsed time: 2239.524395 msecs&quot;
+Simple query with transaction.
+java.jdbc:
+&quot;Elapsed time: 532.151667 msecs&quot;
+clj.jdbc:
+&quot;Elapsed time: 475.982354 msecs&quot;
+</pre></div></div></div>
+</div>
+<div class="sect2">
+<h3 id="_why_clj_jdbc_does_not_include_dsl_for_working_with_sql_as_clojure_java_jdbc_0_3">7.3. Why clj.jdbc does not include dsl for working with sql as clojure.java.jdbc 0.3?</h3>
 <div class="quoteblock">
 <div class="content">
 <div class="paragraph"><p>Write programs that do one thing and do it well.</p></div>
@@ -705,7 +729,7 @@ clj.jdbc will not reinvent the wheel.<br>
 One example of a good dsl for build sql: <a href="https://github.com/r0man/sqlingvo">https://github.com/r0man/sqlingvo</a></p></div>
 </div>
 <div class="sect2">
-<h3 id="_this_is_a_fork_of_clojure_java_jdbc">7.3. This is a fork of clojure.java.jdbc?</h3>
+<h3 id="_this_is_a_fork_of_clojure_java_jdbc">7.4. This is a fork of clojure.java.jdbc?</h3>
 <div class="paragraph"><p>No. Is just a alternative implementation.</p></div>
 </div>
 </div>
@@ -741,7 +765,7 @@ initial work. Some intial ideas for clj.jdbc are taken from it.</p></div>
 <div id="footer">
 <div id="footer-text">
 Version 0.1.0<br>
-Last updated 2014-02-11 22:56:39 CET
+Last updated 2014-02-16 20:13:38 CET
 </div>
 </div>
 </body>
