@@ -50,6 +50,7 @@ Date: unreleased
 - Connection pooling is splited to separate module (it preserves same api, but should be
   declared as additional dependency if you want use it).
 - Set clojure 1.6 as default clojure version.
+- Add apache-commonds dbcp 2.0 connection pool support.
 
 Version 0.1-rc1
 ~~~~~~~~~~~~~~~
