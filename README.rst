@@ -42,6 +42,15 @@ Doc
 Changelog
 ---------
 
+Version 0.1.1
+~~~~~~~~~~~~~
+
+Date: unreleased
+
+- Connection pooling is splited to separate module (it preserves same api, but should be
+  declared as additional dependency if you want use it).
+- Set clojure 1.6 as default clojure version.
+
 Version 0.1-rc1
 ~~~~~~~~~~~~~~~
 
