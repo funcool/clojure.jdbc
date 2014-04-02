@@ -3,6 +3,7 @@
             [jdbc.transaction :refer :all]
             [jdbc.types :refer :all]
             [jdbc.pool.c3p0 :as pool-c3p0]
+            [jdbc.pool.dbcp :as ac-dbcp]
             [clojure.test :refer :all]))
 
 (def h2-dbspec1 {:classname "org.h2.Driver"
@@ -172,11 +173,23 @@
 
 (deftest db-pool
   (testing "C3P0 connection pool testing."
-    (let [spec (pool-c3p0/make-datasource-spec h2-dbspec3)]
+    (let [spec (pool-c3p0/make-datasource-spec h2-dbspec1)]
       (is (instance? javax.sql.DataSource (:datasource spec)))
       (with-open [conn (make-connection spec)]
         (is (instance? jdbc.types.connection.Connection conn))
-        (is (instance? java.sql.Connection (:connection conn)))))))
+        (is (instance? java.sql.Connection (:connection conn)))
+
+        (let [result (query conn ["SELECT 1 + 1 as foo;"])]
+          (is (= [{:foo 2}] result))))))
+
+  (testing "Apache commons DBCP connection pool testing."
+    (let [spec (ac-dbcp/make-datasource-spec h2-dbspec1)]
+      (is (instance? javax.sql.DataSource (:datasource spec)))
+      (with-open [conn (make-connection spec)]
+        (is (instance? jdbc.types.connection.Connection conn))
+        (is (instance? java.sql.Connection (:connection conn)))
+        (let [result (query conn ["SELECT 1 + 1 as foo;"])]
+          (is (= [{:foo 2}] result)))))))
 
 (defrecord BasicTransactionStrategy []
   ITransactionStrategy
