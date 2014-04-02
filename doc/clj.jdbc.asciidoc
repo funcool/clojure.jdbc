@@ -44,9 +44,8 @@ Requirements
 
 _clj.jdbc_ is tested with these platforms:
 
-- OpenJDK7
-- OpenJDK6
-- Oracle JDK7
+- JDK7
+- JDK8
 
 Leiningen
 ~~~~~~~~~
