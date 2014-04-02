@@ -1,0 +1,16 @@
+/target
+/classes
+/checkouts
+pom.xml
+pom.xml.asc
+*.swp
+*.jar
+*.class
+/.lein-*
+/.nrepl-port
+*.db
+doc/index.html
+doc/api*
+\#*\#
+.\#*
+*~
