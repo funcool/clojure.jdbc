@@ -478,6 +478,36 @@ helper function:
 ;; like a plain dbspec for open new connection.
 ----
 
+Apache-Commons DBCP
+^^^^^^^^^^^^^^^^^^^
+
+Database connection pooling services from Apache-Commons
+
+Install
++++++++
+
+._on project.clj_
+[source, clojure]
+----
+[be.niwi/clj.jdbc-dbcp "0.1.1"]
+----
+
+Usage
++++++
+
+For use a connection pool, you should convert your plain dbspec to datasource-dbspec using
+helper function:
+
+[source,clojure]
+----
+(require '[jdbc.pool.dbcp :as pool])
+(def dbspec (pool/make-datasource-spec {:classname "org.postgresql.Driver"
+                                        :subprotocol "postgresql"
+                                        :subname "//localhost:5432/dbname"}))
+----
+
+NOTE: this is a recommended implementation for connection pooling.
+
 [[transaction-strategy]]
 Transaction strategy
 ~~~~~~~~~~~~~~~~~~~~
