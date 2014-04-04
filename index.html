@@ -491,17 +491,25 @@ which are used for executing a query.</p></div>
 <td class="content"><span class="monospaced">make-query</span> is a low level interface and you must be careful to use it.</td>
 </tr></table>
 </div>
-<div class="exampleblock">
-<div class="content">
-<div class="paragraph" id="connection-pool"><p>All good database library should come with connection pool support.</p></div>
+</div>
+<div class="sect2">
+<h3 id="connection-pool">5.3. Connection pool</h3>
+<div class="paragraph"><p>All good database library should come with connection pool support.</p></div>
 <div class="paragraph"><p>Java ecosystem comes with various connection pool implementations for jdbc and clj.jdbc
 comes with following interfaces:</p></div>
+<div class="sect3">
+<h4 id="_c3p0">5.3.1. c3p0</h4>
 <div class="paragraph"><p>c3p0 is an easy-to-use library for making traditional JDBC drivers "enterprise-ready" by
 augmenting them with functionality defined by the jdbc3 spec</p></div>
+<div class="sect4">
+<h5 id="_install_2">Install</h5>
 <div class="listingblock">
 <div class="title"><em>on project.clj</em></div>
 <div class="content"><div class="highlight"><pre><span class="p">[</span><span class="nv">be.niwi/clj.jdbc-c3p0</span> <span class="s">&quot;0.1.1&quot;</span><span class="p">]</span>
 </pre></div></div></div>
+</div>
+<div class="sect4">
+<h5 id="_usage">Usage</h5>
 <div class="paragraph"><p>For use a connection pool, you should convert your plain dbspec to datasource-dbspec using
 helper function:</p></div>
 <div class="listingblock">
@@ -513,11 +521,20 @@ helper function:</p></div>
 <span class="c1">;; instead of plain dbspec with connection parameters. This dbspec should be used</span>
 <span class="c1">;; like a plain dbspec for open new connection.</span>
 </pre></div></div></div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_apache_commons_dbcp">5.3.2. Apache-Commons DBCP</h4>
 <div class="paragraph"><p>Database connection pooling services from Apache-Commons</p></div>
+<div class="sect4">
+<h5 id="_install_3">Install</h5>
 <div class="listingblock">
 <div class="title"><em>on project.clj</em></div>
 <div class="content"><div class="highlight"><pre><span class="p">[</span><span class="nv">be.niwi/clj.jdbc-dbcp</span> <span class="s">&quot;0.1.1&quot;</span><span class="p">]</span>
 </pre></div></div></div>
+</div>
+<div class="sect4">
+<h5 id="_usage_2">Usage</h5>
 <div class="paragraph"><p>For use a connection pool, you should convert your plain dbspec to datasource-dbspec using
 helper function:</p></div>
 <div class="listingblock">
@@ -534,7 +551,12 @@ helper function:</p></div>
 <td class="content">this is a recommended implementation for connection pooling.</td>
 </tr></table>
 </div>
-<div class="paragraph" id="transaction-strategy"><p>Transactions strategy on <em>clj.jdbc</em> are implemented using protocols having default implementation explained
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="transaction-strategy">5.4. Transaction strategy</h3>
+<div class="paragraph"><p>Transactions strategy on <em>clj.jdbc</em> are implemented using protocols having default implementation explained
 in previous sections. This approach, allows easy way to extend, customize or completely change a transaction
 strategy for your application.</p></div>
 <div class="paragraph"><p>If you want an other strategy, you should create a new type and implement <span class="monospaced">ITransactionStrategy</span> protocol.</p></div>
@@ -559,6 +581,9 @@ strategy for your application.</p></div>
                      <span class="p">(</span><span class="nf">wrap-transaction-strategy</span> <span class="p">(</span><span class="nf">DummyTransactionStrategy.</span><span class="p">)))]</span>
   <span class="p">(</span><span class="nf">do-some-thing</span> <span class="nv">conn</span><span class="p">))</span>
 </pre></div></div></div>
+</div>
+<div class="sect2">
+<h3 id="_extend_sql_types">5.5. Extend sql types</h3>
 <div class="paragraph"><p>All related to type handling/conversion are exposed on <span class="monospaced">jdbc.types</span> namespace.</p></div>
 <div class="paragraph"><p>If you want extend some type/class for use it as jdbc parameter without explicit conversion
 to sql compatible type, you should extend your type with <span class="monospaced">jdbc.types/ISQLType</span> protocol.</p></div>
@@ -588,6 +613,12 @@ to sql array and assigned properly to prepared statement:</p></div>
 </pre></div></div></div>
 <div class="paragraph"><p>clj.jdbc also exposes <span class="monospaced">jdbc.types/ISQLResultSetReadColumn</span> protocol that encapsulates
 a backward conversions from sql types to user defined types.</p></div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_how_to_contribute">6. How to contribute?</h2>
+<div class="sectionbody">
 <div class="paragraph"><p><strong>clj.jdbc</strong> unlike clojure and other clojure contrib libs, does not have much
 restrictions for contribute. Just follow the following steps depending on the
 situation:</p></div>
@@ -622,6 +653,13 @@ If it is accepted, follow same steps as "bugfix".
 </p>
 </li>
 </ul></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_faq">7. Faq</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_why_another_jdbc_wrapper">7.1. Why another jdbc wrapper?</h3>
 <div class="paragraph"><p>This is a incomplete list of reasons:</p></div>
 <div class="ulist"><ul>
 <li>
@@ -691,6 +729,9 @@ Much more documentation ;) (a project without documentation is a project that do
 </p>
 </li>
 </ul></div>
+</div>
+<div class="sect2">
+<h3 id="_clj_jdbc_has_better_performance_than_java_jdbc">7.2. clj.jdbc has better performance than java.jdbc?</h3>
 <div class="paragraph"><p>Mostly <strong>Yes</strong>, <em>clj.jdbc</em>  by default has better performance than java.jdbc. You can
 run the micro benchmark code on your environment with: <span class="monospaced">lein with-profile bench run</span></p></div>
 <div class="paragraph"><p>On my environments, the result is:</p></div>
@@ -712,6 +753,9 @@ java.jdbc:
 clj.jdbc:
 &quot;Elapsed time: 475.982354 msecs&quot;
 </pre></div></div></div>
+</div>
+<div class="sect2">
+<h3 id="_why_clj_jdbc_does_not_include_dsl_for_working_with_sql_as_clojure_java_jdbc_0_3">7.3. Why clj.jdbc does not include dsl for working with sql as clojure.java.jdbc 0.3?</h3>
 <div class="quoteblock">
 <div class="content">
 <div class="paragraph"><p>Write programs that do one thing and do it well.</p></div>
@@ -724,7 +768,16 @@ clj.jdbc:
 for avoid sql usage. There already are a good number of DSLs for working with SQL.
 clj.jdbc will not reinvent the wheel.<br>
 One example of a good dsl for build sql: <a href="https://github.com/r0man/sqlingvo">https://github.com/r0man/sqlingvo</a></p></div>
+</div>
+<div class="sect2">
+<h3 id="_this_is_a_fork_of_clojure_java_jdbc">7.4. This is a fork of clojure.java.jdbc?</h3>
 <div class="paragraph"><p>No. Is just a alternative implementation.</p></div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_license">8. License</h2>
+<div class="sectionbody">
 <div class="paragraph"><p>clj.jdbc are writen from scratch and is licensed under Apache 2.0 license:</p></div>
 <div class="listingblock">
 <div class="content monospaced">
@@ -746,8 +799,6 @@ limitations under the License.</pre>
 repo.</p></div>
 <div class="paragraph"><p>Additionaly, I want give thanks to <span class="monospaced">clojure.java.jdbc</span> developers for a good
 initial work. Some intial ideas for clj.jdbc are taken from it.</p></div>
-</div></div>
-</div>
 </div>
 </div>
 </div>
@@ -755,7 +806,7 @@ initial work. Some intial ideas for clj.jdbc are taken from it.</p></div>
 <div id="footer">
 <div id="footer-text">
 Version 0.1.1<br>
-Last updated 2014-04-04 20:34:56 CEST
+Last updated 2014-04-04 20:37:56 CEST
 </div>
 </div>
 </body>
