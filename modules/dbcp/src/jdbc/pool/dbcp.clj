@@ -18,7 +18,7 @@
 
 (defn make-datasource-spec
   "Given a plain dbspec, convert it on datasource dbspec
-  using c3p0 connection pool implementation."
+  using apachr commons connection pool implementation."
   [dbspec]
   (let [normalized (normalize-dbspec dbspec)]
     (when (or (:factory normalized)
