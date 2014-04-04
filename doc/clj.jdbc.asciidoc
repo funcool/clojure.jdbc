@@ -427,7 +427,6 @@ which are used for executing a query.
 ====
 
 WARNING: `make-query` is a low level interface and you must be careful to use it.
-====
 
 [[connection-pool]]
 Connection pool
