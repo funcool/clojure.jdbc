@@ -6,7 +6,7 @@ cp -vr doc/static /tmp/static
 mv -v doc/api /tmp/api
 git checkout gh-pages;
 
-rm -rf *
+rm -rf static index.html api
 mv -fv /tmp/static .
 mv -fv /tmp/index.html .
 mv -fv /tmp/api .
