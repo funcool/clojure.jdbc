@@ -1,7 +1,7 @@
 clj.jdbc documentation
 ======================
 Andrey Antukh, <niwi@niwi.be>
-0.1.0, 2014-02-16
+0.1.1, 2014-04-04
 
 :toc:
 :numbered:
@@ -28,16 +28,16 @@ Five most important rules:
 
 All contributions to _clj.jdbc_ should keep these important rules in mind.
 
+
 Project Maturity
 ----------------
 
-_clj.jdbc_ is a young project and can have some bugs. Now, api is still stable
-and should not experiment big backward incompatible changes.
+Since _clj.jdbc_ is a young project there can be some API breakage.
 
 Install
 -------
 
-This section covers a installation and requirements of _clj.jdbc_
+This section covers a installing _clj.jdbc and its requirements.
 
 Requirements
 ~~~~~~~~~~~~
@@ -51,7 +51,7 @@ Leiningen
 ~~~~~~~~~
 
 The simplest way to use _clj.jdbc_ on clojure project, is including it on dependency
-vector of your *_project.clj_* file:
+vector on your *_project.clj_* file:
 
 ._on project.clj_
 [source,clojure]
@@ -94,16 +94,17 @@ this is a xml that you should put on dependency section on a maven config file:
 </dependency>
 ----
 
+
 Get the Code
 ~~~~~~~~~~~~
 
-_clj.jdbc_ is developed on GitHub, where the code is link:https://github.com/niwibe/clj.jdbc[always available].
+_clj.jdbc_ is opensource and is entirelly developed on link:https://github.com/niwibe/clj.jdbc[github].
 
-You can either clone the public repository:
+You can clone the public repository with this command:
 
 [source,text]
 ----
-git clone https://github.com/niwibe/clj.jdbc.git
+git clone https://github.com/niwibe/clj.jdbc
 ----
 
 
@@ -116,63 +117,52 @@ Connecting to database
 Connection parameters
 ^^^^^^^^^^^^^^^^^^^^^
 
-Usually, the documentation of any jvm language that explains JDBC always
-supposes that the reader comes from Java and knowns JDBC well. This
-documentation will not make the same mistake.
-
 JDBC is the default Java abstraction/interface for SQL databases.  It's like
 the Python DB-API and similar abstractions in other languages.  Clojure, as a
 guest language on the jvm, benefits from having a good, well tested abstraction
-like this.
+like that.
 
-*dbspec* is a simple Clojure way to define the database connection parameters
-using plain native clojure hash-map, that are used to create a new database
-connection or create a new datasource (connection pool).
+Connection parameters are exposed in a simple hash-map and called *dbspec*. This is the simplest
+and idiomatic way on clojure define configuration parameters.
 
-This is a default aspect of one dbspec definition:
-
+.This is a default aspect of one dbspec.
 [source,clojure]
 ----
-{:classname "org.postgresql.Driver"
- :subprotocol "postgresql"
- :subname "//localhost:5432/dbname"
- :user "username"
- :password "password"}
+(def dbspec {:classname "org.postgresql.Driver"
+             :subprotocol "postgresql"
+             :subname "//localhost:5432/dbname"
+             :user "username"         ;; Optional
+             :password "password"}    ;; Optional
 ----
 
-Description of the parameters:
+[NOTE]
+====
+The `:classname` parameter represents a class location/route of JDBC driver. Each driver has one; in
+this example it is a path to a Postgresql JDBC driver.  This parameter can be omited and in that case
+it is automatically resolved from a predefined list using `:subprotocol` key.
+====
 
-- `:classname` is a class location/route of JDBC driver. Each driver has one; in
-  this example it is a path to a Postgresql JDBC driver.  This parameter can be
-  omited and in that case it is automatically resolved from a predefined list
-  using `:subprotocol` key.
-- `:user` and `:password` can be ommited if they are empty.
+Also, *dbspec* can be represented as URI.
 
-dbspec has other formats which are parsed to the previously explained format.
-As an example, you can pass a string containing a url with same data:
-
+.Same as previous example but using uri format.
 [source,clojure]
 ----
-"postgresql://user:password@localhost:5432/dbname"
+(def dbspec "postgresql://user:password@localhost:5432/dbname")
 ----
 
 
 Creating a connection
 ^^^^^^^^^^^^^^^^^^^^^
 
-In clj.jdbc, every function that interacts with a database requires explicitly
-one connection instance as parameter. No dynamic vars are used for it.
+With clj.jdbc every function that interacts with a database, requires explicitly
+one connection instance as parameter (no dynamic vars are used for it).
 
-In contrast to clojure.java.jdbc, clj.jdbc requires that the connections should
-to be explicitly opened before any operation (you can't use dbspec map
-as connection). For this purpose, clj.jdbc exposes two ways to create new connections:
-`make-connection` function and the `with-connection` macro.
-
-The `make-connection` function exposes a low level interface for creating a connection,
-and delegates to user the connection resource management. A connection is not automatically
-closed and is strongly recommended use of `with-open` macro for clear resource management.
 
 NOTE: clj.jdbc does not use any global/thread-local state, and always try ensure immutability.
+
+NOTE: unlike clojure.java.jdbc, with _clj.jdbc_ you can't use a plain dbspec hash-map as
+connection parameter and you shall explicitly open a new connection before doing any operation
+in a database.
 
 .Example using `make-connection` function
 [source,clojure]
@@ -182,7 +172,11 @@ NOTE: clj.jdbc does not use any global/thread-local state, and always try ensure
   (.close conn))
 ----
 
-.Much better usage of `make-connection` function
+The `make-connection` function exposes a low level interface for creating a connection,
+and delegates to user the connection resource management. A connection is not automatically
+closed and is strongly recommended use of `with-open` macro for clear resource management.
+
+.Better way.
 [source,clojure]
 ----
 (with-open [conn (make-connection dbspec)]
@@ -203,16 +197,11 @@ works like `with-open` clojure macro. And this is an equivalent piece of code us
 Execute database commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-clj.jdbc has many methods for executing database commands, like creating
-tables, inserting data or simply executing stored procedures.
-
-
 Execute raw sql statements
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The simplest way to execute a raw SQL is using the ``execute!`` function. It
-receives a connection as the first parameter followed by variable list
-of sql sentences:
+The simplest way to execute a raw SQL is using the `execute!` function. It requires
+an active connection on the first parameter followed by sql sentences:
 
 [source,clojure]
 ----
@@ -226,20 +215,20 @@ Execute parametrized SQL statements
 
 Raw SQL statements work well for creating tables and similar operations, but
 when you need to insert some data, especially if the data comes from untrusted
-sources, the ``execute!`` function is not adequate.
+sources, the `execute!` function is not a good option.
 
 For this problem, clj.jdbc exposes `execute-prepared!` function. It
 accepts parametrized SQL and a list of groups of parameters that allow
 execute amount of same operations with distinct parameters in bulk.
 
-.Execute a simple insert SQL statement:
+.Execute a simple insert SQL statement.
 [source,clojure]
 ----
 (let [sql "INSERT INTO foo VALUES (?, ?);"]
   (execute-prepared! conn sql ["Foo", 2]))
 ----
 
-.Execute inserts in bulk
+.Bulk insert example.
 [source,clojure]
 ----
 (let [sql "INSERT INTO foo VALUES (?, ?);"]
@@ -250,14 +239,13 @@ execute amount of same operations with distinct parameters in bulk.
 ;;   INSERT INTO foo VALUES ('Bar', 3);
 ----
 
+
 Make queries
 ~~~~~~~~~~~~
 
-As usual, clj.jdbc offers two ways to send queries to a database. But in this
-section only will be explained the basic and the most usual way to make queries
-using a `query` function.
+The basic way to query adatabase is using the `query` function.
 
-`query` function, given a open connection and parametrized sql, executes it and returns
+`query` function, given an active connection and parametrized sql, executes it and returns
 a evaluated result (as vector of records):
 
 [source,clojure]
@@ -266,6 +254,10 @@ a evaluated result (as vector of records):
       result (query sql)]
   (doseq [row results]
   (println row))))
+
+;; It should print this:
+;; => {:id 1 :name "Foo"}
+;; => {:id 2 :name "Bar"}
 ----
 
 Parametrized sql can be:
@@ -289,30 +281,32 @@ Transactions
 Getting start with transactions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Managing transactions well is almost the most important thing when building an
-application. Managing transactions implicitly, trusting your "web framework"
-to do it for you, is a very bad approach.
-
-All transactions related functions are exposed on `jdbc.transaction` namespace
-and if you need transactions, you should import it:
+All transactions related functions on _clj.jdbc_ are exposed on `jdbc.transaction` namespace
+and if you need transactions on your code, you should import it:
 
 [source,clojure]
 ----
 (require '[jdbc.transaction :as tx])
 ----
 
+
 The most idiomatic way to wrap some code in transaction, is using `with-transaction`
 macro:
 
+[source,clojure]
+----
 (tx/with-transaction conn
   (do-thing-first conn)
   (do-thing-second conn))
-
+----
 
 [NOTE]
-Contrary to what it seems, clj.jdbc not uses any dynamic thread-local vars for store
-a transaction state for a connection. Instead of that, it overwrites lexical scope
-value of conn with new connection that has a transactional state.
+====
+_clj.jdbc_ does not uses any dynamic thread-local vars for store the transaction state
+for a connection. Instead of that, it overwrites lexical scope value of `conn` with new
+connection that has a transactional state.
+====
+
 
 Low level transaction primitives
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -320,8 +314,9 @@ Low level transaction primitives
 Behind the scene of `with-transaction` macro, _clj.jdbc_ has uses `call-in-transaction`
 function.
 
-It, given a connection as first parameter and function that you want execute in a
-transaction (that should accept connection as first parameter).
+It, given an active connection as first parameter and function that you want execute in a
+transaction as second parameter, executes it in a database transaction. The function should accept
+a connection as first parameter.
 
 [source,clojure]
 ----
@@ -345,7 +340,8 @@ Isolation Level
 clj.jdbc by default does nothing with isolation level and keep it with default values. But
 provides a simple way to set specific isolation level if is needed.
 
-You can set custom isolation level on your dbspec map:
+
+For set a custom isolation level, you should add an additional key to your dbspec:
 
 [source,clojure]
 ----
@@ -363,6 +359,8 @@ This is a list of supported options:
 
 You can read more about it on link:http://en.wikipedia.org/wiki/Isolation_(database_systems)[wikipedia].
 
+WARNING: not all jdbc providers supports here listed isolation levels.
+
 
 Advanced usage
 --------------
@@ -372,12 +370,12 @@ Server Side Cursors
 ~~~~~~~~~~~~~~~~~~~
 
 By default, most of jdbc drivers prefetches all results in memory that make totally useless use lazy
-structures for fetching data. For solve this, some databases implements server side cursors that
-avoids a prefetch all results of a query in memory.
+structures for fetching data. To our luck, some databases implements server side cursors that
+avoids these behavior.
 
-If you have an extremely large result set to retrieve from your database, it is exactly what you need.
+If you have an extremely large resultset and you want retrieve it and process each item, it is exactly what you need.
 
-_clj.jdbc_, for this purpose, has `with-query` macro that uses server side cursors inside
+_clj.jdbc_ for this purpose, exposes `with-query` macro that uses server side cursors inside
 and exposes a lazy seq of records (instead of full evaluated vector) in a created macro context:
 
 [source,clojure]
@@ -390,9 +388,9 @@ and exposes a lazy seq of records (instead of full evaluated vector) in a create
 
 [NOTE]
 ====
-`with-query` macro implicitly ensures that all of code executed insinde a created
-context are executed on transaction or subtransaction. This is mandatory because a
-server side cursors only works inside one transaction.
+`with-query` macro implicitly ensures that all code insinde a created context are executed 
+on one transaction or subtransaction. This is mandatory because a server side cursors only works 
+inside one transaction.
 ====
 
 
@@ -402,7 +400,7 @@ Low level query interface
 All functions that executes queries, uses `make-query` function behind the scenes. Is a low
 level interface for access to query functionality.
 
-This function has distinct behavior in comparison with his high level siblings: it returns a
+This function has distinct behavior in comparison with his high level siblings. It returns a
 `jdbc.types.resultset.ResultSet` instance that works as clojure persistent map and contains
 these keys:
 
@@ -424,17 +422,11 @@ these keys:
 [NOTE]
 ====
 You can see the api documentation to know more about it, but mainly it is
-a container that mantains a reference  to the original java jdbc objects
+a container that mantains a reference to the original java jdbc objects
 which are used for executing a query.
 ====
 
-[WARNING]
-====
-If you know how jdbc works, you should know that if you execute two queries and
-the second is executed while the results of the first haven't been completely
-consumed, the results of the first query are aborted.
-
-`make-query` function should to be used with precaution.
+WARNING: `make-query` is a low level interface and you must be careful to use it.
 ====
 
 [[connection-pool]]
@@ -518,7 +510,7 @@ strategy for your application.
 
 If you want an other strategy, you should create a new type and implement `ITransactionStrategy` protocol.
 
-.Simple example implementing dummy transaction strategy.
+.Sample dummy transaction strategy.
 [source,clojure]
 ----
 (defrecord DummyTransactionStrategy []
@@ -528,9 +520,7 @@ If you want an other strategy, you should create a new type and implement `ITran
   (commit [_ conn opts] conn))
 ----
 
-
-For use it, _clj.jdbc_ exposes two ways:
-
+You can specify that transaction strategy to use with these two ways:
 
 .Using `with-transaction-strategy` macro
 [source,clojure]
@@ -653,6 +643,7 @@ This is a incomplete list of reasons:
 - Much more documentation ;) (a project without documentation is a project that doesn't
   really exist).
 
+
 clj.jdbc has better performance than java.jdbc?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -680,6 +671,7 @@ java.jdbc:
 clj.jdbc:
 "Elapsed time: 475.982354 msecs"
 ----
+
 
 Why clj.jdbc does not include dsl for working with sql as clojure.java.jdbc 0.3?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
