@@ -24,15 +24,10 @@
             [jdbc.types.connection :refer [->Connection is-connection?]]
             [jdbc.types.resultset :refer [->ResultSet]]
             [jdbc.types :as types]
-            [jdbc.transaction :as tx])
+            [jdbc.transaction :as tx]
+            [jdbc.constants :as constants])
   (:refer-clojure :exclude [resultset-seq])
   (:gen-class))
-
-(def ^:private isolation-level-map
-  {:none nil
-   :read-commited (java.sql.Connection/TRANSACTION_READ_UNCOMMITTED)
-   :repeatable-read (java.sql.Connection/TRANSACTION_REPEATABLE_READ)
-   :serializable (java.sql.Connection/TRANSACTION_SERIALIZABLE)})
 
 (defn map->properties
   "Convert hash-map to java.utils.Properties instance. This method is used
@@ -134,20 +129,6 @@
   [stmt]
   {:pre [(instance? Statement stmt)]}
   (seq (.executeBatch stmt)))
-
-(def ^:private resultset-constants
-   ;; Type
-  {:forward-only ResultSet/TYPE_FORWARD_ONLY
-   :scroll-insensitive ResultSet/TYPE_SCROLL_INSENSITIVE
-   :scroll-sensitive ResultSet/TYPE_SCROLL_SENSITIVE
-
-   ;; Cursors
-   :hold ResultSet/HOLD_CURSORS_OVER_COMMIT
-   :close ResultSet/CLOSE_CURSORS_AT_COMMIT
-
-   ;; Concurrency
-   :read-only ResultSet/CONCUR_READ_ONLY
-   :updatable ResultSet/CONCUR_UPDATABLE})
 
 (defn- make-raw-connection-from-jdbcurl
   "Given a url and optionally params, returns a raw jdbc connection."
