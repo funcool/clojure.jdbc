@@ -1,7 +1,7 @@
 clj.jdbc documentation
 ======================
 Andrey Antukh, <niwi@niwi.be>
-0.1.1, 2014-04-04
+0.1.2, 2014-04-06
 
 :toc:
 :numbered:
