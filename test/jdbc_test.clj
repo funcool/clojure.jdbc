@@ -42,7 +42,14 @@
     (let [c1 (make-connection h2-dbspec4)
           c2 (make-connection h2-dbspec3)]
       (is (= (:isolation-level c1) :serializable))
-      (is (= (:isolation-level c2) :none)))))
+      (is (= (:isolation-level c2) nil))))
+
+  (testing "Set isolation level on transaction"
+    (let [func (fn [conn] (is (= (:isolation-level conn) :serializable)))]
+      (with-connection [conn h2-dbspec3]
+        (call-in-transaction conn func {:isolation-level :serializable})
+        (is (= (:isolation-level conn) nil))))))
+
 
 (deftest db-commands
   (testing "Simple create table"
@@ -159,6 +166,7 @@
   (testing "Test use arrays"
     (with-connection pg-dbspec conn
       (with-transaction conn
+        (set-rollback! conn)
         (let [sql "CREATE TABLE arrayfoo (id integer, data text[]);"
               dat (into-array String ["foo", "bar"])]
           (execute! conn sql)
