@@ -50,7 +50,7 @@
           ;; Create new connection maintaining all previous state.
           (let [state {:autocommit old-autocommit
                        :isolation-value old-isolation
-                       :readonly old-readonly}]
+                       :read-only old-readonly}]
             (assoc conn :state state
                         :in-transaction true
                         :isolation-level (or (:isolation-level opts)
@@ -60,7 +60,7 @@
           savepoint       (:savepoint conn)
           old-autocommit  (get-in conn [:state :autocommit])
           old-isolation   (get-in conn [:state :isolation-value])
-          old-readonly    (get-in conn [:state :readonly])]
+          old-readonly    (get-in conn [:state :read-only])]
       (if savepoint (.rollback raw-conn savepoint)
         (do
           (.rollback raw-conn)
@@ -73,7 +73,7 @@
           savepoint       (:savepoint conn)
           old-autocommit  (get-in conn [:state :autocommit])
           old-isolation   (get-in conn [:state :isolation-value])
-          old-readonly    (get-in conn [:state :readonly])]
+          old-readonly    (get-in conn [:state :read-only])]
       (if savepoint (.releaseSavepoint raw-conn savepoint)
         (do
           (.commit raw-conn)

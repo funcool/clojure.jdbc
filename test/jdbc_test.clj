@@ -45,11 +45,24 @@
       (is (= (:isolation-level c2) nil))))
 
   (testing "Set isolation level on transaction"
-    (let [func (fn [conn] (is (= (:isolation-level conn) :serializable)))]
+    (let [func1 (fn [conn] (is (= (:isolation-level conn) :serializable)))
+          func2 (fn [conn] (is (= (:isolation-level conn) :read-committed)))]
       (with-connection [conn h2-dbspec3]
-        (call-in-transaction conn func {:isolation-level :serializable})
-        (is (= (:isolation-level conn) nil))))))
+        (call-in-transaction conn func1 {:isolation-level :serializable})
+        (is (= (:isolation-level conn) nil)))
 
+      (with-connection [conn h2-dbspec4]
+        (call-in-transaction conn func2 {:isolation-level :read-committed})
+        (is (= (:isolation-level conn) :serializable))))))
+
+(deftest db-readonly-transactions
+  (testing "Set readonly for transaction"
+    (let [func (fn [conn]
+                 (let [raw (:connection conn)]
+                   (is (true? (.isReadOnly raw)))))]
+      (with-connection [conn pg-dbspec]
+        (call-in-transaction conn func {:read-only true})
+        (is (false? (.isReadOnly (:connection conn))))))))
 
 (deftest db-commands
   (testing "Simple create table"
