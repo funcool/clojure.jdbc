@@ -60,7 +60,8 @@
                       old-isolation  (:old-isolation conn)
                       old-autocommit (:old-autocommit conn)]
 
-      (if savepoint (.rollback raw-conn savepoint)
+      (if savepoint
+        (.rollback raw-conn savepoint)
         (do
           (.rollback raw-conn)
           (.setAutoCommit raw-conn old-autocommit)
@@ -73,7 +74,8 @@
                       old-readonly   (:old-readonly conn)
                       old-isolation  (:old-isolation conn)
                       old-autocommit (:old-autocommit conn)]
-      (if savepoint (.releaseSavepoint raw-conn savepoint)
+      (if savepoint
+        (.releaseSavepoint raw-conn savepoint)
         (do
           (.commit raw-conn)
           (.setAutoCommit raw-conn old-autocommit)
@@ -82,31 +84,32 @@
 
 (defn wrap-transaction-strategy
   "Simple helper function that associate a strategy
-  to a connection and return a new connection object
-  with wrapped stragy.
+to a connection and return a new connection object
+with wrapped stragy.
 
-  Example:
+Example:
 
-    (let [conn (wrap-transaction-strategy simplecon (MyStrategy.))]
-      (use-your-new-conn conn))
-  "
+(let [conn (wrap-transaction-strategy simplecon (MyStrategy.))]
+  (use-your-new-conn conn))
+"
   [conn strategy]
   (assoc conn :transaction-strategy strategy))
 
 (defn set-rollback!
   "Mark a current connection for rollback.
 
-  It ensures that on the end of the current transaction
-  instead of commit changes, rollback them.
+It ensures that on the end of the current transaction
+instead of commit changes, rollback them.
 
-  This function should be used inside of a transaction
-  block, otherwise this function does nothing.
+This function should be used inside of a transaction
+block, otherwise this function does nothing.
 
-  Example:
+Example:
 
-    (with-transaction conn
-      (make-some-queries-without-changes conn)
-      (set-rollback! conn))"
+(with-transaction conn
+  (make-some-queries-without-changes conn)
+  (set-rollback! conn))
+"
   [conn]
   {:pre [(is-connection? conn)]}
   (when-let [rollback-flag (:rollback conn)]
@@ -114,9 +117,8 @@
 
 (defn unset-rollback!
   "Revert flag setted by `set-rollback!` function.
-
-  This function should be used inside of a transaction
-  block, otherwise this function does nothing."
+This function should be used inside of a transaction
+block, otherwise this function does nothing."
   [conn]
   {:pre [(is-connection? conn)]}
   (when-let [rollback-flag (:rollback conn)]
@@ -124,11 +126,10 @@
 
 (defn is-rollback-set?
   "Check if a current connection in one transaction
-  is marked for rollback.
+is marked for rollback.
 
-  This should be used in one transaction, in other case this
-  function always return false.
-  "
+This should be used in one transaction, in other case this
+function always return false."
   [conn]
   {:pre [(is-connection? conn)]}
   (if-let [rollback-flag (:rollback conn)]
@@ -137,7 +138,6 @@
 
 (defn call-in-transaction
   "Wrap function in one transaction.
-
 This function accepts as a parameter a transaction strategy. If no one
 is specified, ``DefaultTransactionStrategy`` is used.
 
@@ -179,7 +179,6 @@ parameters:
 
 (defmacro with-transaction-strategy
   "Set some transaction strategy connection in the current context scope.
-
 This method not uses thread-local dynamic variables and connection
 preserves a transaction strategy throught threads."
   [conn strategy & body]
@@ -188,7 +187,6 @@ preserves a transaction strategy throught threads."
 
 (defmacro with-transaction
   "Creates a context that evaluates in transaction (or nested transaction).
-
 This is a more idiomatic way to execute some database operations in
 atomic way.
 
