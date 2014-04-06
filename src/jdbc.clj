@@ -49,12 +49,13 @@
   "Parses a dbspec as uri into a plain dbspec. This function
   accepts ``java.net.URI`` or ``String`` as parameter."
   [url]
-  (let [uri       (if (instance? URI url) url (URI. (strip-jdbc-prefix url)))
-        host      (.getHost uri)
-        port      (.getPort uri)
-        path      (.getPath uri)
-        scheme    (.getScheme uri)
-        userinfo  (.getUserInfo uri)]
+  (let [^URI uri       (if (instance? URI url) url
+                           (URI. (strip-jdbc-prefix url)))
+             host      (.getHost uri)
+             port      (.getPort uri)
+             path      (.getPath uri)
+             scheme    (.getScheme uri)
+             userinfo  (.getUserInfo uri)]
     (merge
       {:subname (if (pos? port)
                  (str "//" host ":" port path)
@@ -115,7 +116,7 @@
   Status: Alpha - Implementation and name of this method can change on
   following versions.
   "
-  [stmt]
+  [^Statement stmt]
   {:pre [(instance? Statement stmt)]}
   (seq (.executeBatch stmt)))
 

@@ -15,7 +15,8 @@
 (ns jdbc.transaction
   "Transactions support for clj.jdbc"
   (:require [jdbc.types.connection :refer [is-connection?]]
-            [jdbc.constants :as constants]))
+            [jdbc.constants :as constants])
+  (:import java.sql.Connection))
 
 (defprotocol ITransactionStrategy
   (begin! [_ conn opts] "Starts a transaction and return a connection instance")
@@ -25,12 +26,11 @@
 (defrecord DefaultTransactionStrategy []
   ITransactionStrategy
   (begin! [_ conn opts]
-    (let [conn          (assoc conn :rollback (atom false))
-          raw-conn      (:connection conn)
-          old-isolation (.getTransactionIsolation raw-conn)
-          old-readonly  (.isReadOnly raw-conn)]
+    (let [^Connection raw-conn      (:connection conn)
+                      conn          (assoc conn :rollback (atom false))
+                      old-isolation (.getTransactionIsolation raw-conn)
+                      old-readonly  (.isReadOnly raw-conn)]
       (if (:in-transaction conn)
-
         ;; If connection is already in a transaction, isolation
         ;; level and read only flag can not to be changed.
         (do
@@ -47,20 +47,19 @@
           (when-let [read-only (:read-only opts)]
             (.setReadOnly raw-conn read-only))
 
-          ;; Create new connection maintaining all previous state.
-          (let [state {:autocommit old-autocommit
-                       :isolation-value old-isolation
-                       :read-only old-readonly}]
-            (assoc conn :state state
-                        :in-transaction true
-                        :isolation-level (or (:isolation-level opts)
-                                             (:isolation-level conn))))))))
+          (assoc conn :old-autocommit old-autocommit
+                      :old-isolation old-isolation
+                      :old-readonly old-readonly
+                      :in-transaction true
+                      :isolation-level (or (:isolation-level opts)
+                                           (:isolation-level conn)))))))
   (rollback! [_ conn opts]
-    (let [raw-conn        (:connection conn)
-          savepoint       (:savepoint conn)
-          old-autocommit  (get-in conn [:state :autocommit])
-          old-isolation   (get-in conn [:state :isolation-value])
-          old-readonly    (get-in conn [:state :read-only])]
+    (let [^Connection raw-conn       (:connection conn)
+                      savepoint      (:savepoint conn)
+                      old-readonly   (:old-readonly conn)
+                      old-isolation  (:old-isolation conn)
+                      old-autocommit (:old-autocommit conn)]
+
       (if savepoint (.rollback raw-conn savepoint)
         (do
           (.rollback raw-conn)
@@ -69,11 +68,11 @@
           (.setReadOnly raw-conn old-readonly)))))
 
   (commit! [_ conn opts]
-    (let [raw-conn        (:connection conn)
-          savepoint       (:savepoint conn)
-          old-autocommit  (get-in conn [:state :autocommit])
-          old-isolation   (get-in conn [:state :isolation-value])
-          old-readonly    (get-in conn [:state :read-only])]
+    (let [^Connection raw-conn       (:connection conn)
+                      savepoint      (:savepoint conn)
+                      old-readonly   (:old-readonly conn)
+                      old-isolation  (:old-isolation conn)
+                      old-autocommit (:old-autocommit conn)]
       (if savepoint (.releaseSavepoint raw-conn savepoint)
         (do
           (.commit raw-conn)
