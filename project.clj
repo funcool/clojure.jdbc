@@ -18,7 +18,8 @@ official library."
   :codox {:output-dir "doc/api"
           :src-dir-uri "http://github.com/niwibe/clj.jdbc/blob/master/"
           :src-linenum-anchor-prefix "L"}
-  :sub ["modules/c3p0"]
+  :sub ["modules/c3p0"
+        "modules/dbcp"]
   :profiles {:bench {:source-paths ["bench/"]
                      :main jdbc.bench
                      :dependencies [[org.clojure/java.jdbc "0.3.3"]
