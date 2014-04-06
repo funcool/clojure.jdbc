@@ -1,4 +1,4 @@
-(defproject be.niwi/clj.jdbc-c3p0 "0.1.1"
+(defproject be.niwi/clj.jdbc-c3p0 "0.1.2"
   :description "clj.jdbc extension for c3p0 (a mature, highly concurrent JDBC
 Connection pooling library)."
   :url "http://github.com/niwibe/clj.jdbc"

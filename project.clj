@@ -1,4 +1,4 @@
-(defproject be.niwi/clj.jdbc "0.1.1"
+(defproject be.niwi/clj.jdbc "0.1.2"
   :description "Alternative implementation of jdbc wrapper for clojure.
 
 For this momment, the official wrapper `clojure.jdbc` has very unclear

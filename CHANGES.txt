@@ -1,6 +1,12 @@
 Changelog
 ---------
 
+Version 0.1.2
+~~~~~~~~~~~~~
+
+Date: unreleased
+
+
 Version 0.1.1
 ~~~~~~~~~~~~~
 

@@ -1,4 +1,4 @@
-(defproject be.niwi/clj.jdbc-dbcp "0.1.1"
+(defproject be.niwi/clj.jdbc-dbcp "0.1.2"
   :description "clj.jdbc extension for apache commonds dbcp jdbc
 connection pool implementation."
   :url "http://github.com/niwibe/clj.jdbc"
