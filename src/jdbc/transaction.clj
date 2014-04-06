@@ -1,4 +1,4 @@
-;; Copyright 2013 Andrey Antukh <niwi@niwi.be>
+;; Copyright 2014 Andrey Antukh <niwi@niwi.be>
 ;;
 ;; Licensed under the Apache License, Version 2.0 (the "License")
 ;; you may not use this file except in compliance with the License.
@@ -178,11 +178,10 @@ parameters:
           (throw t))))))
 
 (defmacro with-transaction-strategy
-  "Set some transaction strategy connection in the current context
-  scope.
+  "Set some transaction strategy connection in the current context scope.
 
-  This method not uses thread-local dynamic variables and
-  connection preserves a transaction strategy throught threads."
+This method not uses thread-local dynamic variables and connection
+preserves a transaction strategy throught threads."
   [conn strategy & body]
   `(let [~conn (wrap-transaction-strategy ~conn ~strategy)]
      ~@body))
