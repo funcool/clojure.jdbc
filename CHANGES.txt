@@ -11,6 +11,7 @@ Date: unreleased
 - Set clojure 1.6 as default clojure version.
 - Add apache-commonds dbcp 2.0 connection pool support.
 - Breaking change: rename transaction strategy methods to: begin! rollback! commit!
+- Breaking change: call-in-transaction now accepts options map insted of named parameters.
 - Fix bugs on marking transaction rollback-only.
 - Allow set isolation level for transaction.
 - Allow set read-only transaction.
