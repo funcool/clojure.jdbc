@@ -62,7 +62,13 @@
                    (is (true? (.isReadOnly raw)))))]
       (with-connection [conn pg-dbspec]
         (call-in-transaction conn func {:read-only true})
-        (is (false? (.isReadOnly (:connection conn))))))))
+        (is (false? (.isReadOnly (:connection conn)))))))
+
+  (testing "Set readonly flag with with-transaction macro"
+      (with-connection [conn pg-dbspec]
+        (with-transaction conn {:read-only true}
+          (is (true? (.isReadOnly (:connection conn)))))
+        (is (false? (.isReadOnly (:connection conn)))))))
 
 (deftest db-commands
   (testing "Simple create table"

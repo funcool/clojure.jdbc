@@ -190,14 +190,24 @@ parameters:
 (defmacro with-transaction
   "Creates a context that evaluates in transaction (or nested transaction).
 
-  This is a more idiomatic way to execute some database operations in
-  atomic way.
+This is a more idiomatic way to execute some database operations in
+atomic way.
 
-  Example:
+Example:
 
-    (with-transaction conn
-      (execute! conn 'DROP TABLE foo;')
-      (execute! conn 'DROP TABLE bar;'))"
+(with-transaction conn
+  (execute! conn 'DROP TABLE foo;')
+  (execute! conn 'DROP TABLE bar;'))
+
+Also, you can pass additional options to transaction:
+
+(with-transaction conn {:read-only true}
+  (execute! conn 'DROP TABLE foo;')
+  (execute! conn 'DROP TABLE bar;'))
+"
   [conn & body]
-  `(let [func# (fn [c#] (let [~conn c#] ~@body))]
-     (apply call-in-transaction [~conn func#])))
+  (if (map? (first body))
+    `(let [func# (fn [c#] (let [~conn c#] ~@(next body)))]
+       (apply call-in-transaction [~conn func# ~(first body)]))
+    `(let [func# (fn [c#] (let [~conn c#] ~@body))]
+       (apply call-in-transaction [~conn func#]))))

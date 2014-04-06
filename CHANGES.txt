@@ -6,6 +6,7 @@ Version 0.1.2
 
 Date: unreleased
 
+- Add optional options parameter to `with-transaction` macro.
 
 Version 0.1.1
 ~~~~~~~~~~~~~
