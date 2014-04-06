@@ -64,17 +64,6 @@
         (let [[user password] (str/split userinfo #":")]
           {:user user :password password})))))
 
-(defn- wrap-isolation-level
-  "Wraps and handles a isolation level for connection."
-  [dbspec conn]
-  (let [raw-connection  (:connection conn)
-        isolation-level (:isolation-level dbspec)]
-    (if-let [isolation-level-value (get isolation-level-map isolation-level)]
-      (do
-        (.setTransactionIsolation raw-connection isolation-level-value)
-        (assoc conn :isolation-level isolation-level))
-      (assoc conn :isolation-level :none))))
-
 (defn result-set->lazyseq
   "Function that wraps result in a lazy seq. This function
   is part of public api but can not be used directly (you should pass
@@ -157,7 +146,8 @@
     (with-open [c (make-connection \"postgresql://user:pass@localhost/test\")]
       (do-somethin-with-connection c))"
   [{:keys [connection-uri subprotocol subname
-           datasource user password read-only schema]
+           datasource user password read-only
+           schema isolation-level]
     :or {read-only false schema nil}
     :as dbspec}]
   (let [raw-connection  (cond
@@ -175,7 +165,9 @@
                             (throw (IllegalArgumentException. "Invalid dbspec format")))
         metadata        (.getMetaData raw-connection)
         connection      (->Connection raw-connection metadata)]
-    (wrap-isolation-level dbspec connection)))
+    (when isolation-level
+      (.setTransactionIsolation raw-connection (get constants/isolation-levels isolation-level)))
+    (assoc connection :isolation-level isolation-level)))
 
 (defn execute!
   "Run arbitrary number of raw sql commands such as: CREATE TABLE,
@@ -253,12 +245,12 @@
          params     (rest sqlvec)
          stmt       (if holdability
                       (.prepareStatement connection sql
-                                         (result-type resultset-constants)
-                                         (result-concurency resultset-constants)
-                                         (holdability resultset-constants))
+                                         (result-type constants/resultset-options)
+                                         (result-concurency constants/resultset-options)
+                                         (holdability constants/resultset-options))
                       (.prepareStatement connection sql
-                                         (result-type resultset-constants)
-                                         (result-concurency resultset-constants)))]
+                                         (result-type constants/resultset-options)
+                                         (result-concurency constants/resultset-options)))]
      ;; Lazy resultset works with database cursors ant them can not be used
      ;; without one transaction
      (when (and (not (:in-transaction conn)) lazy)
