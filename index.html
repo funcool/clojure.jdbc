@@ -21,8 +21,8 @@ asciidoc.install(2);
 <h1>clj.jdbc documentation</h1>
 <span id="author">Andrey Antukh,</span><br>
 <span id="email" class="monospaced">&lt;<a href="mailto:niwi@niwi.be">niwi@niwi.be</a>&gt;</span><br>
-<span id="revnumber">version 0.1.1,</span>
-<span id="revdate">2014-04-04</span>
+<span id="revnumber">version 0.1.2,</span>
+<span id="revdate">2014-04-06</span>
 <div id="toc">
   <div id="toctitle">Table of Contents</div>
   <noscript><p><b>JavaScript must be enabled in your browser to display the table of contents.</b></p></noscript>
@@ -365,16 +365,29 @@ code wrapped in transaction block truly atomic independenty of transaction nesti
 </div>
 <div class="sect3">
 <h4 id="_isolation_level">4.4.3. Isolation Level</h4>
-<div class="paragraph"><p>clj.jdbc by default does nothing with isolation level and keep it with default values. But
-provides a simple way to set specific isolation level if is needed.</p></div>
-<div class="paragraph"><p>For set a custom isolation level, you should add an additional key to your dbspec:</p></div>
+<div class="paragraph"><p>clj.jdbc by default does nothing with isolation level and keep it with default values.</p></div>
 <div class="listingblock">
+<div class="title">You can set isolation level on creating a connection specifying it on your dbspec.</div>
 <div class="content"><div class="highlight"><pre><span class="p">(</span><span class="k">def </span><span class="nv">dbsoec</span> <span class="p">{</span><span class="ss">:subprotocol</span> <span class="s">&quot;h2&quot;</span>
              <span class="ss">:subname</span> <span class="s">&quot;mem:&quot;</span>
              <span class="ss">:isolation-level</span> <span class="ss">:serializable</span><span class="p">})</span>
 </pre></div></div></div>
+<div class="listingblock">
+<div class="title">Or set it on execute a transaction</div>
+<div class="content"><div class="highlight"><pre><span class="p">(</span><span class="nf">call-in-transaction</span> <span class="nv">conn</span> <span class="nv">do-something</span> <span class="p">{</span><span class="ss">:isolation-level</span> <span class="ss">:serializable</span><span class="p">})</span>
+
+<span class="c1">;; Or...</span>
+
+<span class="p">(</span><span class="nf">with-transaction</span> <span class="nv">conn</span> <span class="p">{</span><span class="ss">:isolation-level</span> <span class="ss">:serializable</span><span class="p">}</span>
+  <span class="p">(</span><span class="nf">do-something</span> <span class="nv">conn</span><span class="p">))</span>
+</pre></div></div></div>
 <div class="paragraph"><p>This is a list of supported options:</p></div>
 <div class="ulist"><ul>
+<li>
+<p>
+<span class="monospaced">:read-uncommited</span> - Set read uncommited isolation level
+</p>
+</li>
 <li>
 <p>
 <span class="monospaced">:read-commited</span> - Set read committed isolation level
@@ -405,6 +418,17 @@ provides a simple way to set specific isolation level if is needed.</p></div>
 <td class="content">not all jdbc providers supports here listed isolation levels.</td>
 </tr></table>
 </div>
+</div>
+<div class="sect3">
+<h4 id="_read_only_transactions">4.4.4. Read-Only transactions</h4>
+<div class="paragraph"><p>In some circumstances, mainly when you are using strictest isolation-level, you may want
+indicate to database which query is really readonly allowing to database server make some optiomizations
+for this operation.</p></div>
+<div class="listingblock">
+<div class="title">You can set transaction readonly using transaction options</div>
+<div class="content"><div class="highlight"><pre><span class="p">(</span><span class="nf">with-transaction</span> <span class="nv">conn</span> <span class="p">{</span><span class="ss">:isolation-level</span> <span class="ss">:serializable</span> <span class="ss">:read-only</span> <span class="nv">true</span><span class="p">}</span>
+  <span class="p">(</span><span class="nf">query-something</span> <span class="nv">conn</span><span class="p">))</span>
+</pre></div></div></div>
 </div>
 </div>
 </div>
@@ -805,8 +829,8 @@ initial work. Some intial ideas for clj.jdbc are taken from it.</p></div>
 <div id="footnotes"><hr></div>
 <div id="footer">
 <div id="footer-text">
-Version 0.1.1<br>
-Last updated 2014-04-04 20:43:03 CEST
+Version 0.1.2<br>
+Last updated 2014-04-06 19:35:59 CEST
 </div>
 </div>
 </body>
