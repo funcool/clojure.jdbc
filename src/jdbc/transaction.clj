@@ -13,50 +13,73 @@
 ;; limitations under the License.
 
 (ns jdbc.transaction
-  "Namespace that encapsules all transaction specific logic."
-  (:require [jdbc.types.connection :refer [is-connection?]]))
+  "Transactions support for clj.jdbc"
+  (:require [jdbc.types.connection :refer [is-connection?]]
+            [jdbc.constants :as constants]))
 
 (defprotocol ITransactionStrategy
-  (begin [_ conn opts] "Starts a transaction")
-  (rollback [_ conn opts] "Rollbacks a transaction")
-  (commit [_ conn opts] "Commits a transaction"))
+  (begin! [_ conn opts] "Starts a transaction and return a connection instance")
+  (rollback! [_ conn opts] "Rollbacks a transaction. Returns nil.")
+  (commit! [_ conn opts] "Commits a transaction. Returns nil."))
 
 (defrecord DefaultTransactionStrategy []
   ITransactionStrategy
-  (begin [_ conn opts]
-    (let [raw-connection (:connection conn)
-          conn           (assoc conn :rollback (atom false))]
+  (begin! [_ conn opts]
+    (let [conn          (assoc conn :rollback (atom false))
+          raw-conn      (:connection conn)
+          old-isolation (.getTransactionIsolation raw-conn)
+          old-readonly  (.isReadOnly raw-conn)]
       (if (:in-transaction conn)
-        (assoc conn :savepoint (.setSavepoint raw-connection))
-        (let [prev-autocommit-state (.getAutoCommit raw-connection)]
-          (.setAutoCommit raw-connection false)
-          (assoc conn :prev-autocommit-state prev-autocommit-state
-                      :in-transaction true)))))
-  (rollback [_ conn opts]
-    (let [raw-connection        (:connection conn)
-          savepoint             (:savepoint conn)
-          prev-autocommit-state (:prev-autocommit-state conn)]
-      (if savepoint
-        (do
-          (.rollback raw-connection savepoint)
-          (dissoc conn :savepoint :rollback))
-        (do
-          (.rollback raw-connection)
-          (.setAutoCommit raw-connection prev-autocommit-state)
-          (dissoc conn :prev-autocommit-state :rollback)))))
 
-  (commit [_ conn opts]
-    (let [connection            (:connection conn)
-          savepoint             (:savepoint conn)
-          prev-autocommit-state (:prev-autocommit-state conn)]
-      (if savepoint
+        ;; If connection is already in a transaction, isolation
+        ;; level and read only flag can not to be changed.
         (do
-          (.releaseSavepoint connection savepoint)
-          (dissoc conn :savepoint :rollback))
+          (when (:isolation-level opts)
+            (throw (RuntimeException. "Can not set isolation level in transaction")))
+          (when (:read-only opts)
+            (throw (RuntimeException. "Can not change read only in transaction")))
+          (assoc conn :savepoint (.setSavepoint raw-conn)))
+
+        (let [old-autocommit (.getAutoCommit raw-conn)]
+          (.setAutoCommit raw-conn false)
+          (when-let [isolation (:isolation-level opts)]
+            (.setTransactionIsolation raw-conn (get constants/isolation-levels isolation)))
+          (when-let [read-only (:read-only opts)]
+            (.setReadOnly raw-conn read-only))
+
+          ;; Create new connection maintaining all previous state.
+          (let [state {:autocommit old-autocommit
+                       :isolation-value old-isolation
+                       :readonly old-readonly}]
+            (assoc conn :state state
+                        :in-transaction true
+                        :isolation-level (or (:isolation-level opts)
+                                             (:isolation-level conn))))))))
+  (rollback! [_ conn opts]
+    (let [raw-conn        (:connection conn)
+          savepoint       (:savepoint conn)
+          old-autocommit  (get-in conn [:state :autocommit])
+          old-isolation   (get-in conn [:state :isolation-value])
+          old-readonly    (get-in conn [:state :readonly])]
+      (if savepoint (.rollback raw-conn savepoint)
         (do
-          (.commit connection)
-          (.setAutoCommit connection prev-autocommit-state)
-          (dissoc conn :prev-autocommit-state :in-transaction :rollback))))))
+          (.rollback raw-conn)
+          (.setAutoCommit raw-conn old-autocommit)
+          (.setTransactionIsolation raw-conn old-isolation)
+          (.setReadOnly raw-conn old-readonly)))))
+
+  (commit! [_ conn opts]
+    (let [raw-conn        (:connection conn)
+          savepoint       (:savepoint conn)
+          old-autocommit  (get-in conn [:state :autocommit])
+          old-isolation   (get-in conn [:state :isolation-value])
+          old-readonly    (get-in conn [:state :readonly])]
+      (if savepoint (.releaseSavepoint raw-conn savepoint)
+        (do
+          (.commit raw-conn)
+          (.setAutoCommit raw-conn old-autocommit)
+          (.setTransactionIsolation raw-conn old-isolation)
+          (.setReadOnly raw-conn old-readonly))))))
 
 (defn wrap-transaction-strategy
   "Simple helper function that associate a strategy
@@ -110,44 +133,49 @@
   [conn]
   {:pre [(is-connection? conn)]}
   (if-let [rollback-flag (:rollback conn)]
-    (deref rollback)
+    (deref rollback-flag)
     false))
 
 (defn call-in-transaction
   "Wrap function in one transaction.
 
-  This function accepts as a parameter a transaction strategy. If no one
-  is specified, ``DefaultTransactionStrategy`` is used.
+This function accepts as a parameter a transaction strategy. If no one
+is specified, ``DefaultTransactionStrategy`` is used.
 
-  With ``DefaultTransactionStrategy``, if current connection is already in
-  transaction, it uses truly nested transactions for properly handle it.
-  The availability of this feature depends on database support for it.
+With `DefaultTransactionStrategy`, if current connection is already in
+transaction, it uses truly nested transactions for properly handle it.
+The availability of this feature depends on database support for it.
 
-  Example:
+Example:
 
-    (with-connection dbspec conn
-      (call-in-transaction conn (fn [conn] (execute! conn 'DROP TABLE foo;'))))
+(with-connection dbspec conn
+  (call-in-transaction conn (fn [conn] (execute! conn 'DROP TABLE foo;'))))
 
-  For more idiomatic code, you should use `with-transaction` macro.
-  "
-  [conn func & {:keys [savepoints strategy] :or {savepoints true} :as opts}]
+For more idiomatic code, you should use `with-transaction` macro.
+
+Depending on transaction strategy you are using, this function can accept
+additional parameters. The default transaction strategy exposes two additional
+parameters:
+
+- `:isolation-level` - set isolation level for this transaction
+- `:read-only` - set current transaction to read only
+"
+  [conn func & [{:keys [savepoints strategy] :or {savepoints true} :as opts}]]
   {:pre [(is-connection? conn)]}
-  (let [conn-tx-strategy     (:transaction-strategy conn)
-        transaction-strategy (cond
-                                strategy strategy
-                                conn-tx-strategy conn-tx-strategy
-                               :else (DefaultTransactionStrategy.))]
+  (let [tx-strategy (or strategy
+                        (:transaction-strategy conn)
+                        (DefaultTransactionStrategy.))]
     (when (and (:in-transaction conn) (not savepoints))
       (throw (RuntimeException. "Savepoints explicitly disabled.")))
-    (let [conn (begin transaction-strategy conn opts)]
+    (let [conn (begin! tx-strategy conn opts)]
       (try
         (let [returnvalue (func conn)]
-          (if (:rollback conn)
-            (rollback transaction-strategy conn opts)
-            (commit transaction-strategy conn opts))
+          (if @(:rollback conn)
+            (rollback! tx-strategy conn opts)
+            (commit! tx-strategy conn opts))
           returnvalue)
         (catch Throwable t
-          (rollback transaction-strategy conn opts)
+          (rollback! tx-strategy conn opts)
           (throw t))))))
 
 (defmacro with-transaction-strategy

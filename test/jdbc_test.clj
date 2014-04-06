@@ -193,7 +193,7 @@
 
 (defrecord BasicTransactionStrategy []
   ITransactionStrategy
-  (begin [_ conn opts]
+  (begin! [_ conn opts]
     (let [depth    (:depth-level conn)
           raw-conn (:connection conn)]
       (if depth
@@ -202,31 +202,29 @@
           (.setAutoCommit raw-conn false)
           (assoc conn :depth-level 0 :prev-autocommit-state prev-autocommit-state)))))
 
-  (rollback [_ conn opts]
+  (rollback! [_ conn opts]
     (let [depth    (:depth-level conn)
           raw-conn (:connection conn)]
       (if (= depth 0)
         (do
           (.rollback raw-conn)
           (.setAutoCommit raw-conn (:prev-autocommit-state conn))
-          (dissoc conn :depth-level :prev-autocommit-state))
-        conn)))
+          (dissoc conn :depth-level :prev-autocommit-state)))))
 
-  (commit [_ conn opts]
+  (commit! [_ conn opts]
     (let [depth    (:depth-level conn)
           raw-conn (:connection conn)]
       (if (= depth 0)
         (do
           (.commit raw-conn)
           (.setAutoCommit raw-conn (:prev-autocommit-state conn))
-          (dissoc :depth-level :prev-autocommit-state))
-        conn))))
+          (dissoc :depth-level :prev-autocommit-state))))))
 
 (defrecord DummyTransactionStrategy []
   ITransactionStrategy
-  (begin [_ conn opts] conn)
-  (rollback [_ conn opts] conn)
-  (commit [_ conn opts] conn))
+  (begin! [_ conn opts] conn)
+  (rollback! [_ conn opts] nil)
+  (commit! [_ conn opts] nil))
 
 (deftest db-transaction-strategy
   (let [sql1 "CREATE TABLE foo (name varchar(255), age integer);"
@@ -270,7 +268,7 @@
         sql2 "INSERT INTO foo (name,age) VALUES (?, ?);"
         sql3 "SELECT age FROM foo;"]
 
-    (testing "Basic transaction test"
+    (testing "Basic transaction test with exception."
       (with-connection h2-dbspec3 conn
         (execute! conn sql1)
 
@@ -283,6 +281,16 @@
           (catch Exception e
             (with-query conn results [sql3]
               (is (= (count results) 0)))))))
+
+    (testing "Basic transaction test without exception."
+      (with-connection h2-dbspec3 conn
+        (execute! conn sql1)
+
+        (with-transaction conn
+          (execute-prepared! conn sql2 ["foo", 1]  ["bar", 2]))
+        (with-transaction conn
+          (with-query conn results [sql3]
+            (is (= (count results) 2))))))
 
     (testing "Immutability"
       (with-connection h2-dbspec3 conn
@@ -339,7 +347,7 @@
               (is (= (count results) 4))))
 
           (with-query conn results [sql3]
-            (is (= (count results) 2))))
+            (is (= (count results) 4))))
 
         (with-query conn results [sql3]
             (is (= (count results) 0)))))
