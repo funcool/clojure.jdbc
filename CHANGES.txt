@@ -4,7 +4,7 @@ Changelog
 Version 0.1.1
 ~~~~~~~~~~~~~
 
-Date: unreleased
+Date: 2014-04-06
 
 - Connection pooling is splited to separate module (it preserves same api, but should be
   declared as additional dependency if you want use it).
