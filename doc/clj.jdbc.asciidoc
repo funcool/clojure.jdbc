@@ -337,12 +337,9 @@ xref:transaction-strategy[Transaction Strategy section].
 Isolation Level
 ^^^^^^^^^^^^^^^
 
-clj.jdbc by default does nothing with isolation level and keep it with default values. But
-provides a simple way to set specific isolation level if is needed.
+clj.jdbc by default does nothing with isolation level and keep it with default values.
 
-
-For set a custom isolation level, you should add an additional key to your dbspec:
-
+.You can set isolation level on creating a connection specifying it on your dbspec.
 [source,clojure]
 ----
 (def dbsoec {:subprotocol "h2"
@@ -350,8 +347,20 @@ For set a custom isolation level, you should add an additional key to your dbspe
              :isolation-level :serializable})
 ----
 
+.Or set it on execute a transaction
+[source, clojure]
+----
+(call-in-transaction conn do-something {:isolation-level :serializable})
+
+;; Or...
+
+(with-transaction conn {:isolation-level :serializable}
+  (do-something conn))
+----
+
 This is a list of supported options:
 
+- `:read-uncommited` - Set read uncommited isolation level
 - `:read-commited` - Set read committed isolation level
 - `:repeatable-read` - Set repeatable reads isolation level
 - `:serializable` - Set serializable isolation level
@@ -361,6 +370,20 @@ You can read more about it on link:http://en.wikipedia.org/wiki/Isolation_(datab
 
 WARNING: not all jdbc providers supports here listed isolation levels.
 
+
+Read-Only transactions
+^^^^^^^^^^^^^^^^^^^^^^
+
+In some circumstances, mainly when you are using strictest isolation-level, you may want
+indicate to database which query is really readonly allowing to database server make some optiomizations
+for this operation.
+
+.You can set transaction readonly using transaction options
+[source, clojure]
+----
+(with-transaction conn {:isolation-level :serializable :read-only true}
+  (query-something conn))
+----
 
 Advanced usage
 --------------
