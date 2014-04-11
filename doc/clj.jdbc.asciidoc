@@ -537,9 +537,9 @@ If you want an other strategy, you should create a new type and implement `ITran
 ----
 (defrecord DummyTransactionStrategy []
   tx/ITransactionStrategy
-  (begin [_ conn opts] conn)
-  (rollback [_ conn opts] conn)
-  (commit [_ conn opts] conn))
+  (begin! [_ conn opts] conn)
+  (rollback! [_ conn opts] conn)
+  (commit! [_ conn opts] conn))
 ----
 
 You can specify that transaction strategy to use with these two ways:
