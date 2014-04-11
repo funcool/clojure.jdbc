@@ -588,9 +588,9 @@ strategy for your application.</p></div>
 <div class="title">Sample dummy transaction strategy.</div>
 <div class="content"><div class="highlight"><pre><span class="p">(</span><span class="kd">defrecord </span><span class="nv">DummyTransactionStrategy</span> <span class="p">[]</span>
   <span class="nv">tx/ITransactionStrategy</span>
-  <span class="p">(</span><span class="nf">begin</span> <span class="p">[</span><span class="nv">_</span> <span class="nv">conn</span> <span class="nv">opts</span><span class="p">]</span> <span class="nv">conn</span><span class="p">)</span>
-  <span class="p">(</span><span class="nf">rollback</span> <span class="p">[</span><span class="nv">_</span> <span class="nv">conn</span> <span class="nv">opts</span><span class="p">]</span> <span class="nv">conn</span><span class="p">)</span>
-  <span class="p">(</span><span class="nf">commit</span> <span class="p">[</span><span class="nv">_</span> <span class="nv">conn</span> <span class="nv">opts</span><span class="p">]</span> <span class="nv">conn</span><span class="p">))</span>
+  <span class="p">(</span><span class="nf">begin!</span> <span class="p">[</span><span class="nv">_</span> <span class="nv">conn</span> <span class="nv">opts</span><span class="p">]</span> <span class="nv">conn</span><span class="p">)</span>
+  <span class="p">(</span><span class="nf">rollback!</span> <span class="p">[</span><span class="nv">_</span> <span class="nv">conn</span> <span class="nv">opts</span><span class="p">]</span> <span class="nv">conn</span><span class="p">)</span>
+  <span class="p">(</span><span class="nf">commit!</span> <span class="p">[</span><span class="nv">_</span> <span class="nv">conn</span> <span class="nv">opts</span><span class="p">]</span> <span class="nv">conn</span><span class="p">))</span>
 </pre></div></div></div>
 <div class="paragraph"><p>You can specify that transaction strategy to use with these two ways:</p></div>
 <div class="listingblock">
@@ -830,7 +830,7 @@ initial work. Some intial ideas for clj.jdbc are taken from it.</p></div>
 <div id="footer">
 <div id="footer-text">
 Version 0.1.2<br>
-Last updated 2014-04-06 19:35:59 CEST
+Last updated 2014-04-11 19:49:07 CEST
 </div>
 </div>
 </body>
