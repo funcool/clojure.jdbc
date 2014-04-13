@@ -161,7 +161,7 @@ one connection instance as parameter (no dynamic vars are used for it).
 NOTE: clj.jdbc does not use any global/thread-local state, and always try ensure immutability.
 
 NOTE: unlike clojure.java.jdbc, with _clj.jdbc_ you can't use a plain dbspec hash-map as
-connection parameter and you shall explicitly open a new connection before doing any operation
+connection parameter and you should explicitly open a new connection before doing any operation
 in a database.
 
 .Example using `make-connection` function
