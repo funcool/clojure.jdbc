@@ -1,9 +1,11 @@
 (ns jdbc-test
+  (:import org.postgresql.util.PGobject)
   (:require [jdbc :refer :all]
             [jdbc.transaction :refer :all]
             [jdbc.types :refer :all]
             [jdbc.pool.c3p0 :as pool-c3p0]
             [jdbc.pool.dbcp :as ac-dbcp]
+            [cheshire.core :as json]
             [clojure.test :refer :all]))
 
 (def h2-dbspec1 {:classname "org.h2.Driver"
@@ -395,3 +397,37 @@
             (catch Exception e
               (with-query conn results [sql3]
                 (is (= (count results) 2))))))))))
+
+;; PostgreSQL json support
+
+(extend-protocol ISQLType
+  clojure.lang.IPersistentMap
+  (set-stmt-parameter! [self conn stmt index]
+    (.setObject stmt index (as-sql-type self conn)))
+  (as-sql-type [self conn]
+    (doto (PGobject.)
+      (.setType "json")
+      (.setValue (json/generate-string self)))))
+
+(extend-protocol ISQLResultSetReadColumn
+  PGobject
+  (from-sql-type [pgobj conn metadata i]
+    (let [type  (.getType pgobj)
+          value (.getValue pgobj)]
+      (case type
+        "json" (json/parse-string value)
+        :else value))))
+
+(deftest db-postgresql-json-type
+  (testing "Persist/Query json fields"
+    (with-connection [conn pg-dbspec]
+      (with-transaction conn
+        (set-rollback! conn)
+        (let [sql-create "CREATE TABLE jsontest (data json);"
+              sql-query  "SELECT data FROM jsontest;"
+              sql-insert "INSERT INTO jsontest (data) VALUES (?);"]
+          (execute! conn sql-create)
+          (execute-prepared! conn sql-insert [{:foo "bar"}])
+          (let [res (first (query conn sql-query))]
+            (is (= res {:data {"foo" "bar"}}))))))))
+

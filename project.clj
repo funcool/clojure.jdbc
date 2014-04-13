@@ -27,7 +27,8 @@ official library."
              :test {:dependencies [[com.h2database/h2 "1.3.170"]
                                    [postgresql "9.3-1101.jdbc41"]
                                    [com.mchange/c3p0 "0.9.5-pre7"]
-                                   [org.apache.commons/commons-dbcp2 "2.0"]]
+                                   [org.apache.commons/commons-dbcp2 "2.0"]
+                                   [cheshire "5.3.1"]]
                     :source-paths ["modules/c3p0/src"
                                    "modules/dbcp/src"]
                     :jvm-opts ["-Dcom.mchange.v2.log.MLog=com.mchange.v2.log.FallbackMLog"
