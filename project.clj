@@ -29,4 +29,6 @@ official library."
                                    [com.mchange/c3p0 "0.9.5-pre7"]
                                    [org.apache.commons/commons-dbcp2 "2.0"]]
                     :source-paths ["modules/c3p0/src"
-                                   "modules/dbcp/src"]}})
+                                   "modules/dbcp/src"]
+                    :jvm-opts ["-Dcom.mchange.v2.log.MLog=com.mchange.v2.log.FallbackMLog"
+                               "-Dcom.mchange.v2.log.FallbackMLog.DEFAULT_CUTOFF_LEVEL=OFF"]}})
