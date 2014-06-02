@@ -26,8 +26,8 @@ official library."
                                     [postgresql "9.3-1101.jdbc41"]]}
              :test {:dependencies [[com.h2database/h2 "1.3.170"]
                                    [postgresql "9.3-1101.jdbc41"]
-                                   [com.mchange/c3p0 "0.9.5-pre7"]
-                                   [org.apache.commons/commons-dbcp2 "2.0"]
+                                   [com.mchange/c3p0 "0.9.5-pre8"]
+                                   [org.apache.commons/commons-dbcp2 "2.0.1"]
                                    [cheshire "5.3.1"]]
                     :source-paths ["modules/c3p0/src"
                                    "modules/dbcp/src"]
