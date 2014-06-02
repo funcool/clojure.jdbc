@@ -155,13 +155,21 @@
       (with-query conn results ["SELECT count(age) as total FROM foo;"]
         (is (= [{:total 2}] (doall results)))))))
 
-(deftest db-execute-statement
-  (testing "Statement result"
+(deftest db-execute-prepared-statement
+  (testing "Execute simple sql based prepared statement."
     (with-connection h2-dbspec3 conn
       (execute! conn "CREATE TABLE foo (name varchar(255), age integer);")
       (let [res (execute-prepared! conn "INSERT INTO foo (name,age) VALUES (?, ?);"
                                    ["foo", 1]  ["bar", 2])]
-        (is (= res (seq [1 1])))))))
+        (is (= res (seq [1 1]))))))
+  (testing "Executing self defined prepared statement"
+    (with-connection [conn h2-dbspec3]
+      (execute! conn "CREATE TABLE foo (name varchar(255), age integer);")
+      (let [stmt (make-prepared-statement conn "INSERT INTO foo (name,age) VALUES (?, ?);")
+            res1  (execute-prepared! conn stmt ["foo", 1] ["bar", 2])
+            res2  (execute-prepared! conn stmt ["fooo", 1] ["barr", 2])]
+        (with-query conn results ["SELECT count(age) as total FROM foo;"]
+          (is (= [{:total 4}] (doall results))))))))
 
 (deftest db-commands-bytes
   (testing "Insert bytes"
