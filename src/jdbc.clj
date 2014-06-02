@@ -24,6 +24,7 @@
             [jdbc.types.connection :refer [->Connection is-connection?]]
             [jdbc.types.resultset :refer [->ResultSet]]
             [jdbc.types :as types]
+            [jdbc.util :refer [with-exception raise-exc]]
             [jdbc.transaction :as tx]
             [jdbc.constants :as constants])
   (:refer-clojure :exclude [resultset-seq])
@@ -106,19 +107,26 @@
   (vec (apply result-set->lazyseq args)))
 
 (defn execute-statement!
-  "Given a plain statement instance, execute it throught its asociated
-  connection and return a raw seq of results.
+  "Given a connection statement and paramgroups (can be empty)
+execute the prepared statement and return results from it.
 
-  This is a low level interface and should be used with precaution. This
-  function is used internally for execue raw sql such as CREATE/DROP
-  table.
+This is a low level interface and should be used with precaution. This
+function is used internally for execue raw sql such as CREATE/DROP
+table.
 
-  Status: Alpha - Implementation and name of this method can change on
-  following versions.
-  "
-  [^Statement stmt]
+Status: Alpha - Implementation and name of this method can change on
+next versions."
+  [conn ^Statement stmt param-groups]
   {:pre [(instance? Statement stmt)]}
-  (seq (.executeBatch stmt)))
+  (if-not (seq param-groups)
+    (with-exception
+      (seq (.executeUpdate stmt)))
+    (let [set-parameter (fn [index value]
+                          (types/set-stmt-parameter! value conn stmt (inc index)))]
+      (doseq [pgroup param-groups]
+        (dorun (map-indexed set-parameter pgroup))
+        (.addBatch stmt))
+      (seq (.executeBatch stmt)))))
 
 (defn- make-raw-connection-from-jdbcurl
   "Given a url and optionally params, returns a raw jdbc connection."
@@ -195,7 +203,12 @@
     (with-open [stmt (.createStatement connection)]
       (dorun (map (fn [command]
                     (.addBatch stmt command)) commands))
-      (execute-statement! stmt))))
+      (seq (.executeBatch stmt)))))
+
+(defn is-prepared-statement?
+  "Check if specified object is prepared statement."
+  [obj]
+  (instance? PreparedStatement obj))
 
 (defn execute-prepared!
   "Same as `execute!` function, but works with PreparedStatement
@@ -218,12 +231,11 @@
   "
   [conn sql & param-groups]
   {:pre [(is-connection? conn)]}
-  (let [connection (:connection conn)]
-    (with-open [stmt (.prepareStatement connection sql)]
-      (doseq [param-group param-groups]
-        (dorun (map-indexed (fn [index value] (types/set-stmt-parameter! value conn stmt (inc index))) param-group))
-        (.addBatch stmt))
-      (execute-statement! stmt))))
+  (if (is-prepared-statement? sql)
+    (execute-statement! conn sql param-groups)
+    (let [connection (:connection conn)]
+      (with-open [stmt (.prepareStatement connection sql)]
+        (execute-statement! conn stmt param-groups)))))
 
 (defn make-prepared-statement
   "Given connection and parametrized query as vector with first
