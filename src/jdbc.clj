@@ -299,8 +299,9 @@ For more details, see documentation."
   ([conn sqlvec {:keys [result-type result-concurency fetch-size max-rows holdability lazy]
                  :or {result-type :forward-only result-concurency :read-only fetch-size 100}
                  :as options}]
-   {:pre [(is-connection? conn) (vector? sqlvec)]}
+   {:pre [(is-connection? conn) (or (string? sqlvec) (vector? sqlvec))]}
    (let [connection (:connection conn)
+         sqlvec     (if (string? sqlvec) [sqlvec] sqlvec)
          sql        (first sqlvec)
          params     (rest sqlvec)
          stmt       (if holdability
