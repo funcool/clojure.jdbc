@@ -1,7 +1,7 @@
 clj.jdbc
 ========
 
-Alternative jdbc wrapper for clojure.
+Jdbc library for Clojure.
 
 .. image:: https://travis-ci.org/niwibe/clj.jdbc.png?branch=master
     :target: https://travis-ci.org/niwibe/clj.jdbc
