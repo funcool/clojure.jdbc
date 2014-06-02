@@ -7,6 +7,13 @@ Version 0.1.2
 Date: unreleased
 
 - Add optional options parameter to `with-transaction` macro.
+- Improved `execute-prepared!` function. Now accepts self prepared statements like `query`.
+- Improved `make-prepared-statement` function. Now accept string and parametrized vector
+  as sql value.
+- Pretty dbspec format.
+- Read only connections.
+- Set schema to connection.
+
 
 Version 0.1.1
 ~~~~~~~~~~~~~
