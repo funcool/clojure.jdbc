@@ -22,18 +22,24 @@
                  :subname "mem:"
                  :isolation-level :serializable})
 
-(def pg-dbspec {:classname "org.postgresql.Driver"
-                :subprotocol "postgresql"
+(def pg-dbspec {:subprotocol "postgresql"
                 :subname "//localhost:5432/test"})
+
+(def pg-dbspec-pretty {:vendor "postgresql"
+                       :name "test"
+                       :host "localhost"
+                       :read-only true})
 
 (deftest db-specs
   (testing "Create connection with distinct dbspec"
     (let [c1 (make-connection h2-dbspec1)
           c2 (make-connection h2-dbspec2)
-          c3 (make-connection h2-dbspec3)]
+          c3 (make-connection h2-dbspec3)
+          c4 (make-connection pg-dbspec-pretty)]
       (is (instance? jdbc.types.connection.Connection c1))
       (is (instance? jdbc.types.connection.Connection c2))
-      (is (instance? jdbc.types.connection.Connection c3))))
+      (is (instance? jdbc.types.connection.Connection c3))
+      (is (instance? jdbc.types.connection.Connection c4))))
 
   (testing "Using macro with-connection"
     (with-connection h2-dbspec3 conn
@@ -430,4 +436,3 @@
           (execute-prepared! conn sql-insert [{:foo "bar"}])
           (let [res (first (query conn sql-query))]
             (is (= res {:data {"foo" "bar"}}))))))))
-

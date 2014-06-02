@@ -141,42 +141,89 @@ next versions."
         options (dissoc dbspec :subprotocol :subname)]
     (make-raw-connection-from-jdbcurl url options)))
 
-(defn make-connection
-  "Creates a connection to a database.
-
-  Here some simple examples, but if you want more detailed information,
-  please read a documentation:
-
-    ;; Using a plain dbspec
-    (with-open [c (make-connection {:subprotocol \"h2\" :subname \"mem:\"})]
-      (do-somethin-with-connection c))
-
-    ;; Using raw jdbc connection url
-    (with-open [c (make-connection \"postgresql://user:pass@localhost/test\")]
-      (do-somethin-with-connection c))"
+(defn- make-raw-connection
+  "Given connection parametes get raw jdbc connection. This
+function is private and is used directly by `make-connection`."
   [{:keys [connection-uri subprotocol subname
            datasource user password read-only
-           schema isolation-level]
+           schema isolation-level name vendor
+           host port]
     :or {read-only false schema nil}
     :as dbspec}]
-  (let [raw-connection  (cond
-                          (and datasource user password)
-                            (.getConnection datasource user password)
-                          (and datasource)
-                            (.getConnection datasource)
-                          (and subprotocol subname)
-                            (make-raw-connection-from-dbspec dbspec)
-                          (and connection-uri)
-                            (make-raw-connection-from-jdbcurl connection-uri)
-                          (or (string? dbspec) (instance? URI dbspec))
-                            (make-raw-connection-from-dbspec (uri->dbspec dbspec))
-                          :else
-                            (throw (IllegalArgumentException. "Invalid dbspec format")))
-        metadata        (.getMetaData raw-connection)
-        connection      (->Connection raw-connection metadata)]
+  (cond
+   (and datasource user password)
+   (.getConnection datasource user password)
+
+   (and datasource)
+   (.getConnection datasource)
+
+   (and subprotocol subname)
+   (make-raw-connection-from-dbspec dbspec)
+
+   (and name vendor)
+   (let [host   (or host "127.0.0.1")
+         port   (if port (str ":" port) "")
+         dbspec (merge
+                 {:subprotocol vendor
+                  :subname (str "//" host port "/" name)}
+                 (when (and user password)
+                   {:user user
+                    :password password}))]
+     (make-raw-connection-from-dbspec dbspec))
+
+   (and connection-uri)
+   (make-raw-connection-from-jdbcurl connection-uri)
+
+   (or (string? dbspec) (instance? URI dbspec))
+   (make-raw-connection-from-dbspec (uri->dbspec dbspec))
+   :else (throw (IllegalArgumentException. "Invalid dbspec format"))))
+
+(defn make-connection
+  "Creates a connection to a database from dbspec, and dbspec
+can be:
+
+- map containing connection parameter
+- map containing a datasource
+- URI or string
+
+The dbspec map has this possible variants:
+
+Classic approach:
+  :subprotocol -> (required) string that represents a vendor name (ex: postgresql)
+  :subname -> (required) string that represents a database name (ex: test)
+  :classname -> (optional) string that represents a class name.
+  (many others options that are pased directly as driver parameters)
+
+Pretty format:
+  :vendor -> (required) string that represents a vendor name (ex: postgresql)
+  :name -> (required) string that represents a database name (ex: test)
+  :host -> (optional) string that represents a database hostname (default: 127.0.0.1)
+  :port -> (optional) long number that represents a database port (default: driver default)
+  (many others options that are pased directly as driver parameters)
+
+Raw format:
+  :connection-uri -> String that passed directly to DriverManager/getConnection
+
+URI or String format:
+  vendor://user:password@host:post/dbname
+
+Additional options for map based dbspecs:
+  :schema -> string that represents a schema name (default: nil)
+  :read-only -> boolean for mark entire connection read only.
+
+For more details, see documentation."
+  [{:keys [isolation-level schema read-only]
+    :or {read-only false schema nil}
+    :as dbspec}]
+  (let [rawconn (make-raw-connection dbspec)
+        metadata (.getMetaData rawconn)]
     (when isolation-level
-      (.setTransactionIsolation raw-connection (get constants/isolation-levels isolation-level)))
-    (assoc connection :isolation-level isolation-level)))
+      (.setTransactionIsolation rawconn (get constants/isolation-levels isolation-level)))
+    (when schema
+      (.setSchema rawconn schema))
+    (.setReadOnly rawconn read-only)
+    (-> (->Connection rawconn metadata)
+        (assoc :isolation-level isolation-level))))
 
 (defn execute!
   "Run arbitrary number of raw sql commands such as: CREATE TABLE,
