@@ -13,7 +13,7 @@
 ;; limitations under the License.
 
 (ns jdbc.transaction
-  "Transactions support for clj.jdbc"
+  "Transactions support for clojure.jdbc"
   (:require [jdbc.types.connection :refer [is-connection?]]
             [jdbc.constants :as constants])
   (:import java.sql.Connection))

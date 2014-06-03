@@ -13,16 +13,6 @@
 ;; limitations under the License.
 
 (ns jdbc.pool
-  "clj.jdbc has native support for more than one connection
-  pool implementations.
-
-  Currently it has support for:
-  - c3p0 (see jdbc.pool.c3p0 namespace)
-
-  Each wrapped connection pool interface only implements
-  one function: `make-datasource-spec` that receves a default
-  plain dbspec and returns other dbspect with datasource
-  instance."
   (:require [jdbc :refer [uri->dbspec]])
   (:import (java.net URI))
   (:gen-class))
