@@ -1,38 +1,34 @@
-clj.jdbc-dbcp
-=============
+# clojure.jdbc-dbcp
 
-clj.jdbc extension for apache commons dbcp connection pool implementation.
+clojure.jdbc extension for apache commons dbcp connection pool implementation.
 
 Note: only works on >= jdk7
 
-Install
--------
+## Install
 
 Leiningen
 
-.. code-block:: clojure
-
-    [be.niwi/clj.jdbc-dbcp "0.1.1"]
+```clojure
+[clojure.jdbc/clojure.jdbc-dbcp "0.2.0"]
+```
 
 Gradle
 
-.. code-block:: groovy
-
-    compile "be.niwi:clj.jdbc-dbcp:0.1.1"
+```groovy
+compile "clojure.jdbc:clojure.jdbc-dbcp:0.2.0"
+```
 
 Maven
 
-.. code-block:: xml
+```xml
+<dependency>
+  <groupId>clojure.jdbc</groupId>
+  <artifactId>clojure.jdbc-dbcp</artifactId>
+  <version>0.2.0</version>
+</dependency>
+```
 
-    <dependency>
-      <groupId>be.niwi</groupId>
-      <artifactId>clj.jdbc-dbcp</artifactId>
-      <version>0.1.1</version>
-    </dependency>
+## Doc
 
-
-Doc
----
-
-**Documentation:** http://niwibe.github.io/clj.jdbc/
+**Documentation:** http://niwibe.github.io/clojure.jdbc/
 

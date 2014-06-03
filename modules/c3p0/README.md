@@ -1,37 +1,33 @@
-clj.jdbc
-========
+# clojure.jdbc-c3p0
 
-clj.jdbc extension for c3p0 (a mature, highly concurrent JDBC
+clojure.jdbc extension for c3p0 (a mature, highly concurrent JDBC
 Connection pooling library).
 
-Install
--------
+## Install
 
 Leiningen
 
-.. code-block:: clojure
-
-    [be.niwi/clj.jdbc-c3p0 "0.1.1"]
+```clojure
+[clojure.jdbc/clojure.jdbc-c3p0 "0.2.0"]
+```
 
 Gradle
 
-.. code-block:: groovy
-
-    compile "be.niwi:clj.jdbc-c3p0:0.1.1"
+```groovy
+compile "clojure.jdbc:clojure.jdbc-c3p0:0.2.0"
+```
 
 Maven
 
-.. code-block:: xml
+```xml
+<dependency>
+  <groupId>clojure.jdbc</groupId>
+  <artifactId>clojure.jdbc-c3p0</artifactId>
+  <version>0.2.0</version>
+</dependency>
+```
 
-    <dependency>
-      <groupId>be.niwi</groupId>
-      <artifactId>clj.jdbc-c3p0</artifactId>
-      <version>0.1.1</version>
-    </dependency>
+## Doc
 
-
-Doc
----
-
-**Documentation:** http://niwibe.github.io/clj.jdbc/
+**Documentation:** http://niwibe.github.io/clojure.jdbc/
 
