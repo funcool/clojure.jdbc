@@ -4,7 +4,7 @@ Previously: clj.jdbc
 
 Jdbc library for Clojure.
 
-[![Travis Badge](https://img.shields.io/travis/niwibe/clj.jdbc.svg?style=flat)](https://travis-ci.org/niwibe/clj.jdbc "Travis Badge")
+[![Travis Badge](https://img.shields.io/travis/niwibe/clojure.jdbc.svg?style=flat)](https://travis-ci.org/niwibe/clojure.jdbc "Travis Badge")
 
 
 ## Install
