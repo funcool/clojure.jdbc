@@ -252,78 +252,112 @@ For more details, see documentation."
                     (.addBatch stmt command)) commands))
       (seq (.executeBatch stmt)))))
 
+(defn get-returning-records
+  "Given a executed prepared statement with expected returning
+values. Return a vector of records of returning values.
+Usually is a id of just inserted objects, but in other cases
+can be complete objects."
+  [conn ^PreparedStatement stmt]
+  {:pre [(is-connection? conn)]}
+  (let [rs (.getGeneratedKeys stmt)]
+    (result-set->vector conn rs)))
+
 (defn is-prepared-statement?
   "Check if specified object is prepared statement."
   [obj]
   (instance? PreparedStatement obj))
 
-(defn execute-prepared!
-  "Same as `execute!` function, but works with PreparedStatement
-  instead with plain Statement.
-
-  With this you can execute multiple operations throught
-  one call, such as bulk update.
-
-  Example:
-
-    (with-connection dbspec conn
-      (let [sql 'UPDATE TABLE foo SET x = ? WHERE y = ?;']
-        (execute-prepared! conn sql [1 2] [2 3] [3 4])))
-
-    This code should send this sql sentences:
-
-      UPDATE TABLE foo SET x = 1 WHERE y = 2;
-      UPDATE TABLE foo SET x = 2 WHERE y = 3;
-      UPDATE TABLE foo SET x = 3 WHERE y = 4;
-  "
-  [conn sql & param-groups]
-  {:pre [(is-connection? conn)]}
-  (if (is-prepared-statement? sql)
-    (execute-statement! conn sql param-groups)
-    (let [connection (:connection conn)]
-      (with-open [stmt (.prepareStatement connection sql)]
-        (execute-statement! conn stmt param-groups)))))
-
 (defn make-prepared-statement
-  "Given connection and parametrized query as vector with first
-  argument as string and other arguments as params, return a
-  prepared statement.
-
-  Example:
-
-    (let [stmt (make-prepared-statement conn [\"SELECT foo FROM bar WHERE id = ?\" 1])]
-      (println (instance? java.sql.PreparedStatement stmt)))
-    ;; -> true
-  "
+  "Given connection and query, return a prepared statement."
   ([conn sqlvec] (make-prepared-statement conn sqlvec {}))
-  ([conn sqlvec {:keys [result-type result-concurency fetch-size max-rows holdability lazy]
+  ([conn sqlvec {:keys [result-type result-concurency fetch-size
+                        max-rows holdability lazy returning]
                  :or {result-type :forward-only result-concurency :read-only fetch-size 100}
                  :as options}]
    {:pre [(is-connection? conn) (or (string? sqlvec) (vector? sqlvec))]}
-   (let [connection (:connection conn)
-         sqlvec     (if (string? sqlvec) [sqlvec] sqlvec)
-         sql        (first sqlvec)
-         params     (rest sqlvec)
-         stmt       (if holdability
-                      (.prepareStatement connection sql
-                                         (result-type constants/resultset-options)
-                                         (result-concurency constants/resultset-options)
-                                         (holdability constants/resultset-options))
-                      (.prepareStatement connection sql
-                                         (result-type constants/resultset-options)
-                                         (result-concurency constants/resultset-options)))]
+   (let [rconn  (:connection conn)
+         sqlvec (if (string? sqlvec) [sqlvec] sqlvec)
+         sql    (first sqlvec)
+         params (rest sqlvec)
+         stmt   (cond
+                 returning
+                 (if (true? returning)
+                   (.prepareStatement rconn sql java.sql.Statement/RETURN_GENERATED_KEYS)
+                   (.prepareStatement rconn sql (into-array String (mapv name returning))))
+
+                 holdability
+                 (.prepareStatement rconn sql
+                                    (result-type constants/resultset-options)
+                                    (result-concurency constants/resultset-options)
+                                    (holdability constants/resultset-options))
+                 :else
+                 (.prepareStatement rconn sql
+                                    (result-type constants/resultset-options)
+                                    (result-concurency constants/resultset-options)))]
+
      ;; Lazy resultset works with database cursors ant them can not be used
      ;; without one transaction
      (when (and (not (:in-transaction conn)) lazy)
-       (throw (RuntimeException. "Can not use cursor resultset without transaction")))
+       (throw (IllegalArgumentException. "Can not use cursor resultset without transaction")))
 
      ;; Overwrite default jdbc driver fetch-size when user
      ;; wants lazy result set.
      (when lazy (.setFetchSize stmt fetch-size))
      (when max-rows (.setMaxRows max-rows))
+
      (when (seq params)
        (dorun (map-indexed #(.setObject stmt (inc %1) (types/as-sql-type %2 conn)) params)))
      stmt)))
+
+(defn execute-prepared!
+  "Given a active connection and sql (or prepared statement),
+executes a query in a database. This differs from `execute!` function
+with that this function allows pass parameters to query in a more safe
+way and permit pass group of parrams enabling bulk operations.
+
+After connection, sql/prepared statement and any number of group of
+params you can pass options map (same as on `make-prepared-statement`
+function).
+
+Note: Some options are incompatible with self defined prepared
+statement.
+
+Example:
+
+(with-connection dbspec conn
+  (let [sql \"UPDATE TABLE foo SET x = ? WHERE y = ?;\"]
+    (execute-prepared! conn sql [1 2] [2 3] [3 4])))
+"
+  [conn sql & param-groups]
+  {:pre [(is-connection? conn)]}
+  ;; Try extract options from param-groups varargs. Options
+  ;; should be a hash-map and located as the last parameter.
+  ;; If any one know more efficient way to do it, pull-request
+  ;; are welcome ;)
+  (let [opts-candidate (last param-groups)
+        options        (if (map? opts-candidate) opts-candidate {})
+        param-groups   (if (map? opts-candidate) (butlast param-groups) param-groups)]
+
+    ;; Check incompatible parameters.
+    (when (and (:returning options) (is-prepared-statement? sql))
+      (throw (IllegalArgumentException. "You can not pass prepared statement with returning options.")))
+
+    (if (is-prepared-statement? sql)
+     ;; In case of sql is just a prepared statement
+     ;; execute it in a standard way.
+     (execute-statement! conn sql param-groups)
+
+     ;; In other case, build a prepared statement from sql string
+     (with-open [stmt (make-prepared-statement conn sql options)]
+       (if-not (:returning options)
+         (execute-statement! conn stmt param-groups)
+         ;; In case of returning key is found on options
+         ;; and it has logical true value, build special prepared
+         ;; statement that expect return values and return a vector
+         ;; of returned records instead of vector of updated rows.
+         (do
+           (execute-statement! conn stmt param-groups)
+           (get-returning-records conn stmt)))))))
 
 (extend-protocol types/ISQLStatement
   clojure.lang.APersistentVector

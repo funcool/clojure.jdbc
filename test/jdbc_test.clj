@@ -30,6 +30,17 @@
                        :host "localhost"
                        :read-only true})
 
+
+(deftest db-extra-returning-keys
+  (testing "Testing basic returning keys"
+    (with-connection [conn pg-dbspec]
+      (execute! conn "DROP TABLE IF EXISTS foo_retkeys;")
+      (execute! conn "CREATE TABLE foo_retkeys (id int primary key, num integer);")
+      (let [sql (str "INSERT INTO foo_retkeys (id, num) VALUES (?, ?)")
+            res (execute-prepared! conn sql [2, 0] [3, 0] {:returning [:id]})]
+        (is (= res [{:id 2} {:id 3}])))))
+)
+
 (deftest db-specs
   (testing "Create connection with distinct dbspec"
     (let [c1 (make-connection h2-dbspec1)
