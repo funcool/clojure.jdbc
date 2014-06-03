@@ -1,7 +1,7 @@
-clj.jdbc documentation
-======================
+clojure.jdbc documentation
+==========================
 Andrey Antukh, <niwi@niwi.be>
-0.1.2, 2014-04-06
+0.2.0, 2014-04-06
 
 :toc:
 :numbered:
@@ -10,7 +10,7 @@ Andrey Antukh, <niwi@niwi.be>
 Introduction
 ------------
 
-_clj.jdbc_ is a library for low level, jdbc based database access.
+_clojure.jdbc_ is a library for low level, jdbc based database access.
 
 
 link:api/index.html[Api reference documentation.]
@@ -26,37 +26,51 @@ Five most important rules:
 - Complex is better than complicated.
 - Readability counts.
 
-All contributions to _clj.jdbc_ should keep these important rules in mind.
+All contributions to _clojure.jdbc_ should keep these important rules in mind.
 
 
 Project Maturity
 ----------------
 
-Since _clj.jdbc_ is a young project there can be some API breakage.
+Since _clojure.jdbc_ is a young project there can be some API breakage.
 
 Install
 -------
 
-This section covers a installing _clj.jdbc and its requirements.
+This section covers a installing _clojure.jdbc and its requirements.
 
 Requirements
 ~~~~~~~~~~~~
 
-_clj.jdbc_ is tested with these platforms:
+_clojure.jdbc_ is tested with these platforms:
 
 - JDK7
 - JDK8
 
+Cooming from clj.jdbc
+~~~~~~~~~~~~~~~~~~~~~
+
+Only a package name is changed, all api is maintained as is with expected
+small changes as described in changelog.
+
+Yo should change your dependency entry on project.clj to new package name:
+
+[source, clojure]
+----
+[clojure.jdbc "x.y.z"]
+----
+
+
 Leiningen
 ~~~~~~~~~
 
-The simplest way to use _clj.jdbc_ on clojure project, is including it on dependency
+The simplest way to use _clojure.jdbc_ on clojure project, is including it on dependency
 vector on your *_project.clj_* file:
 
 ._on project.clj_
 [source,clojure]
 ----
-[be.niwi/clj.jdbc "0.1.1"]
+[clojure.jdbc "0.2.0"]
 ----
 
 Gradle
@@ -66,7 +80,7 @@ If you are using gradle, this is a dependency line for gradle dsl:
 
 [source,groovy]
 ----
-compile "be.niwi:clj.jdbc:0.1.1"
+compile "clojure.jdbc:clojure.jdbc:0.2.0"
 ----
 
 Maven
@@ -88,9 +102,9 @@ this is a xml that you should put on dependency section on a maven config file:
 [source,xml]
 ----
 <dependency>
-  <groupId>be.niwi</groupId>
-  <artifactId>clj.jdbc</artifactId>
-  <version>0.1.1</version>
+  <groupId>clojure.jdbc</groupId>
+  <artifactId>clojure.jdbc</artifactId>
+  <version>0.2.0</version>
 </dependency>
 ----
 
@@ -98,13 +112,13 @@ this is a xml that you should put on dependency section on a maven config file:
 Get the Code
 ~~~~~~~~~~~~
 
-_clj.jdbc_ is opensource and is entirelly developed on link:https://github.com/niwibe/clj.jdbc[github].
+_clojure.jdbc_ is opensource and is entirelly developed on link:https://github.com/niwibe/clojure.jdbc[github].
 
 You can clone the public repository with this command:
 
 [source,text]
 ----
-git clone https://github.com/niwibe/clj.jdbc
+git clone https://github.com/niwibe/clojure.jdbc
 ----
 
 
@@ -154,13 +168,13 @@ Also, *dbspec* can be represented as URI.
 Creating a connection
 ^^^^^^^^^^^^^^^^^^^^^
 
-With clj.jdbc every function that interacts with a database, requires explicitly
+With clojure.jdbc every function that interacts with a database, requires explicitly
 one connection instance as parameter (no dynamic vars are used for it).
 
 
-NOTE: clj.jdbc does not use any global/thread-local state, and always try ensure immutability.
+NOTE: clojure.jdbc does not use any global/thread-local state, and always try ensure immutability.
 
-NOTE: unlike clojure.java.jdbc, with _clj.jdbc_ you can't use a plain dbspec hash-map as
+NOTE: unlike clojure.java.jdbc, with _clojure.jdbc_ you can't use a plain dbspec hash-map as
 connection parameter and you should explicitly open a new connection before doing any operation
 in a database.
 
@@ -217,7 +231,7 @@ Raw SQL statements work well for creating tables and similar operations, but
 when you need to insert some data, especially if the data comes from untrusted
 sources, the `execute!` function is not a good option.
 
-For this problem, clj.jdbc exposes `execute-prepared!` function. It
+For this problem, clojure.jdbc exposes `execute-prepared!` function. It
 accepts parametrized SQL and a list of groups of parameters that allow
 execute amount of same operations with distinct parameters in bulk.
 
@@ -281,7 +295,7 @@ Transactions
 Getting start with transactions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-All transactions related functions on _clj.jdbc_ are exposed on `jdbc.transaction` namespace
+All transactions related functions on _clojure.jdbc_ are exposed on `jdbc.transaction` namespace
 and if you need transactions on your code, you should import it:
 
 [source,clojure]
@@ -302,7 +316,7 @@ macro:
 
 [NOTE]
 ====
-_clj.jdbc_ does not uses any dynamic thread-local vars for store the transaction state
+_clojure.jdbc_ does not uses any dynamic thread-local vars for store the transaction state
 for a connection. Instead of that, it overwrites lexical scope value of `conn` with new
 connection that has a transactional state.
 ====
@@ -311,7 +325,7 @@ connection that has a transactional state.
 Low level transaction primitives
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Behind the scene of `with-transaction` macro, _clj.jdbc_ has uses `call-in-transaction`
+Behind the scene of `with-transaction` macro, _clojure.jdbc_ has uses `call-in-transaction`
 function.
 
 It, given an active connection as first parameter and function that you want execute in a
@@ -326,7 +340,7 @@ a connection as first parameter.
 
 [NOTE]
 ====
-clj.jdbc in contrast to java.jdbc, handles well nested transactions. So making all
+clojure.jdbc in contrast to java.jdbc, handles well nested transactions. So making all
 code wrapped in transaction block truly atomic independenty of transaction nesting.
 
 If you want extend o change a default transaction strategy, see
@@ -337,7 +351,7 @@ xref:transaction-strategy[Transaction Strategy section].
 Isolation Level
 ^^^^^^^^^^^^^^^
 
-clj.jdbc by default does nothing with isolation level and keep it with default values.
+clojure.jdbc by default does nothing with isolation level and keep it with default values.
 
 .You can set isolation level on creating a connection specifying it on your dbspec.
 [source,clojure]
@@ -364,7 +378,7 @@ This is a list of supported options:
 - `:read-commited` - Set read committed isolation level
 - `:repeatable-read` - Set repeatable reads isolation level
 - `:serializable` - Set serializable isolation level
-- `:none` - Use this option to indicate to clj.jdbc to do nothing and keep default behavior.
+- `:none` - Use this option to indicate to clojure.jdbc to do nothing and keep default behavior.
 
 You can read more about it on link:http://en.wikipedia.org/wiki/Isolation_(database_systems)[wikipedia].
 
@@ -398,7 +412,7 @@ avoids these behavior.
 
 If you have an extremely large resultset and you want retrieve it and process each item, it is exactly what you need.
 
-_clj.jdbc_ for this purpose, exposes `with-query` macro that uses server side cursors inside
+_clojure.jdbc_ for this purpose, exposes `with-query` macro that uses server side cursors inside
 and exposes a lazy seq of records (instead of full evaluated vector) in a created macro context:
 
 [source,clojure]
@@ -457,7 +471,7 @@ Connection pool
 
 All good database library should come with connection pool support.
 
-Java ecosystem comes with various connection pool implementations for jdbc and clj.jdbc
+Java ecosystem comes with various connection pool implementations for jdbc and clojure.jdbc
 comes with following interfaces:
 
 c3p0
@@ -472,7 +486,7 @@ Install
 ._on project.clj_
 [source, clojure]
 ----
-[be.niwi/clj.jdbc-c3p0 "0.1.1"]
+[be.niwi/clojure.jdbc-c3p0 "0.1.1"]
 ----
 
 Usage
@@ -503,7 +517,7 @@ Install
 ._on project.clj_
 [source, clojure]
 ----
-[be.niwi/clj.jdbc-dbcp "0.1.1"]
+[be.niwi/clojure.jdbc-dbcp "0.1.1"]
 ----
 
 Usage
@@ -526,7 +540,7 @@ NOTE: this is a recommended implementation for connection pooling.
 Transaction strategy
 ~~~~~~~~~~~~~~~~~~~~
 
-Transactions strategy on _clj.jdbc_ are implemented using protocols having default implementation explained
+Transactions strategy on _clojure.jdbc_ are implemented using protocols having default implementation explained
 in previous sections. This approach, allows easy way to extend, customize or completely change a transaction
 strategy for your application.
 
@@ -599,14 +613,14 @@ to sql array and assigned properly to prepared statement:
 ----
 
 
-clj.jdbc also exposes `jdbc.types/ISQLResultSetReadColumn` protocol that encapsulates
+clojure.jdbc also exposes `jdbc.types/ISQLResultSetReadColumn` protocol that encapsulates
 a backward conversions from sql types to user defined types.
 
 
 How to contribute?
 ------------------
 
-**clj.jdbc** unlike clojure and other clojure contrib libs, does not have much
+**clojure.jdbc** unlike clojure and other clojure contrib libs, does not have much
 restrictions for contribute. Just follow the following steps depending on the
 situation:
 
@@ -630,18 +644,18 @@ Why another jdbc wrapper?
 
 This is a incomplete list of reasons:
 
-- Connection management should be explicit. clj.jdbc has a clear differentiation
+- Connection management should be explicit. clojure.jdbc has a clear differentiation
   between connection and dbspec without unnecessary nesting controls and with explicit
   resource management (using `with-open` or other specific macros for it, see the
   examples).
-- clj.jdbc has full support for all the transactions api, with the ability to set the
+- clojure.jdbc has full support for all the transactions api, with the ability to set the
   database isolation level and use nested transactions (savepoints).
   It creates a new transaction if no other transaction is active but,
   when invoked within the context of an already existing transaction, it creates a savepoint.
-- clj.jdbc supports extend or overwrite a transaction management if a default
+- clojure.jdbc supports extend or overwrite a transaction management if a default
   behavior is not sufficient for you.
-- clj.jdbc has native support for connection pools.
-- clj.jdbc has a simpler implementation than clojure.java.jdbc. It has no more
+- clojure.jdbc has native support for connection pools.
+- clojure.jdbc has a simpler implementation than clojure.java.jdbc. It has no more
   complexity than necessary for each available function in public api. +
   +
   As an example:
@@ -650,15 +664,15 @@ This is a incomplete list of reasons:
     +
     Ex: functions like `create!` can receive plain dbspec or a connection. If you are
     curious, take a look to `with-db-connection` implementation of clojure.java.jdbc
-    and compare it with `with-connection` of clj.jdbc. You are going to give account of the
+    and compare it with `with-connection` of clojure.jdbc. You are going to give account of the
     hidden unnecesary complexity found on clojure.java.jdbc. +
     +
-    clojure.java.jdbc has inconsistent connection management. In contrast, with clj.jdbc,
+    clojure.java.jdbc has inconsistent connection management. In contrast, with clojure.jdbc,
     a connection should be created explicitly befor use any other function that
     requires one connection.
 
     * clojure.java.jdbc has repeated transaction handling on each CRUD method
-    (insert!, drop!, etc...). With clj.jdbc, if you want that some code to run in a
+    (insert!, drop!, etc...). With clojure.jdbc, if you want that some code to run in a
     transaction, you should wrap it in a transaction context explicitly, using the
     `with-transaction` macro (see the transactions section for more information).
 
@@ -666,45 +680,45 @@ This is a incomplete list of reasons:
   really exist).
 
 
-clj.jdbc has better performance than java.jdbc?
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+clojure.jdbc has better performance than java.jdbc?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Mostly **Yes**, _clj.jdbc_  by default has better performance than java.jdbc. You can
+Mostly **Yes**, _clojure.jdbc_  by default has better performance than java.jdbc. You can
 run the micro benchmark code on your environment with: `lein with-profile bench run`
 
 On my environments, the result is:
 
 [source,text]
 ----
-[3/5.0.5]niwi@niwi:~/clj.jdbc> lein with-profile bench run
+[3/5.0.5]niwi@niwi:~/clojure.jdbc> lein with-profile bench run
 Simple query without connection overhead.
 java.jdbc:
 "Elapsed time: 673.890131 msecs"
-clj.jdbc:
+clojure.jdbc:
 "Elapsed time: 450.329706 msecs"
 Simple query with connection overhead.
 java.jdbc:
 "Elapsed time: 2490.233925 msecs"
-clj.jdbc:
+clojure.jdbc:
 "Elapsed time: 2239.524395 msecs"
 Simple query with transaction.
 java.jdbc:
 "Elapsed time: 532.151667 msecs"
-clj.jdbc:
+clojure.jdbc:
 "Elapsed time: 475.982354 msecs"
 ----
 
 
-Why clj.jdbc does not include dsl for working with sql as clojure.java.jdbc 0.3?
+Why clojure.jdbc does not include dsl for working with sql as clojure.java.jdbc 0.3?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 [quote, Douglas McIlroy, http://en.wikipedia.org/wiki/Douglas_McIlroy]
 ____
 Write programs that do one thing and do it well.
 ____
 
-clj.jdbc is a wrapper for Java JDBC interface, it doesn't intend provide helpers
+clojure.jdbc is a wrapper for Java JDBC interface, it doesn't intend provide helpers
 for avoid sql usage. There already are a good number of DSLs for working with SQL.
-clj.jdbc will not reinvent the wheel. +
+clojure.jdbc will not reinvent the wheel. +
 One example of a good dsl for build sql: https://github.com/r0man/sqlingvo
 
 This is a fork of clojure.java.jdbc?
@@ -716,7 +730,7 @@ No. Is just a alternative implementation.
 License
 -------
 
-clj.jdbc are writen from scratch and is licensed under Apache 2.0 license:
+clojure.jdbc are writen from scratch and is licensed under Apache 2.0 license:
 
 ----
 Copyright 2013 Andrey Antukh <niwi@niwi.be>
@@ -738,4 +752,4 @@ You can see a full license on LICENSE file located on the root of the project
 repo.
 
 Additionaly, I want give thanks to `clojure.java.jdbc` developers for a good
-initial work. Some intial ideas for clj.jdbc are taken from it.
+initial work. Some intial ideas for clojure.jdbc are taken from it.
