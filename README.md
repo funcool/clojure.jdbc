@@ -1,4 +1,6 @@
-# clj.jdbc
+# clojure.jdbc
+
+Previously: clj.jdbc
 
 Jdbc library for Clojure.
 
@@ -6,6 +8,8 @@ Jdbc library for Clojure.
 
 
 ## Install
+
+Note: new name will appear when next version is released
 
 Leiningen
 
@@ -30,4 +34,4 @@ Maven
 
 ## Doc
 
-- **Documentation:** http://niwibe.github.io/clj.jdbc/
+- **Documentation:** http://niwibe.github.io/clojure.jdbc/
