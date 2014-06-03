@@ -281,7 +281,7 @@ For more details, see documentation."
   (if (is-prepared-statement? sql)
     (execute-statement! conn sql param-groups)
     (let [connection (:connection conn)]
-      (with-open [stmt (.prepareStatement connection sql)]
+      (with-open [stmt (.prepareStatement connection sql java.sql.Statement/RETURN_GENERATED_KEYS)]
         (execute-statement! conn stmt param-groups)))))
 
 (defn make-prepared-statement
@@ -311,7 +311,8 @@ For more details, see documentation."
                                          (holdability constants/resultset-options))
                       (.prepareStatement connection sql
                                          (result-type constants/resultset-options)
-                                         (result-concurency constants/resultset-options)))]
+                                         (result-concurency constants/resultset-options)))
+         stmt       (.prepareStatement connection sql (into-array String ["id"]))]
      ;; Lazy resultset works with database cursors ant them can not be used
      ;; without one transaction
      (when (and (not (:in-transaction conn)) lazy)

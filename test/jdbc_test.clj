@@ -30,6 +30,23 @@
                        :host "localhost"
                        :read-only true})
 
+
+(deftest db-extra-returning-keys
+  (testing "Testing basic returning keys"
+    (with-connection [conn pg-dbspec]
+      (try
+        (execute! conn "DROP TABLE IF EXISTS foo_retkeys;")
+        (execute! conn "CREATE TABLE foo_retkeys (id int primary key, num integer);")
+        (let [sql (str "INSERT INTO foo_retkeys (id, num) VALUES (?, ?)")
+              stmt (make-prepared-statement conn sql)]
+          (let [res (execute-prepared! conn stmt [2, 0] [3, 0])]
+            (println 111, (result-set->vector conn (.getGeneratedKeys stmt) {}))
+            (println 222, res)))
+        (catch java.sql.BatchUpdateException e
+          (.printStackTrace e)
+          (.printStackTrace (.getNextException e))))))
+)
+
 (deftest db-specs
   (testing "Create connection with distinct dbspec"
     (let [c1 (make-connection h2-dbspec1)
