@@ -238,19 +238,37 @@ execute amount of same operations with distinct parameters in bulk.
 .Execute a simple insert SQL statement.
 [source,clojure]
 ----
-(let [sql "INSERT INTO foo VALUES (?, ?);"]
-  (execute-prepared! conn sql ["Foo", 2]))
+(let [sql "INSERT INTO foo (name) VALUES (?)"]
+  (execute-prepared! conn sql ["Foo"]))
 ----
 
 .Bulk insert example.
 [source,clojure]
 ----
-(let [sql "INSERT INTO foo VALUES (?, ?);"]
-  (execute-prepared! conn sql ["Foo", 2] ["Bar", 3]))
+(let [sql "INSERT INTO foo (name) VALUES (?)"]
+  (execute-prepared! conn sql ["Foo"] ["Bar"]))
 
 ;; This should emit this sql:
-;;   INSERT INTO foo VALUES ('Foo', 2);
-;;   INSERT INTO foo VALUES ('Bar', 3);
+;;   INSERT INTO foo (name) VALUES ('Foo');
+;;   INSERT INTO foo (name) VALUES ('Bar');
+----
+
+
+Returning inserted keys
++++++++++++++++++++++++
+
+In some circumstances, you want use "RETURNING id" or similar functionality on
+your queries for return just inserted primary keys. 
+
+.This is how you can do it using clojure.jdbc
+[source, clojure]
+----
+(let [sql "INSERT INTO foo (name) VALUES (?);"
+      res (execute-prepared! conn sql ["Foo"] ["Bar"] {:returning [:id]})]
+  (println res))
+
+;; This should print to standard output something like this:
+[{:id 3} {:id 4}]
 ----
 
 
