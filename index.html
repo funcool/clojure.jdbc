@@ -3,7 +3,7 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <meta name="generator" content="AsciiDoc 8.6.9">
-<title>clj.jdbc documentation</title>
+<title>clojure.jdbc documentation</title>
 <link rel="stylesheet" href="static/niwi.css" type="text/css">
 <link rel="stylesheet" href="static/pygments.css" type="text/css">
 
@@ -18,10 +18,10 @@ asciidoc.install(2);
 </head>
 <body class="article" style="max-width:800px">
 <div id="header">
-<h1>clj.jdbc documentation</h1>
+<h1>clojure.jdbc documentation</h1>
 <span id="author">Andrey Antukh,</span><br>
 <span id="email" class="monospaced">&lt;<a href="mailto:niwi@niwi.be">niwi@niwi.be</a>&gt;</span><br>
-<span id="revnumber">version 0.1.2,</span>
+<span id="revnumber">version 0.2.0,</span>
 <span id="revdate">2014-04-06</span>
 <div id="toc">
   <div id="toctitle">Table of Contents</div>
@@ -32,7 +32,7 @@ asciidoc.install(2);
 <div class="sect1">
 <h2 id="_introduction">1. Introduction</h2>
 <div class="sectionbody">
-<div class="paragraph"><p><em>clj.jdbc</em> is a library for low level, jdbc based database access.</p></div>
+<div class="paragraph"><p><em>clojure.jdbc</em> is a library for low level, jdbc based database access.</p></div>
 <div class="paragraph"><p><a href="api/index.html">Api reference documentation.</a></p></div>
 <div class="sect2">
 <h3 id="_philosofy">1.1. Philosofy</h3>
@@ -64,23 +64,23 @@ Readability counts.
 </p>
 </li>
 </ul></div>
-<div class="paragraph"><p>All contributions to <em>clj.jdbc</em> should keep these important rules in mind.</p></div>
+<div class="paragraph"><p>All contributions to <em>clojure.jdbc</em> should keep these important rules in mind.</p></div>
 </div>
 </div>
 </div>
 <div class="sect1">
 <h2 id="_project_maturity">2. Project Maturity</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>Since <em>clj.jdbc</em> is a young project there can be some API breakage.</p></div>
+<div class="paragraph"><p>Since <em>clojure.jdbc</em> is a young project there can be some API breakage.</p></div>
 </div>
 </div>
 <div class="sect1">
 <h2 id="_install">3. Install</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>This section covers a installing _clj.jdbc and its requirements.</p></div>
+<div class="paragraph"><p>This section covers a installing _clojure.jdbc and its requirements.</p></div>
 <div class="sect2">
 <h3 id="_requirements">3.1. Requirements</h3>
-<div class="paragraph"><p><em>clj.jdbc</em> is tested with these platforms:</p></div>
+<div class="paragraph"><p><em>clojure.jdbc</em> is tested with these platforms:</p></div>
 <div class="ulist"><ul>
 <li>
 <p>
@@ -95,23 +95,32 @@ JDK8
 </ul></div>
 </div>
 <div class="sect2">
-<h3 id="_leiningen">3.2. Leiningen</h3>
-<div class="paragraph"><p>The simplest way to use <em>clj.jdbc</em> on clojure project, is including it on dependency
+<h3 id="_cooming_from_clj_jdbc">3.2. Cooming from clj.jdbc</h3>
+<div class="paragraph"><p>Only a package name is changed, all api is maintained as is with expected
+small changes as described in changelog.</p></div>
+<div class="paragraph"><p>Yo should change your dependency entry on project.clj to new package name:</p></div>
+<div class="listingblock">
+<div class="content"><div class="highlight"><pre><span class="p">[</span><span class="nv">clojure.jdbc</span> <span class="s">&quot;x.y.z&quot;</span><span class="p">]</span>
+</pre></div></div></div>
+</div>
+<div class="sect2">
+<h3 id="_leiningen">3.3. Leiningen</h3>
+<div class="paragraph"><p>The simplest way to use <em>clojure.jdbc</em> on clojure project, is including it on dependency
 vector on your <strong><em>project.clj</em></strong> file:</p></div>
 <div class="listingblock">
 <div class="title"><em>on project.clj</em></div>
-<div class="content"><div class="highlight"><pre><span class="p">[</span><span class="nv">be.niwi/clj.jdbc</span> <span class="s">&quot;0.1.1&quot;</span><span class="p">]</span>
+<div class="content"><div class="highlight"><pre><span class="p">[</span><span class="nv">clojure.jdbc</span> <span class="s">&quot;0.2.0&quot;</span><span class="p">]</span>
 </pre></div></div></div>
 </div>
 <div class="sect2">
-<h3 id="_gradle">3.3. Gradle</h3>
+<h3 id="_gradle">3.4. Gradle</h3>
 <div class="paragraph"><p>If you are using gradle, this is a dependency line for gradle dsl:</p></div>
 <div class="listingblock">
-<div class="content"><div class="highlight"><pre><span class="n">compile</span> <span class="s2">&quot;be.niwi:clj.jdbc:0.1.1&quot;</span>
+<div class="content"><div class="highlight"><pre><span class="n">compile</span> <span class="s2">&quot;clojure.jdbc:clojure.jdbc:0.2.0&quot;</span>
 </pre></div></div></div>
 </div>
 <div class="sect2">
-<h3 id="_maven">3.4. Maven</h3>
+<h3 id="_maven">3.5. Maven</h3>
 <div class="paragraph"><p>And for old school people, who are using a ugly xml files for configure everything,
 this is a xml that you should put on dependency section on a maven config file:</p></div>
 <div class="listingblock">
@@ -124,18 +133,18 @@ this is a xml that you should put on dependency section on a maven config file:<
 <div class="listingblock">
 <div class="title">Dependency entry.</div>
 <div class="content"><div class="highlight"><pre><span class="nt">&lt;dependency&gt;</span>
-  <span class="nt">&lt;groupId&gt;</span>be.niwi<span class="nt">&lt;/groupId&gt;</span>
-  <span class="nt">&lt;artifactId&gt;</span>clj.jdbc<span class="nt">&lt;/artifactId&gt;</span>
-  <span class="nt">&lt;version&gt;</span>0.1.1<span class="nt">&lt;/version&gt;</span>
+  <span class="nt">&lt;groupId&gt;</span>clojure.jdbc<span class="nt">&lt;/groupId&gt;</span>
+  <span class="nt">&lt;artifactId&gt;</span>clojure.jdbc<span class="nt">&lt;/artifactId&gt;</span>
+  <span class="nt">&lt;version&gt;</span>0.2.0<span class="nt">&lt;/version&gt;</span>
 <span class="nt">&lt;/dependency&gt;</span>
 </pre></div></div></div>
 </div>
 <div class="sect2">
-<h3 id="_get_the_code">3.5. Get the Code</h3>
-<div class="paragraph"><p><em>clj.jdbc</em> is opensource and is entirelly developed on <a href="https://github.com/niwibe/clj.jdbc">github</a>.</p></div>
+<h3 id="_get_the_code">3.6. Get the Code</h3>
+<div class="paragraph"><p><em>clojure.jdbc</em> is opensource and is entirelly developed on <a href="https://github.com/niwibe/clojure.jdbc">github</a>.</p></div>
 <div class="paragraph"><p>You can clone the public repository with this command:</p></div>
 <div class="listingblock">
-<div class="content"><div class="highlight"><pre>git clone https://github.com/niwibe/clj.jdbc
+<div class="content"><div class="highlight"><pre>git clone https://github.com/niwibe/clojure.jdbc
 </pre></div></div></div>
 </div>
 </div>
@@ -181,14 +190,14 @@ it is automatically resolved from a predefined list using <span class="monospace
 </div>
 <div class="sect3">
 <h4 id="_creating_a_connection">4.1.2. Creating a connection</h4>
-<div class="paragraph"><p>With clj.jdbc every function that interacts with a database, requires explicitly
+<div class="paragraph"><p>With clojure.jdbc every function that interacts with a database, requires explicitly
 one connection instance as parameter (no dynamic vars are used for it).</p></div>
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
 <div class="title">Note</div>
 </td>
-<td class="content">clj.jdbc does not use any global/thread-local state, and always try ensure immutability.</td>
+<td class="content">clojure.jdbc does not use any global/thread-local state, and always try ensure immutability.</td>
 </tr></table>
 </div>
 <div class="admonitionblock">
@@ -196,8 +205,8 @@ one connection instance as parameter (no dynamic vars are used for it).</p></div
 <td class="icon">
 <div class="title">Note</div>
 </td>
-<td class="content">unlike clojure.java.jdbc, with <em>clj.jdbc</em> you can&#8217;t use a plain dbspec hash-map as
-connection parameter and you shall explicitly open a new connection before doing any operation
+<td class="content">unlike clojure.java.jdbc, with <em>clojure.jdbc</em> you can&#8217;t use a plain dbspec hash-map as
+connection parameter and you should explicitly open a new connection before doing any operation
 in a database.</td>
 </tr></table>
 </div>
@@ -240,23 +249,37 @@ an active connection on the first parameter followed by sql sentences:</p></div>
 <div class="paragraph"><p>Raw SQL statements work well for creating tables and similar operations, but
 when you need to insert some data, especially if the data comes from untrusted
 sources, the <span class="monospaced">execute!</span> function is not a good option.</p></div>
-<div class="paragraph"><p>For this problem, clj.jdbc exposes <span class="monospaced">execute-prepared!</span> function. It
+<div class="paragraph"><p>For this problem, clojure.jdbc exposes <span class="monospaced">execute-prepared!</span> function. It
 accepts parametrized SQL and a list of groups of parameters that allow
 execute amount of same operations with distinct parameters in bulk.</p></div>
 <div class="listingblock">
 <div class="title">Execute a simple insert SQL statement.</div>
-<div class="content"><div class="highlight"><pre><span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">sql</span> <span class="s">&quot;INSERT INTO foo VALUES (?, ?);&quot;</span><span class="p">]</span>
-  <span class="p">(</span><span class="nf">execute-prepared!</span> <span class="nv">conn</span> <span class="nv">sql</span> <span class="p">[</span><span class="s">&quot;Foo&quot;</span>, <span class="mi">2</span><span class="p">]))</span>
+<div class="content"><div class="highlight"><pre><span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">sql</span> <span class="s">&quot;INSERT INTO foo (name) VALUES (?)&quot;</span><span class="p">]</span>
+  <span class="p">(</span><span class="nf">execute-prepared!</span> <span class="nv">conn</span> <span class="nv">sql</span> <span class="p">[</span><span class="s">&quot;Foo&quot;</span><span class="p">]))</span>
 </pre></div></div></div>
 <div class="listingblock">
 <div class="title">Bulk insert example.</div>
-<div class="content"><div class="highlight"><pre><span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">sql</span> <span class="s">&quot;INSERT INTO foo VALUES (?, ?);&quot;</span><span class="p">]</span>
-  <span class="p">(</span><span class="nf">execute-prepared!</span> <span class="nv">conn</span> <span class="nv">sql</span> <span class="p">[</span><span class="s">&quot;Foo&quot;</span>, <span class="mi">2</span><span class="p">]</span> <span class="p">[</span><span class="s">&quot;Bar&quot;</span>, <span class="mi">3</span><span class="p">]))</span>
+<div class="content"><div class="highlight"><pre><span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">sql</span> <span class="s">&quot;INSERT INTO foo (name) VALUES (?)&quot;</span><span class="p">]</span>
+  <span class="p">(</span><span class="nf">execute-prepared!</span> <span class="nv">conn</span> <span class="nv">sql</span> <span class="p">[</span><span class="s">&quot;Foo&quot;</span><span class="p">]</span> <span class="p">[</span><span class="s">&quot;Bar&quot;</span><span class="p">]))</span>
 
 <span class="c1">;; This should emit this sql:</span>
-<span class="c1">;;   INSERT INTO foo VALUES (&#39;Foo&#39;, 2);</span>
-<span class="c1">;;   INSERT INTO foo VALUES (&#39;Bar&#39;, 3);</span>
+<span class="c1">;;   INSERT INTO foo (name) VALUES (&#39;Foo&#39;);</span>
+<span class="c1">;;   INSERT INTO foo (name) VALUES (&#39;Bar&#39;);</span>
 </pre></div></div></div>
+<div class="sect4">
+<h5 id="_returning_inserted_keys">Returning inserted keys</h5>
+<div class="paragraph"><p>In some circumstances, you want use "RETURNING id" or similar functionality on
+your queries for return just inserted primary keys.</p></div>
+<div class="listingblock">
+<div class="title">This is how you can do it using clojure.jdbc</div>
+<div class="content"><div class="highlight"><pre><span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">sql</span> <span class="s">&quot;INSERT INTO foo (name) VALUES (?);&quot;</span>
+      <span class="nv">res</span> <span class="p">(</span><span class="nf">execute-prepared!</span> <span class="nv">conn</span> <span class="nv">sql</span> <span class="p">[</span><span class="s">&quot;Foo&quot;</span><span class="p">]</span> <span class="p">[</span><span class="s">&quot;Bar&quot;</span><span class="p">]</span> <span class="p">{</span><span class="ss">:returning</span> <span class="p">[</span><span class="ss">:id</span><span class="p">]})]</span>
+  <span class="p">(</span><span class="nb">println </span><span class="nv">res</span><span class="p">))</span>
+
+<span class="c1">;; This should print to standard output something like this:</span>
+<span class="p">[{</span><span class="ss">:id</span> <span class="mi">3</span><span class="p">}</span> <span class="p">{</span><span class="ss">:id</span> <span class="mi">4</span><span class="p">}]</span>
+</pre></div></div></div>
+</div>
 </div>
 </div>
 <div class="sect2">
@@ -314,7 +337,7 @@ type queries that are explained on <a href="#cursor-queries">Advanced usage</a> 
 <h3 id="_transactions">4.4. Transactions</h3>
 <div class="sect3">
 <h4 id="_getting_start_with_transactions">4.4.1. Getting start with transactions</h4>
-<div class="paragraph"><p>All transactions related functions on <em>clj.jdbc</em> are exposed on <span class="monospaced">jdbc.transaction</span> namespace
+<div class="paragraph"><p>All transactions related functions on <em>clojure.jdbc</em> are exposed on <span class="monospaced">jdbc.transaction</span> namespace
 and if you need transactions on your code, you should import it:</p></div>
 <div class="listingblock">
 <div class="content"><div class="highlight"><pre><span class="p">(</span><span class="nf">require</span> <span class="o">&#39;</span><span class="p">[</span><span class="nv">jdbc.transaction</span> <span class="ss">:as</span> <span class="nv">tx</span><span class="p">])</span>
@@ -332,7 +355,7 @@ macro:</p></div>
 <div class="title">Note</div>
 </td>
 <td class="content">
-<div class="paragraph"><p><em>clj.jdbc</em> does not uses any dynamic thread-local vars for store the transaction state
+<div class="paragraph"><p><em>clojure.jdbc</em> does not uses any dynamic thread-local vars for store the transaction state
 for a connection. Instead of that, it overwrites lexical scope value of <span class="monospaced">conn</span> with new
 connection that has a transactional state.</p></div>
 </td>
@@ -341,7 +364,7 @@ connection that has a transactional state.</p></div>
 </div>
 <div class="sect3">
 <h4 id="_low_level_transaction_primitives">4.4.2. Low level transaction primitives</h4>
-<div class="paragraph"><p>Behind the scene of <span class="monospaced">with-transaction</span> macro, <em>clj.jdbc</em> has uses <span class="monospaced">call-in-transaction</span>
+<div class="paragraph"><p>Behind the scene of <span class="monospaced">with-transaction</span> macro, <em>clojure.jdbc</em> has uses <span class="monospaced">call-in-transaction</span>
 function.</p></div>
 <div class="paragraph"><p>It, given an active connection as first parameter and function that you want execute in a
 transaction as second parameter, executes it in a database transaction. The function should accept
@@ -355,7 +378,7 @@ a connection as first parameter.</p></div>
 <div class="title">Note</div>
 </td>
 <td class="content">
-<div class="paragraph"><p>clj.jdbc in contrast to java.jdbc, handles well nested transactions. So making all
+<div class="paragraph"><p>clojure.jdbc in contrast to java.jdbc, handles well nested transactions. So making all
 code wrapped in transaction block truly atomic independenty of transaction nesting.</p></div>
 <div class="paragraph"><p>If you want extend o change a default transaction strategy, see
 <a href="#transaction-strategy">Transaction Strategy section</a>.</p></div>
@@ -365,7 +388,7 @@ code wrapped in transaction block truly atomic independenty of transaction nesti
 </div>
 <div class="sect3">
 <h4 id="_isolation_level">4.4.3. Isolation Level</h4>
-<div class="paragraph"><p>clj.jdbc by default does nothing with isolation level and keep it with default values.</p></div>
+<div class="paragraph"><p>clojure.jdbc by default does nothing with isolation level and keep it with default values.</p></div>
 <div class="listingblock">
 <div class="title">You can set isolation level on creating a connection specifying it on your dbspec.</div>
 <div class="content"><div class="highlight"><pre><span class="p">(</span><span class="k">def </span><span class="nv">dbsoec</span> <span class="p">{</span><span class="ss">:subprotocol</span> <span class="s">&quot;h2&quot;</span>
@@ -405,7 +428,7 @@ code wrapped in transaction block truly atomic independenty of transaction nesti
 </li>
 <li>
 <p>
-<span class="monospaced">:none</span> - Use this option to indicate to clj.jdbc to do nothing and keep default behavior.
+<span class="monospaced">:none</span> - Use this option to indicate to clojure.jdbc to do nothing and keep default behavior.
 </p>
 </li>
 </ul></div>
@@ -442,7 +465,7 @@ for this operation.</p></div>
 structures for fetching data. To our luck, some databases implements server side cursors that
 avoids these behavior.</p></div>
 <div class="paragraph"><p>If you have an extremely large resultset and you want retrieve it and process each item, it is exactly what you need.</p></div>
-<div class="paragraph"><p><em>clj.jdbc</em> for this purpose, exposes <span class="monospaced">with-query</span> macro that uses server side cursors inside
+<div class="paragraph"><p><em>clojure.jdbc</em> for this purpose, exposes <span class="monospaced">with-query</span> macro that uses server side cursors inside
 and exposes a lazy seq of records (instead of full evaluated vector) in a created macro context:</p></div>
 <div class="listingblock">
 <div class="content"><div class="highlight"><pre><span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">sql</span> <span class="p">[</span><span class="s">&quot;SELECT id, name FROM people;&quot;</span><span class="p">]]</span>
@@ -519,7 +542,7 @@ which are used for executing a query.</p></div>
 <div class="sect2">
 <h3 id="connection-pool">5.3. Connection pool</h3>
 <div class="paragraph"><p>All good database library should come with connection pool support.</p></div>
-<div class="paragraph"><p>Java ecosystem comes with various connection pool implementations for jdbc and clj.jdbc
+<div class="paragraph"><p>Java ecosystem comes with various connection pool implementations for jdbc and clojure.jdbc
 comes with following interfaces:</p></div>
 <div class="sect3">
 <h4 id="_c3p0">5.3.1. c3p0</h4>
@@ -529,7 +552,7 @@ augmenting them with functionality defined by the jdbc3 spec</p></div>
 <h5 id="_install_2">Install</h5>
 <div class="listingblock">
 <div class="title"><em>on project.clj</em></div>
-<div class="content"><div class="highlight"><pre><span class="p">[</span><span class="nv">be.niwi/clj.jdbc-c3p0</span> <span class="s">&quot;0.1.1&quot;</span><span class="p">]</span>
+<div class="content"><div class="highlight"><pre><span class="p">[</span><span class="nv">be.niwi/clojure.jdbc-c3p0</span> <span class="s">&quot;0.1.1&quot;</span><span class="p">]</span>
 </pre></div></div></div>
 </div>
 <div class="sect4">
@@ -554,7 +577,7 @@ helper function:</p></div>
 <h5 id="_install_3">Install</h5>
 <div class="listingblock">
 <div class="title"><em>on project.clj</em></div>
-<div class="content"><div class="highlight"><pre><span class="p">[</span><span class="nv">be.niwi/clj.jdbc-dbcp</span> <span class="s">&quot;0.1.1&quot;</span><span class="p">]</span>
+<div class="content"><div class="highlight"><pre><span class="p">[</span><span class="nv">be.niwi/clojure.jdbc-dbcp</span> <span class="s">&quot;0.1.1&quot;</span><span class="p">]</span>
 </pre></div></div></div>
 </div>
 <div class="sect4">
@@ -580,7 +603,7 @@ helper function:</p></div>
 </div>
 <div class="sect2">
 <h3 id="transaction-strategy">5.4. Transaction strategy</h3>
-<div class="paragraph"><p>Transactions strategy on <em>clj.jdbc</em> are implemented using protocols having default implementation explained
+<div class="paragraph"><p>Transactions strategy on <em>clojure.jdbc</em> are implemented using protocols having default implementation explained
 in previous sections. This approach, allows easy way to extend, customize or completely change a transaction
 strategy for your application.</p></div>
 <div class="paragraph"><p>If you want an other strategy, you should create a new type and implement <span class="monospaced">ITransactionStrategy</span> protocol.</p></div>
@@ -635,7 +658,7 @@ to sql array and assigned properly to prepared statement:</p></div>
     <span class="p">(</span><span class="nf">execute-prepared!</span> <span class="nv">conn</span> <span class="s">&quot;INSERT INTO arrayfoo VALUES (?, ?);&quot;</span>
                        <span class="p">[</span><span class="mi">1</span>, <span class="nv">mystringarray</span><span class="p">])))</span>
 </pre></div></div></div>
-<div class="paragraph"><p>clj.jdbc also exposes <span class="monospaced">jdbc.types/ISQLResultSetReadColumn</span> protocol that encapsulates
+<div class="paragraph"><p>clojure.jdbc also exposes <span class="monospaced">jdbc.types/ISQLResultSetReadColumn</span> protocol that encapsulates
 a backward conversions from sql types to user defined types.</p></div>
 </div>
 </div>
@@ -643,7 +666,7 @@ a backward conversions from sql types to user defined types.</p></div>
 <div class="sect1">
 <h2 id="_how_to_contribute">6. How to contribute?</h2>
 <div class="sectionbody">
-<div class="paragraph"><p><strong>clj.jdbc</strong> unlike clojure and other clojure contrib libs, does not have much
+<div class="paragraph"><p><strong>clojure.jdbc</strong> unlike clojure and other clojure contrib libs, does not have much
 restrictions for contribute. Just follow the following steps depending on the
 situation:</p></div>
 <div class="paragraph"><p><strong>Bugfix</strong>:</p></div>
@@ -688,7 +711,7 @@ If it is accepted, follow same steps as "bugfix".
 <div class="ulist"><ul>
 <li>
 <p>
-Connection management should be explicit. clj.jdbc has a clear differentiation
+Connection management should be explicit. clojure.jdbc has a clear differentiation
   between connection and dbspec without unnecessary nesting controls and with explicit
   resource management (using <span class="monospaced">with-open</span> or other specific macros for it, see the
   examples).
@@ -696,7 +719,7 @@ Connection management should be explicit. clj.jdbc has a clear differentiation
 </li>
 <li>
 <p>
-clj.jdbc has full support for all the transactions api, with the ability to set the
+clojure.jdbc has full support for all the transactions api, with the ability to set the
   database isolation level and use nested transactions (savepoints).
   It creates a new transaction if no other transaction is active but,
   when invoked within the context of an already existing transaction, it creates a savepoint.
@@ -704,18 +727,18 @@ clj.jdbc has full support for all the transactions api, with the ability to set 
 </li>
 <li>
 <p>
-clj.jdbc supports extend or overwrite a transaction management if a default
+clojure.jdbc supports extend or overwrite a transaction management if a default
   behavior is not sufficient for you.
 </p>
 </li>
 <li>
 <p>
-clj.jdbc has native support for connection pools.
+clojure.jdbc has native support for connection pools.
 </p>
 </li>
 <li>
 <p>
-clj.jdbc has a simpler implementation than clojure.java.jdbc. It has no more
+clojure.jdbc has a simpler implementation than clojure.java.jdbc. It has no more
   complexity than necessary for each available function in public api.<br>
  <br>
   As an example:
@@ -728,10 +751,10 @@ clojure.java.jdbc has a lot boilerplate connection management around all functio
    <br>
     Ex: functions like <span class="monospaced">create!</span> can receive plain dbspec or a connection. If you are
     curious, take a look to <span class="monospaced">with-db-connection</span> implementation of clojure.java.jdbc
-    and compare it with <span class="monospaced">with-connection</span> of clj.jdbc. You are going to give account of the
+    and compare it with <span class="monospaced">with-connection</span> of clojure.jdbc. You are going to give account of the
     hidden unnecesary complexity found on clojure.java.jdbc.<br>
    <br>
-    clojure.java.jdbc has inconsistent connection management. In contrast, with clj.jdbc,
+    clojure.java.jdbc has inconsistent connection management. In contrast, with clojure.jdbc,
     a connection should be created explicitly befor use any other function that
     requires one connection.
 </p>
@@ -739,7 +762,7 @@ clojure.java.jdbc has a lot boilerplate connection management around all functio
 <li>
 <p>
 clojure.java.jdbc has repeated transaction handling on each CRUD method
-    (insert!, drop!, etc&#8230;). With clj.jdbc, if you want that some code to run in a
+    (insert!, drop!, etc&#8230;). With clojure.jdbc, if you want that some code to run in a
     transaction, you should wrap it in a transaction context explicitly, using the
     <span class="monospaced">with-transaction</span> macro (see the transactions section for more information).
 </p>
@@ -755,46 +778,43 @@ Much more documentation ;) (a project without documentation is a project that do
 </ul></div>
 </div>
 <div class="sect2">
-<h3 id="_clj_jdbc_has_better_performance_than_java_jdbc">7.2. clj.jdbc has better performance than java.jdbc?</h3>
-<div class="paragraph"><p>Mostly <strong>Yes</strong>, <em>clj.jdbc</em>  by default has better performance than java.jdbc. You can
+<h3 id="_clojure_jdbc_has_better_performance_than_java_jdbc">7.2. clojure.jdbc has better performance than java.jdbc?</h3>
+<div class="paragraph"><p>Mostly <strong>Yes</strong>, <em>clojure.jdbc</em>  by default has better performance than java.jdbc. You can
 run the micro benchmark code on your environment with: <span class="monospaced">lein with-profile bench run</span></p></div>
 <div class="paragraph"><p>On my environments, the result is:</p></div>
 <div class="listingblock">
-<div class="content"><div class="highlight"><pre>[3/5.0.5]niwi@niwi:~/clj.jdbc&gt; lein with-profile bench run
+<div class="content"><div class="highlight"><pre>[3/5.0.5]niwi@niwi:~/clojure.jdbc&gt; lein with-profile bench run
 Simple query without connection overhead.
 java.jdbc:
 &quot;Elapsed time: 673.890131 msecs&quot;
-clj.jdbc:
+clojure.jdbc:
 &quot;Elapsed time: 450.329706 msecs&quot;
 Simple query with connection overhead.
 java.jdbc:
 &quot;Elapsed time: 2490.233925 msecs&quot;
-clj.jdbc:
+clojure.jdbc:
 &quot;Elapsed time: 2239.524395 msecs&quot;
 Simple query with transaction.
 java.jdbc:
 &quot;Elapsed time: 532.151667 msecs&quot;
-clj.jdbc:
+clojure.jdbc:
 &quot;Elapsed time: 475.982354 msecs&quot;
 </pre></div></div></div>
-</div>
-<div class="sect2">
-<h3 id="_why_clj_jdbc_does_not_include_dsl_for_working_with_sql_as_clojure_java_jdbc_0_3">7.3. Why clj.jdbc does not include dsl for working with sql as clojure.java.jdbc 0.3?</h3>
-<div class="quoteblock">
-<div class="content">
-<div class="paragraph"><p>Write programs that do one thing and do it well.</p></div>
-</div>
-<div class="attribution">
-<em>http://en.wikipedia.org/wiki/Douglas_McIlroy</em><br>
-&#8212; Douglas McIlroy
-</div></div>
-<div class="paragraph"><p>clj.jdbc is a wrapper for Java JDBC interface, it doesn&#8217;t intend provide helpers
+<div class="paragraph"><p>Why clojure.jdbc does not include dsl for working with sql as clojure.java.jdbc 0.3?</p></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre>[quote, Douglas McIlroy, http://en.wikipedia.org/wiki/Douglas_McIlroy]
+____
+Write programs that do one thing and do it well.
+____
+
+clojure.jdbc is a wrapper for Java JDBC interface, it doesn't intend provide helpers
 for avoid sql usage. There already are a good number of DSLs for working with SQL.
-clj.jdbc will not reinvent the wheel.<br>
-One example of a good dsl for build sql: <a href="https://github.com/r0man/sqlingvo">https://github.com/r0man/sqlingvo</a></p></div>
-</div>
-<div class="sect2">
-<h3 id="_this_is_a_fork_of_clojure_java_jdbc">7.4. This is a fork of clojure.java.jdbc?</h3>
+clojure.jdbc will not reinvent the wheel. +
+One example of a good dsl for build sql: https://github.com/r0man/sqlingvo
+
+This is a fork of clojure.java.jdbc?</pre>
+</div></div>
 <div class="paragraph"><p>No. Is just a alternative implementation.</p></div>
 </div>
 </div>
@@ -802,7 +822,7 @@ One example of a good dsl for build sql: <a href="https://github.com/r0man/sqlin
 <div class="sect1">
 <h2 id="_license">8. License</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>clj.jdbc are writen from scratch and is licensed under Apache 2.0 license:</p></div>
+<div class="paragraph"><p>clojure.jdbc are writen from scratch and is licensed under Apache 2.0 license:</p></div>
 <div class="listingblock">
 <div class="content monospaced">
 <pre>Copyright 2013 Andrey Antukh &lt;niwi@niwi.be&gt;
@@ -822,15 +842,15 @@ limitations under the License.</pre>
 <div class="paragraph"><p>You can see a full license on LICENSE file located on the root of the project
 repo.</p></div>
 <div class="paragraph"><p>Additionaly, I want give thanks to <span class="monospaced">clojure.java.jdbc</span> developers for a good
-initial work. Some intial ideas for clj.jdbc are taken from it.</p></div>
+initial work. Some intial ideas for clojure.jdbc are taken from it.</p></div>
 </div>
 </div>
 </div>
 <div id="footnotes"><hr></div>
 <div id="footer">
 <div id="footer-text">
-Version 0.1.2<br>
-Last updated 2014-04-11 19:49:07 CEST
+Version 0.2.0<br>
+Last updated 2014-06-04 19:54:23 CEST
 </div>
 </div>
 </body>
