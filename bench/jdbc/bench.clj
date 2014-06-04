@@ -20,12 +20,12 @@
         (println "java.jdbc:")
         (time (f))))
 
-    ;; clj.jdbc
+    ;; clojure.jdbc
     (j1/with-connection dbspec conn
       (let [f (fn []
                 (dotimes [i 500]
                   (j1/query conn sql)))]
-        (println "clj.jdbc:")
+        (println "clojure.jdbc:")
         (time (f))))))
 
 (defn bench-02-with-connection-overhead
@@ -39,12 +39,12 @@
       (println "java.jdbc:")
       (time (f)))
 
-    ;; clj.jdbc
+    ;; clojure.jdbc
     (let [f (fn []
               (dotimes [i 500]
                 (j1/with-connection dbspec conn
                   (j1/query conn sql))))]
-      (println "clj.jdbc:")
+      (println "clojure.jdbc:")
       (time (f)))))
 
 (defn bench-03-with-transactions
@@ -60,13 +60,13 @@
         (println "java.jdbc:")
         (time (f))))
 
-    ;; clj.jdbc
+    ;; clojure.jdbc
     (j1/with-connection dbspec conn
       (let [f (fn []
                 (dotimes [i 500]
                   (tx1/with-transaction conn
                     (j1/query conn sql))))]
-        (println "clj.jdbc:")
+        (println "clojure.jdbc:")
         (time (f))))))
 
 (defn -main
