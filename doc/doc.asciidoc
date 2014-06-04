@@ -142,11 +142,24 @@ and idiomatic way on clojure define configuration parameters.
 .This is a default aspect of one dbspec.
 [source,clojure]
 ----
-(def dbspec {:classname "org.postgresql.Driver"
-             :subprotocol "postgresql"
+(def dbspec {:subprotocol "postgresql"
              :subname "//localhost:5432/dbname"
              :user "username"         ;; Optional
              :password "password"}    ;; Optional
+----
+
+Also, _clojure.jdbc_ comes with alternative, more human comprensible format, that
+have this appearance:
+
+.Pretty dbspec format
+[source, clojure]
+----
+(def dbspec {:vendor "postgresql"
+             :name "dbname"
+             :host "localhost"      ;; Optional
+             :port 5432             ;; Optional
+             :user "username"       ;; Optional
+             :password "password"}) ;; Optional
 ----
 
 [NOTE]
