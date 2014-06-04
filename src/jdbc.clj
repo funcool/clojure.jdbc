@@ -281,7 +281,7 @@ can be complete objects."
          params (rest sqlvec)
          stmt   (cond
                  returning
-                 (if (true? returning)
+                 (if (= :all returning)
                    (.prepareStatement rconn sql java.sql.Statement/RETURN_GENERATED_KEYS)
                    (.prepareStatement rconn sql (into-array String (mapv name returning))))
 
