@@ -9,26 +9,24 @@ Jdbc library for Clojure.
 
 ## Install
 
-Note: new name will appear when next version is released
-
 Leiningen
 
 ```clojure
-[be.niwi/clj.jdbc "0.1.1"]
+[clojure.jdbc "0.2.0b1"]
 ```
 
 Gradle
 
 ```groovy
-compile "be.niwi:clj.jdbc:0.1.1"
+compile "clojure.jdbc:clojure.jdbc:0.2.0b1"
 ```
 
 Maven
 
 <dependency>
-  <groupId>be.niwi</groupId>
-  <artifactId>clj.jdbc</artifactId>
-  <version>0.1.1</version>
+  <groupId>clojure.jdbc</groupId>
+  <artifactId>clojure.jdbc</artifactId>
+  <version>0.2.0b1</version>
 </dependency>
 
 
