@@ -10,8 +10,6 @@ official library."
   :license {:name "Apache 2.0"
             :url "http://www.apache.org/licenses/LICENSE-2.0.txt"}
   :dependencies [[org.clojure/clojure "1.6.0"]]
-  :aot [jdbc.types.connection
-        jdbc.types.resultset]
   :plugins [[lein-marginalia "0.7.1"]
             [codox "0.6.7"]
             [lein-sub "0.3.0"]]

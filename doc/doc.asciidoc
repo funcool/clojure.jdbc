@@ -258,7 +258,7 @@ Returning inserted keys
 +++++++++++++++++++++++
 
 In some circumstances, you want use "RETURNING id" or similar functionality on
-your queries for return just inserted primary keys. 
+your queries for return just inserted primary keys.
 
 .This is how you can do it using clojure.jdbc
 [source, clojure]

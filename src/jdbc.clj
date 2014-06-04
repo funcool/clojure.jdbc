@@ -14,12 +14,6 @@
 
 (ns jdbc
   "Alternative implementation of jdbc wrapper for clojure."
-  (:import (java.net URI)
-           (java.sql BatchUpdateException DriverManager
-                     PreparedStatement ResultSet SQLException Statement Types)
-           (java.util Hashtable Map Properties)
-           (javax.sql DataSource)
-           (jdbc.types.connection Connection))
   (:require [clojure.string :as str]
             [jdbc.types.connection :refer [->Connection is-connection?]]
             [jdbc.types.resultset :refer [->ResultSet]]
@@ -27,6 +21,13 @@
             [jdbc.util :refer [with-exception raise-exc]]
             [jdbc.transaction :as tx]
             [jdbc.constants :as constants])
+  (:import java.net.URI
+           java.sql.DriverManager
+           java.sql.PreparedStatement
+           java.sql.ResultSet
+           java.sql.Statement
+           javax.sql.DataSource
+           java.util.Properties)
   (:refer-clojure :exclude [resultset-seq])
   (:gen-class))
 
@@ -83,7 +84,7 @@
                     parameter you can enable this behavior and return a lazy-seq
                     of vectors instead of records (maps).
   "
-  [^Connection conn, ^ResultSet rs & [{:keys [identifiers as-rows?]
+  [conn, ^ResultSet rs & [{:keys [identifiers as-rows?]
                                        :or {identifiers str/lower-case as-rows? false}
                                        :as options}]]
   (let [metadata    (.getMetaData rs)
