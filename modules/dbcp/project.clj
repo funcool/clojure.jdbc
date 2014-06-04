@@ -1,4 +1,4 @@
-(defproject clojure.jdbc/clojure.jdbc-dbcp "0.2.0-SNAPSHOT"
+(defproject clojure.jdbc/clojure.jdbc-dbcp "0.2.0"
   :description "clojure.jdbc extension for apache commonds dbcp jdbc
 connection pool implementation."
   :url "http://github.com/niwibe/clojure.jdbc"

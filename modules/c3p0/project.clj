@@ -1,4 +1,4 @@
-(defproject clojure.jdbc/clojure.jdbc-c3p0 "0.2.0-SNAPSHOT"
+(defproject clojure.jdbc/clojure.jdbc-c3p0 "0.2.0"
   :description "clojure.jdbc extension for c3p0 (a mature, highly concurrent JDBC
 Connection pooling library)."
   :url "http://github.com/niwibe/clojure.jdbc"
