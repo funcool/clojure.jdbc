@@ -445,6 +445,11 @@ Example:
      (let [^ResultSet rs (.executeQuery stmt)]
        (result-set->vector conn rs options)))))
 
+(def query-first
+  "Perform a simple sql query and return the first result. It accepts the
+  same arguments as the ``query`` function."
+  (comp first query))
+
 (defmacro with-query
   "Idiomatic dsl macro for ``query`` function that handles well queries
   what returns a huge amount of results.
