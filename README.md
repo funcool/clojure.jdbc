@@ -23,11 +23,13 @@ compile "clojure.jdbc:clojure.jdbc:0.2.0b1"
 
 Maven
 
+```xml
 <dependency>
   <groupId>clojure.jdbc</groupId>
   <artifactId>clojure.jdbc</artifactId>
   <version>0.2.0b1</version>
 </dependency>
+```
 
 
 ## Doc
