@@ -1,4 +1,4 @@
-(defproject clojure.jdbc "0.2.0b1"
+(defproject clojure.jdbc "0.2.0b2"
   :description "Alternative implementation of jdbc wrapper for clojure.
 
 For this momment, the official wrapper `clojure.jdbc` has very unclear
