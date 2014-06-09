@@ -741,11 +741,7 @@ clojure.jdbc:
 
 
 Why clojure.jdbc does not include dsl for working with sql as clojure.java.jdbc 0.3?
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-[quote, Douglas McIlroy, http://en.wikipedia.org/wiki/Douglas_McIlroy]
-____
-Write programs that do one thing and do it well.
-____
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 clojure.jdbc is a wrapper for Java JDBC interface, it doesn't intend provide helpers
 for avoid sql usage. There already are a good number of DSLs for working with SQL.
