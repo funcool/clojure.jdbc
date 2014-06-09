@@ -109,14 +109,14 @@ small changes as described in changelog.</p></div>
 vector on your <strong><em>project.clj</em></strong> file:</p></div>
 <div class="listingblock">
 <div class="title"><em>on project.clj</em></div>
-<div class="content"><div class="highlight"><pre><span class="p">[</span><span class="nv">clojure.jdbc</span> <span class="s">&quot;0.2.0b1&quot;</span><span class="p">]</span>
+<div class="content"><div class="highlight"><pre><span class="p">[</span><span class="nv">clojure.jdbc</span> <span class="s">&quot;0.2.0b2&quot;</span><span class="p">]</span>
 </pre></div></div></div>
 </div>
 <div class="sect2">
 <h3 id="_gradle">3.4. Gradle</h3>
 <div class="paragraph"><p>If you are using gradle, this is a dependency line for gradle dsl:</p></div>
 <div class="listingblock">
-<div class="content"><div class="highlight"><pre><span class="n">compile</span> <span class="s2">&quot;clojure.jdbc:clojure.jdbc:0.2.0b1&quot;</span>
+<div class="content"><div class="highlight"><pre><span class="n">compile</span> <span class="s2">&quot;clojure.jdbc:clojure.jdbc:0.2.0b2&quot;</span>
 </pre></div></div></div>
 </div>
 <div class="sect2">
@@ -135,7 +135,7 @@ this is a xml that you should put on dependency section on a maven config file:<
 <div class="content"><div class="highlight"><pre><span class="nt">&lt;dependency&gt;</span>
   <span class="nt">&lt;groupId&gt;</span>clojure.jdbc<span class="nt">&lt;/groupId&gt;</span>
   <span class="nt">&lt;artifactId&gt;</span>clojure.jdbc<span class="nt">&lt;/artifactId&gt;</span>
-  <span class="nt">&lt;version&gt;</span>0.2.0b1<span class="nt">&lt;/version&gt;</span>
+  <span class="nt">&lt;version&gt;</span>0.2.0b2<span class="nt">&lt;/version&gt;</span>
 <span class="nt">&lt;/dependency&gt;</span>
 </pre></div></div></div>
 </div>
@@ -810,21 +810,33 @@ java.jdbc:
 clojure.jdbc:
 &quot;Elapsed time: 475.982354 msecs&quot;
 </pre></div></div></div>
-<div class="paragraph"><p>Why clojure.jdbc does not include dsl for working with sql as clojure.java.jdbc 0.3?</p></div>
-<div class="listingblock">
-<div class="content monospaced">
-<pre>[quote, Douglas McIlroy, http://en.wikipedia.org/wiki/Douglas_McIlroy]
-____
-Write programs that do one thing and do it well.
-____
-
-clojure.jdbc is a wrapper for Java JDBC interface, it doesn't intend provide helpers
+</div>
+<div class="sect2">
+<h3 id="_why_clojure_jdbc_does_not_include_dsl_for_working_with_sql_as_clojure_java_jdbc_0_3">7.3. Why clojure.jdbc does not include dsl for working with sql as clojure.java.jdbc 0.3?</h3>
+<div class="paragraph"><p>clojure.jdbc is a wrapper for Java JDBC interface, it doesn&#8217;t intend provide helpers
 for avoid sql usage. There already are a good number of DSLs for working with SQL.
-clojure.jdbc will not reinvent the wheel. +
-One example of a good dsl for build sql: https://github.com/r0man/sqlingvo
-
-This is a fork of clojure.java.jdbc?</pre>
-</div></div>
+clojure.jdbc will not reinvent the wheel.</p></div>
+<div class="paragraph"><p>This is a surely incomple list clojure dsl for sql:</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+<a href="https://github.com/stch-library/sql">https://github.com/stch-library/sql</a>
+</p>
+</li>
+<li>
+<p>
+<a href="https://github.com/r0man/sqlingvo">https://github.com/r0man/sqlingvo</a>
+</p>
+</li>
+<li>
+<p>
+<a href="https://github.com/jkk/honeysql">https://github.com/jkk/honeysql</a>
+</p>
+</li>
+</ul></div>
+</div>
+<div class="sect2">
+<h3 id="_this_is_a_fork_of_clojure_java_jdbc">7.4. This is a fork of clojure.java.jdbc?</h3>
 <div class="paragraph"><p>No. Is just a alternative implementation.</p></div>
 </div>
 </div>
@@ -860,7 +872,7 @@ initial work. Some intial ideas for clojure.jdbc are taken from it.</p></div>
 <div id="footer">
 <div id="footer-text">
 Version 0.2.0<br>
-Last updated 2014-06-04 23:19:01 CEST
+Last updated 2014-06-09 23:27:50 CEST
 </div>
 </div>
 </body>
