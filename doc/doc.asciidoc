@@ -749,8 +749,14 @@ ____
 
 clojure.jdbc is a wrapper for Java JDBC interface, it doesn't intend provide helpers
 for avoid sql usage. There already are a good number of DSLs for working with SQL.
-clojure.jdbc will not reinvent the wheel. +
-One example of a good dsl for build sql: https://github.com/r0man/sqlingvo
+clojure.jdbc will not reinvent the wheel.
+
+This is a surely incomple list clojure dsl for sql:
+
+- https://github.com/stch-library/sql
+- https://github.com/r0man/sqlingvo
+- https://github.com/jkk/honeysql
+
 
 This is a fork of clojure.java.jdbc?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
