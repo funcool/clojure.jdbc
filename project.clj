@@ -9,7 +9,8 @@ official library."
   :url "http://github.com/niwibe/clojure.jdbc"
   :license {:name "Apache 2.0"
             :url "http://www.apache.org/licenses/LICENSE-2.0.txt"}
-  :dependencies [[org.clojure/clojure "1.6.0"]]
+  :dependencies [[org.clojure/clojure "1.6.0"]
+                 [potemkin "0.3.4" :exclusions [org.clojure/clojure]]]
   :plugins [[lein-marginalia "0.7.1"]
             [codox "0.6.7"]
             [lein-sub "0.3.0"]]
