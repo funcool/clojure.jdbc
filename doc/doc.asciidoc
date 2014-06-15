@@ -70,7 +70,7 @@ vector on your *_project.clj_* file:
 ._on project.clj_
 [source,clojure]
 ----
-[clojure.jdbc "0.2.0b2"]
+[clojure.jdbc "0.2.0b3"]
 ----
 
 Gradle
@@ -80,7 +80,7 @@ If you are using gradle, this is a dependency line for gradle dsl:
 
 [source,groovy]
 ----
-compile "clojure.jdbc:clojure.jdbc:0.2.0b2"
+compile "clojure.jdbc:clojure.jdbc:0.2.0b3"
 ----
 
 Maven
@@ -104,7 +104,7 @@ this is a xml that you should put on dependency section on a maven config file:
 <dependency>
   <groupId>clojure.jdbc</groupId>
   <artifactId>clojure.jdbc</artifactId>
-  <version>0.2.0b2</version>
+  <version>0.2.0b3</version>
 </dependency>
 ----
 
@@ -194,6 +194,8 @@ in a database.
 .Example using `make-connection` function
 [source,clojure]
 ----
+(require '[jdbc.core :refer :all])
+
 (let [conn (make-connection dbspec)]
   (do-something-with conn)
   (.close conn))
