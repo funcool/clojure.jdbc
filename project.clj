@@ -1,11 +1,5 @@
 (defproject clojure.jdbc "0.2.0b3"
-  :description "Alternative implementation of jdbc wrapper for clojure.
-
-For this momment, the official wrapper `clojure.jdbc` has very unclear
-api and it doing a lot of implicit things such as connection management.
-
-This library intends make more simple and clear api to jdbc than the
-official library."
+  :description "clojure.jdbc is a library for low level, jdbc based database access."
   :url "http://github.com/niwibe/clojure.jdbc"
   :license {:name "Apache 2.0"
             :url "http://www.apache.org/licenses/LICENSE-2.0.txt"}
