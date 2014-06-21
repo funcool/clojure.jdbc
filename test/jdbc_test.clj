@@ -39,6 +39,20 @@
       (let [sql (str "INSERT INTO foo_retkeys (id, num) VALUES (?, ?)")
             res (execute-prepared! conn sql [2, 0] [3, 0] {:returning [:id]})]
         (is (= res [{:id 2} {:id 3}])))))
+
+  (testing "Testing returning keys with vector sql"
+    (with-connection [conn pg-dbspec]
+      (execute! conn "DROP TABLE IF EXISTS foo_retkeys;")
+      (execute! conn "CREATE TABLE foo_retkeys (id int primary key, num integer);")
+      (let [sql (str "INSERT INTO foo_retkeys (id, num) VALUES (?, ?)")
+            res (execute-prepared! conn [sql 2 0] {:returning [:id]})]
+        (is (= res [{:id 2}])))))
+
+  (testing "Testing wrong arguments"
+    (with-connection [conn pg-dbspec]
+      (is (thrown? IllegalArgumentException
+                   (let [sql (str "INSERT INTO foo_retkeys (id, num) VALUES (?, ?)")]
+                     (execute-prepared! conn [sql 1 0] [2 0]))))))
 )
 
 (deftest db-specs

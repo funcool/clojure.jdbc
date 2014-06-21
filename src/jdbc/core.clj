@@ -315,23 +315,23 @@ can be complete objects."
 
 (defn execute-prepared!
   "Given a active connection and sql (or prepared statement),
-executes a query in a database. This differs from `execute!` function
-with that this function allows pass parameters to query in a more safe
-way and permit pass group of parrams enabling bulk operations.
+  executes a query in a database. This differs from `execute!` function
+  with that this function allows pass parameters to query in a more safe
+  way and permit pass group of parrams enabling bulk operations.
 
-After connection, sql/prepared statement and any number of group of
-params you can pass options map (same as on `make-prepared-statement`
-function).
+  After connection, sql/prepared statement and any number of group of
+  params you can pass options map (same as on `make-prepared-statement`
+  function).
 
-Note: Some options are incompatible with self defined prepared
-statement.
+  Note: Some options are incompatible with self defined prepared
+  statement.
 
-Example:
+  Example:
 
-(with-connection dbspec conn
-  (let [sql \"UPDATE TABLE foo SET x = ? WHERE y = ?;\"]
-    (execute-prepared! conn sql [1 2] [2 3] [3 4])))
-"
+  (with-connection dbspec conn
+    (let [sql \"UPDATE TABLE foo SET x = ? WHERE y = ?;\"]
+      (execute-prepared! conn sql [1 2] [2 3] [3 4])))
+  "
   [conn sql & param-groups]
   {:pre [(is-connection? conn)]}
   ;; Try extract options from param-groups varargs. Options
@@ -340,28 +340,33 @@ Example:
   ;; are welcome ;)
   (let [opts-candidate (last param-groups)
         options        (if (map? opts-candidate) opts-candidate {})
-        param-groups   (if (map? opts-candidate) (butlast param-groups) param-groups)]
+        param-groups   (if (map? opts-candidate)
+                         (or (butlast param-groups) [])
+                         param-groups)]
 
     ;; Check incompatible parameters.
     (when (and (:returning options) (is-prepared-statement? sql))
-      (throw (IllegalArgumentException. "You can not pass prepared statement with returning options.")))
+      (throw (IllegalArgumentException. "You can not pass prepared statement with returning options")))
 
-    (if (is-prepared-statement? sql)
+    (when (and (seq param-groups) (vector? sql))
+      (throw (IllegalArgumentException. "param-groups should be empty when sql parameter is a vector")))
+
+    (cond
      ;; In case of sql is just a prepared statement
      ;; execute it in a standard way.
+     (is-prepared-statement? sql)
      (execute-statement! conn sql param-groups)
 
-     ;; In other case, build a prepared statement from sql string
-     (with-open [stmt (make-prepared-statement conn sql options)]
-       (if-not (:returning options)
-         (execute-statement! conn stmt param-groups)
-         ;; In case of returning key is found on options
-         ;; and it has logical true value, build special prepared
-         ;; statement that expect return values and return a vector
-         ;; of returned records instead of vector of updated rows.
-         (do
-           (execute-statement! conn stmt param-groups)
-           (get-returning-records conn stmt)))))))
+     ;; In other case, build a prepared statement from sql or vector.
+     (or (vector? sql) (string? sql))
+     (with-open [stmt (types/normalize sql conn options)]
+       (let [res (execute-statement! conn stmt param-groups)]
+         (if (:returning options)
+           ;; In case of returning key is found on options
+           ;; and it has logical true value, build special prepared
+           ;; statement that expect return values.
+           (get-returning-records conn stmt)
+           res))))))
 
 (extend-protocol types/ISQLStatement
   clojure.lang.APersistentVector
