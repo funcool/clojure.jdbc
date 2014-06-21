@@ -272,7 +272,9 @@ can be complete objects."
   ([conn sqlvec] (make-prepared-statement conn sqlvec {}))
   ([conn sqlvec {:keys [result-type result-concurency fetch-size
                         max-rows holdability lazy returning]
-                 :or {result-type :forward-only result-concurency :read-only fetch-size 100}
+                 :or {result-type :forward-only
+                      result-concurency :read-only
+                      fetch-size 100}
                  :as options}]
    {:pre [(is-connection? conn) (or (string? sqlvec) (vector? sqlvec))]}
    (let [rconn  (:connection conn)
@@ -306,7 +308,9 @@ can be complete objects."
      (when max-rows (.setMaxRows max-rows))
 
      (when (seq params)
-       (dorun (map-indexed #(.setObject stmt (inc %1) (types/as-sql-type %2 conn)) params)))
+       (->> params
+            (map-indexed #(types/set-stmt-parameter! %2 conn stmt (inc %1)))
+            (dorun)))
      stmt)))
 
 (defn execute-prepared!
