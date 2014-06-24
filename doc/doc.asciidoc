@@ -519,7 +519,7 @@ Install
 ._on project.clj_
 [source, clojure]
 ----
-[be.niwi/clojure.jdbc-c3p0 "0.2.0"]
+[clojure.jdbc/clojure.jdbc-c3p0 "0.2.0"]
 ----
 
 Usage
