@@ -1,6 +1,13 @@
 Changelog
 ---------
 
+Version 0.2.1
+~~~~~~~~~~~~~
+
+- `execute-prepared!` now accepts parametrized sql like other `query` methods.
+- Minor fixes.
+
+
 Version 0.2.0b3
 ~~~~~~~~~~~~~~~
 
