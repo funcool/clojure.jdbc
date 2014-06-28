@@ -1,7 +1,7 @@
 clojure.jdbc documentation
 ==========================
 Andrey Antukh, <niwi@niwi.be>
-0.2.0, 2014-04-06
+0.2.1, 2014-06-29
 
 :toc:
 :numbered:
@@ -70,7 +70,7 @@ vector on your *_project.clj_* file:
 ._on project.clj_
 [source,clojure]
 ----
-[clojure.jdbc "0.2.0b3"]
+[clojure.jdbc "0.2.1"]
 ----
 
 Gradle
@@ -80,7 +80,7 @@ If you are using gradle, this is a dependency line for gradle dsl:
 
 [source,groovy]
 ----
-compile "clojure.jdbc:clojure.jdbc:0.2.0b3"
+compile "clojure.jdbc:clojure.jdbc:0.2.1"
 ----
 
 Maven
@@ -104,7 +104,7 @@ this is a xml that you should put on dependency section on a maven config file:
 <dependency>
   <groupId>clojure.jdbc</groupId>
   <artifactId>clojure.jdbc</artifactId>
-  <version>0.2.0b3</version>
+  <version>0.2.1</version>
 </dependency>
 ----
 
@@ -254,7 +254,7 @@ execute amount of same operations with distinct parameters in bulk.
 [source,clojure]
 ----
 (let [sql "INSERT INTO foo (name) VALUES (?)"]
-  (execute-prepared! conn sql ["Foo"]))
+  (execute-prepared! conn [sql "Foo"]))
 ----
 
 .Bulk insert example.
