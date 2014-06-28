@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="generator" content="AsciiDoc 8.6.9">
+<title>clojure.jdbc documentation</title>
+<link rel="stylesheet" href="static/niwi.css" type="text/css">
+<link rel="stylesheet" href="static/pygments.css" type="text/css">
+
+
+<script type="text/javascript" src="static/asciidoc.js"></script>
+<script type="text/javascript" src="static/niwi.js"></script>
+<script type="text/javascript">
+/*<![CDATA[*/
+asciidoc.install(2);
+/*]]>*/
+</script>
+</head>
+<body class="article" style="max-width:800px">
+<div id="header">
+<h1>clojure.jdbc documentation</h1>
+<span id="author">Andrey Antukh,</span><br>
+<span id="email" class="monospaced">&lt;<a href="mailto:niwi@niwi.be">niwi@niwi.be</a>&gt;</span><br>
+<span id="revnumber">version 0.2.1,</span>
+<span id="revdate">2014-06-29</span>
+<div id="toc">
+  <div id="toctitle">Table of Contents</div>
+  <noscript><p><b>JavaScript must be enabled in your browser to display the table of contents.</b></p></noscript>
+</div>
+</div>
+<div id="content">
+<div class="sect1">
+<h2 id="_introduction">1. Introduction</h2>
+<div class="sectionbody">
+<div class="paragraph"><p><em>clojure.jdbc</em> is a library for low level, jdbc based database access.</p></div>
+<div class="paragraph"><p><a href="api/index.html">Api reference documentation.</a></p></div>
+<div class="sect2">
+<h3 id="_philosofy">1.1. Philosofy</h3>
+<div class="paragraph"><p>Five most important rules:</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+Beautiful is better than ugly.
+</p>
+</li>
+<li>
+<p>
+Explicit is better than implicit.
+</p>
+</li>
+<li>
+<p>
+Simple is better than complex.
+</p>
+</li>
+<li>
+<p>
+Complex is better than complicated.
+</p>
+</li>
+<li>
+<p>
+Readability counts.
+</p>
+</li>
+</ul></div>
+<div class="paragraph"><p>All contributions to <em>clojure.jdbc</em> should keep these important rules in mind.</p></div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_project_maturity">2. Project Maturity</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>Since <em>clojure.jdbc</em> is a young project there can be some API breakage.</p></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_install">3. Install</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>This section covers a installing _clojure.jdbc and its requirements.</p></div>
+<div class="sect2">
+<h3 id="_requirements">3.1. Requirements</h3>
+<div class="paragraph"><p><em>clojure.jdbc</em> is tested with these platforms:</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+JDK7
+</p>
+</li>
+<li>
+<p>
+JDK8
+</p>
+</li>
+</ul></div>
+</div>
+<div class="sect2">
+<h3 id="_cooming_from_clj_jdbc">3.2. Cooming from clj.jdbc</h3>
+<div class="paragraph"><p>Only a package name is changed, all api is maintained as is with expected
+small changes as described in changelog.</p></div>
+<div class="paragraph"><p>Yo should change your dependency entry on project.clj to new package name:</p></div>
+<div class="listingblock">
+<div class="content"><div class="highlight"><pre><span class="p">[</span><span class="nv">clojure.jdbc</span> <span class="s">&quot;x.y.z&quot;</span><span class="p">]</span>
+</pre></div></div></div>
+</div>
+<div class="sect2">
+<h3 id="_leiningen">3.3. Leiningen</h3>
+<div class="paragraph"><p>The simplest way to use <em>clojure.jdbc</em> on clojure project, is including it on dependency
+vector on your <strong><em>project.clj</em></strong> file:</p></div>
+<div class="listingblock">
+<div class="title"><em>on project.clj</em></div>
+<div class="content"><div class="highlight"><pre><span class="p">[</span><span class="nv">clojure.jdbc</span> <span class="s">&quot;0.2.1&quot;</span><span class="p">]</span>
+</pre></div></div></div>
+</div>
+<div class="sect2">
+<h3 id="_gradle">3.4. Gradle</h3>
+<div class="paragraph"><p>If you are using gradle, this is a dependency line for gradle dsl:</p></div>
+<div class="listingblock">
+<div class="content"><div class="highlight"><pre><span class="n">compile</span> <span class="s2">&quot;clojure.jdbc:clojure.jdbc:0.2.1&quot;</span>
+</pre></div></div></div>
+</div>
+<div class="sect2">
+<h3 id="_maven">3.5. Maven</h3>
+<div class="paragraph"><p>And for old school people, who are using a ugly xml files for configure everything,
+this is a xml that you should put on dependency section on a maven config file:</p></div>
+<div class="listingblock">
+<div class="title">Repository entry.</div>
+<div class="content"><div class="highlight"><pre><span class="nt">&lt;repository&gt;</span>
+    <span class="nt">&lt;id&gt;</span>clojars.org<span class="nt">&lt;/id&gt;</span>
+    <span class="nt">&lt;url&gt;</span>http://clojars.org/repo<span class="nt">&lt;/url&gt;</span>
+<span class="nt">&lt;/repository&gt;</span>
+</pre></div></div></div>
+<div class="listingblock">
+<div class="title">Dependency entry.</div>
+<div class="content"><div class="highlight"><pre><span class="nt">&lt;dependency&gt;</span>
+  <span class="nt">&lt;groupId&gt;</span>clojure.jdbc<span class="nt">&lt;/groupId&gt;</span>
+  <span class="nt">&lt;artifactId&gt;</span>clojure.jdbc<span class="nt">&lt;/artifactId&gt;</span>
+  <span class="nt">&lt;version&gt;</span>0.2.1<span class="nt">&lt;/version&gt;</span>
+<span class="nt">&lt;/dependency&gt;</span>
+</pre></div></div></div>
+</div>
+<div class="sect2">
+<h3 id="_get_the_code">3.6. Get the Code</h3>
+<div class="paragraph"><p><em>clojure.jdbc</em> is opensource and is entirelly developed on <a href="https://github.com/niwibe/clojure.jdbc">github</a>.</p></div>
+<div class="paragraph"><p>You can clone the public repository with this command:</p></div>
+<div class="listingblock">
+<div class="content"><div class="highlight"><pre>git clone https://github.com/niwibe/clojure.jdbc
+</pre></div></div></div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_user_guide">4. User guide</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_connecting_to_database">4.1. Connecting to database</h3>
+<div class="sect3">
+<h4 id="_connection_parameters">4.1.1. Connection parameters</h4>
+<div class="paragraph"><p>JDBC is the default Java abstraction/interface for SQL databases.  It&#8217;s like
+the Python DB-API and similar abstractions in other languages.  Clojure, as a
+guest language on the jvm, benefits from having a good, well tested abstraction
+like that.</p></div>
+<div class="paragraph"><p>Connection parameters are exposed in a simple hash-map and called <strong>dbspec</strong>. This is the simplest
+and idiomatic way on clojure define configuration parameters.</p></div>
+<div class="listingblock">
+<div class="title">This is a default aspect of one dbspec.</div>
+<div class="content"><div class="highlight"><pre><span class="p">(</span><span class="k">def </span><span class="nv">dbspec</span> <span class="p">{</span><span class="ss">:subprotocol</span> <span class="s">&quot;postgresql&quot;</span>
+             <span class="ss">:subname</span> <span class="s">&quot;//localhost:5432/dbname&quot;</span>
+             <span class="ss">:user</span> <span class="s">&quot;username&quot;</span>         <span class="c1">;; Optional</span>
+             <span class="ss">:password</span> <span class="s">&quot;password&quot;</span><span class="p">}</span>    <span class="c1">;; Optional</span>
+</pre></div></div></div>
+<div class="paragraph"><p>Also, <em>clojure.jdbc</em> comes with alternative, more human comprensible format, that
+have this appearance:</p></div>
+<div class="listingblock">
+<div class="title">Pretty dbspec format</div>
+<div class="content"><div class="highlight"><pre><span class="p">(</span><span class="k">def </span><span class="nv">dbspec</span> <span class="p">{</span><span class="ss">:vendor</span> <span class="s">&quot;postgresql&quot;</span>
+             <span class="ss">:name</span> <span class="s">&quot;dbname&quot;</span>
+             <span class="ss">:host</span> <span class="s">&quot;localhost&quot;</span>      <span class="c1">;; Optional</span>
+             <span class="ss">:port</span> <span class="mi">5432</span>             <span class="c1">;; Optional</span>
+             <span class="ss">:user</span> <span class="s">&quot;username&quot;</span>       <span class="c1">;; Optional</span>
+             <span class="ss">:password</span> <span class="s">&quot;password&quot;</span><span class="p">})</span> <span class="c1">;; Optional</span>
+</pre></div></div></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+<div class="paragraph"><p>The <span class="monospaced">:classname</span> parameter represents a class location/route of JDBC driver. Each driver has one; in
+this example it is a path to a Postgresql JDBC driver.  This parameter can be omited and in that case
+it is automatically resolved from a predefined list using <span class="monospaced">:subprotocol</span> key.</p></div>
+</td>
+</tr></table>
+</div>
+<div class="paragraph"><p>Also, <strong>dbspec</strong> can be represented as URI.</p></div>
+<div class="listingblock">
+<div class="title">Same as previous example but using uri format.</div>
+<div class="content"><div class="highlight"><pre><span class="p">(</span><span class="k">def </span><span class="nv">dbspec</span> <span class="s">&quot;postgresql://user:password@localhost:5432/dbname&quot;</span><span class="p">)</span>
+</pre></div></div></div>
+</div>
+<div class="sect3">
+<h4 id="_creating_a_connection">4.1.2. Creating a connection</h4>
+<div class="paragraph"><p>With clojure.jdbc every function that interacts with a database, requires explicitly
+one connection instance as parameter (no dynamic vars are used for it).</p></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">clojure.jdbc does not use any global/thread-local state, and always try ensure immutability.</td>
+</tr></table>
+</div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">unlike clojure.java.jdbc, with <em>clojure.jdbc</em> you can&#8217;t use a plain dbspec hash-map as
+connection parameter and you should explicitly open a new connection before doing any operation
+in a database.</td>
+</tr></table>
+</div>
+<div class="listingblock">
+<div class="title">Example using <span class="monospaced">make-connection</span> function</div>
+<div class="content"><div class="highlight"><pre><span class="p">(</span><span class="nf">require</span> <span class="o">&#39;</span><span class="p">[</span><span class="nv">jdbc.core</span> <span class="ss">:refer</span> <span class="ss">:all</span><span class="p">])</span>
+
+<span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">conn</span> <span class="p">(</span><span class="nf">make-connection</span> <span class="nv">dbspec</span><span class="p">)]</span>
+  <span class="p">(</span><span class="nf">do-something-with</span> <span class="nv">conn</span><span class="p">)</span>
+  <span class="p">(</span><span class="nf">.close</span> <span class="nv">conn</span><span class="p">))</span>
+</pre></div></div></div>
+<div class="paragraph"><p>The <span class="monospaced">make-connection</span> function exposes a low level interface for creating a connection,
+and delegates to user the connection resource management. A connection is not automatically
+closed and is strongly recommended use of <span class="monospaced">with-open</span> macro for clear resource management.</p></div>
+<div class="listingblock">
+<div class="title">Better way.</div>
+<div class="content"><div class="highlight"><pre><span class="p">(</span><span class="nb">with-open </span><span class="p">[</span><span class="nv">conn</span> <span class="p">(</span><span class="nf">make-connection</span> <span class="nv">dbspec</span><span class="p">)]</span>
+  <span class="p">(</span><span class="nf">do-something-with</span> <span class="nv">conn</span><span class="p">))</span>
+</pre></div></div></div>
+<div class="paragraph"><p>However, the <span class="monospaced">with-connection</span> macro intends to be a high level abstraction and
+works like <span class="monospaced">with-open</span> clojure macro. And this is an equivalent piece of code using
+<span class="monospaced">with-connection</span> macro:</p></div>
+<div class="listingblock">
+<div class="content"><div class="highlight"><pre><span class="p">(</span><span class="nf">with-connection</span> <span class="p">[</span><span class="nv">conn</span> <span class="nv">dbspec</span><span class="p">]</span>
+  <span class="p">(</span><span class="nf">do-something-with</span> <span class="nv">conn</span><span class="p">))</span>
+</pre></div></div></div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_execute_database_commands">4.2. Execute database commands</h3>
+<div class="sect3">
+<h4 id="_execute_raw_sql_statements">4.2.1. Execute raw sql statements</h4>
+<div class="paragraph"><p>The simplest way to execute a raw SQL is using the <span class="monospaced">execute!</span> function. It requires
+an active connection on the first parameter followed by sql sentences:</p></div>
+<div class="listingblock">
+<div class="content"><div class="highlight"><pre><span class="p">(</span><span class="nf">with-connection</span> <span class="p">[</span><span class="nv">conn</span> <span class="nv">dbspec</span><span class="p">]</span>
+  <span class="p">(</span><span class="nf">execute!</span> <span class="nv">conn</span> <span class="s">&quot;CREATE TABLE foo (id serial, name text);&quot;</span><span class="p">))</span>
+</pre></div></div></div>
+</div>
+<div class="sect3">
+<h4 id="_execute_parametrized_sql_statements">4.2.2. Execute parametrized SQL statements</h4>
+<div class="paragraph"><p>Raw SQL statements work well for creating tables and similar operations, but
+when you need to insert some data, especially if the data comes from untrusted
+sources, the <span class="monospaced">execute!</span> function is not a good option.</p></div>
+<div class="paragraph"><p>For this problem, clojure.jdbc exposes <span class="monospaced">execute-prepared!</span> function. It
+accepts parametrized SQL and a list of groups of parameters that allow
+execute amount of same operations with distinct parameters in bulk.</p></div>
+<div class="listingblock">
+<div class="title">Execute a simple insert SQL statement.</div>
+<div class="content"><div class="highlight"><pre><span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">sql</span> <span class="s">&quot;INSERT INTO foo (name) VALUES (?)&quot;</span><span class="p">]</span>
+  <span class="p">(</span><span class="nf">execute-prepared!</span> <span class="nv">conn</span> <span class="p">[</span><span class="nv">sql</span> <span class="s">&quot;Foo&quot;</span><span class="p">]))</span>
+</pre></div></div></div>
+<div class="listingblock">
+<div class="title">Bulk insert example.</div>
+<div class="content"><div class="highlight"><pre><span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">sql</span> <span class="s">&quot;INSERT INTO foo (name) VALUES (?)&quot;</span><span class="p">]</span>
+  <span class="p">(</span><span class="nf">execute-prepared!</span> <span class="nv">conn</span> <span class="nv">sql</span> <span class="p">[</span><span class="s">&quot;Foo&quot;</span><span class="p">]</span> <span class="p">[</span><span class="s">&quot;Bar&quot;</span><span class="p">]))</span>
+
+<span class="c1">;; This should emit this sql:</span>
+<span class="c1">;;   INSERT INTO foo (name) VALUES (&#39;Foo&#39;);</span>
+<span class="c1">;;   INSERT INTO foo (name) VALUES (&#39;Bar&#39;);</span>
+</pre></div></div></div>
+<div class="sect4">
+<h5 id="_returning_inserted_keys">Returning inserted keys</h5>
+<div class="paragraph"><p>In some circumstances, you want use "RETURNING id" or similar functionality on
+your queries for return just inserted primary keys.</p></div>
+<div class="listingblock">
+<div class="title">This is how you can do it using clojure.jdbc</div>
+<div class="content"><div class="highlight"><pre><span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">sql</span> <span class="s">&quot;INSERT INTO foo (name) VALUES (?);&quot;</span>
+      <span class="nv">res</span> <span class="p">(</span><span class="nf">execute-prepared!</span> <span class="nv">conn</span> <span class="nv">sql</span> <span class="p">[</span><span class="s">&quot;Foo&quot;</span><span class="p">]</span> <span class="p">[</span><span class="s">&quot;Bar&quot;</span><span class="p">]</span> <span class="p">{</span><span class="ss">:returning</span> <span class="p">[</span><span class="ss">:id</span><span class="p">]})]</span>
+  <span class="p">(</span><span class="nb">println </span><span class="nv">res</span><span class="p">))</span>
+
+<span class="c1">;; This should print to standard output something like this:</span>
+<span class="p">[{</span><span class="ss">:id</span> <span class="mi">3</span><span class="p">}</span> <span class="p">{</span><span class="ss">:id</span> <span class="mi">4</span><span class="p">}]</span>
+</pre></div></div></div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_make_queries">4.3. Make queries</h3>
+<div class="paragraph"><p>The basic way to query adatabase is using the <span class="monospaced">query</span> function.</p></div>
+<div class="paragraph"><p><span class="monospaced">query</span> function, given an active connection and parametrized sql, executes it and returns
+a evaluated result (as vector of records):</p></div>
+<div class="listingblock">
+<div class="content"><div class="highlight"><pre><span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">sql</span>    <span class="p">[</span><span class="s">&quot;SELECT id, name FROM people WHERE age &gt; ?&quot;</span>, <span class="mi">2</span><span class="p">]</span>
+      <span class="nv">result</span> <span class="p">(</span><span class="nf">query</span> <span class="nv">sql</span><span class="p">)]</span>
+  <span class="p">(</span><span class="nb">doseq </span><span class="p">[</span><span class="nv">row</span> <span class="nv">results</span><span class="p">]</span>
+  <span class="p">(</span><span class="nb">println </span><span class="nv">row</span><span class="p">))))</span>
+
+<span class="c1">;; It should print this:</span>
+<span class="c1">;; =&gt; {:id 1 :name &quot;Foo&quot;}</span>
+<span class="c1">;; =&gt; {:id 2 :name &quot;Bar&quot;}</span>
+</pre></div></div></div>
+<div class="paragraph"><p>Parametrized sql can be:</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+Vector with first element a sql string following with parameters
+</p>
+</li>
+<li>
+<p>
+Native string (sql query without parameters)
+</p>
+</li>
+<li>
+<p>
+Instance of <span class="monospaced">PreparedStatement</span>
+</p>
+</li>
+<li>
+<p>
+Instance of any type that implements <span class="monospaced">ISQLStatement</span> protocol.
+</p>
+</li>
+</ul></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+<div class="paragraph"><p>This method seems usefull en most of cases but can not works well with
+queries that returns a lot of results. For this purpose, exists cursor
+type queries that are explained on <a href="#cursor-queries">Advanced usage</a> section.</p></div>
+</td>
+</tr></table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_transactions">4.4. Transactions</h3>
+<div class="sect3">
+<h4 id="_getting_start_with_transactions">4.4.1. Getting start with transactions</h4>
+<div class="paragraph"><p>All transactions related functions on <em>clojure.jdbc</em> are exposed on <span class="monospaced">jdbc.transaction</span> namespace
+and if you need transactions on your code, you should import it:</p></div>
+<div class="listingblock">
+<div class="content"><div class="highlight"><pre><span class="p">(</span><span class="nf">require</span> <span class="o">&#39;</span><span class="p">[</span><span class="nv">jdbc.transaction</span> <span class="ss">:as</span> <span class="nv">tx</span><span class="p">])</span>
+</pre></div></div></div>
+<div class="paragraph"><p>The most idiomatic way to wrap some code in transaction, is using <span class="monospaced">with-transaction</span>
+macro:</p></div>
+<div class="listingblock">
+<div class="content"><div class="highlight"><pre><span class="p">(</span><span class="nf">tx/with-transaction</span> <span class="nv">conn</span>
+  <span class="p">(</span><span class="nf">do-thing-first</span> <span class="nv">conn</span><span class="p">)</span>
+  <span class="p">(</span><span class="nf">do-thing-second</span> <span class="nv">conn</span><span class="p">))</span>
+</pre></div></div></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+<div class="paragraph"><p><em>clojure.jdbc</em> does not uses any dynamic thread-local vars for store the transaction state
+for a connection. Instead of that, it overwrites lexical scope value of <span class="monospaced">conn</span> with new
+connection that has a transactional state.</p></div>
+</td>
+</tr></table>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_low_level_transaction_primitives">4.4.2. Low level transaction primitives</h4>
+<div class="paragraph"><p>Behind the scene of <span class="monospaced">with-transaction</span> macro, <em>clojure.jdbc</em> has uses <span class="monospaced">call-in-transaction</span>
+function.</p></div>
+<div class="paragraph"><p>It, given an active connection as first parameter and function that you want execute in a
+transaction as second parameter, executes it in a database transaction. The function should accept
+a connection as first parameter.</p></div>
+<div class="listingblock">
+<div class="content"><div class="highlight"><pre><span class="p">(</span><span class="nf">tx/call-in-transaction</span> <span class="nv">conn</span> <span class="p">(</span><span class="k">fn </span><span class="p">[</span><span class="nv">conn</span><span class="p">]</span> <span class="p">(</span><span class="nf">do-something-with</span> <span class="nv">conn</span><span class="p">)))</span>
+</pre></div></div></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+<div class="paragraph"><p>clojure.jdbc in contrast to java.jdbc, handles well nested transactions. So making all
+code wrapped in transaction block truly atomic independenty of transaction nesting.</p></div>
+<div class="paragraph"><p>If you want extend o change a default transaction strategy, see
+<a href="#transaction-strategy">Transaction Strategy section</a>.</p></div>
+</td>
+</tr></table>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_isolation_level">4.4.3. Isolation Level</h4>
+<div class="paragraph"><p>clojure.jdbc by default does nothing with isolation level and keep it with default values.</p></div>
+<div class="listingblock">
+<div class="title">You can set isolation level on creating a connection specifying it on your dbspec.</div>
+<div class="content"><div class="highlight"><pre><span class="p">(</span><span class="k">def </span><span class="nv">dbsoec</span> <span class="p">{</span><span class="ss">:subprotocol</span> <span class="s">&quot;h2&quot;</span>
+             <span class="ss">:subname</span> <span class="s">&quot;mem:&quot;</span>
+             <span class="ss">:isolation-level</span> <span class="ss">:serializable</span><span class="p">})</span>
+</pre></div></div></div>
+<div class="listingblock">
+<div class="title">Or set it on execute a transaction</div>
+<div class="content"><div class="highlight"><pre><span class="p">(</span><span class="nf">call-in-transaction</span> <span class="nv">conn</span> <span class="nv">do-something</span> <span class="p">{</span><span class="ss">:isolation-level</span> <span class="ss">:serializable</span><span class="p">})</span>
+
+<span class="c1">;; Or...</span>
+
+<span class="p">(</span><span class="nf">with-transaction</span> <span class="nv">conn</span> <span class="p">{</span><span class="ss">:isolation-level</span> <span class="ss">:serializable</span><span class="p">}</span>
+  <span class="p">(</span><span class="nf">do-something</span> <span class="nv">conn</span><span class="p">))</span>
+</pre></div></div></div>
+<div class="paragraph"><p>This is a list of supported options:</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+<span class="monospaced">:read-uncommited</span> - Set read uncommited isolation level
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">:read-commited</span> - Set read committed isolation level
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">:repeatable-read</span> - Set repeatable reads isolation level
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">:serializable</span> - Set serializable isolation level
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">:none</span> - Use this option to indicate to clojure.jdbc to do nothing and keep default behavior.
+</p>
+</li>
+</ul></div>
+<div class="paragraph"><p>You can read more about it on <a href="http://en.wikipedia.org/wiki/Isolation_(database_systems)">wikipedia</a>.</p></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<div class="title">Warning</div>
+</td>
+<td class="content">not all jdbc providers supports here listed isolation levels.</td>
+</tr></table>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_read_only_transactions">4.4.4. Read-Only transactions</h4>
+<div class="paragraph"><p>In some circumstances, mainly when you are using strictest isolation-level, you may want
+indicate to database which query is really readonly allowing to database server make some optiomizations
+for this operation.</p></div>
+<div class="listingblock">
+<div class="title">You can set transaction readonly using transaction options</div>
+<div class="content"><div class="highlight"><pre><span class="p">(</span><span class="nf">with-transaction</span> <span class="nv">conn</span> <span class="p">{</span><span class="ss">:isolation-level</span> <span class="ss">:serializable</span> <span class="ss">:read-only</span> <span class="nv">true</span><span class="p">}</span>
+  <span class="p">(</span><span class="nf">query-something</span> <span class="nv">conn</span><span class="p">))</span>
+</pre></div></div></div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_advanced_usage">5. Advanced usage</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="cursor-queries">5.1. Server Side Cursors</h3>
+<div class="paragraph"><p>By default, most of jdbc drivers prefetches all results in memory that make totally useless use lazy
+structures for fetching data. To our luck, some databases implements server side cursors that
+avoids these behavior.</p></div>
+<div class="paragraph"><p>If you have an extremely large resultset and you want retrieve it and process each item, it is exactly what you need.</p></div>
+<div class="paragraph"><p><em>clojure.jdbc</em> for this purpose, exposes <span class="monospaced">with-query</span> macro that uses server side cursors inside
+and exposes a lazy seq of records (instead of full evaluated vector) in a created macro context:</p></div>
+<div class="listingblock">
+<div class="content"><div class="highlight"><pre><span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">sql</span> <span class="p">[</span><span class="s">&quot;SELECT id, name FROM people;&quot;</span><span class="p">]]</span>
+  <span class="p">(</span><span class="nf">with-query</span> <span class="nv">conn</span> <span class="nv">sql</span> <span class="nv">results</span>
+    <span class="p">(</span><span class="nb">doseq </span><span class="p">[</span><span class="nv">row</span> <span class="nv">results</span><span class="p">]</span>
+      <span class="p">(</span><span class="nb">println </span><span class="nv">row</span><span class="p">))))</span>
+</pre></div></div></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+<div class="paragraph"><p><span class="monospaced">with-query</span> macro implicitly ensures that all code insinde a created context are executed
+on one transaction or subtransaction. This is mandatory because a server side cursors only works
+inside one transaction.</p></div>
+</td>
+</tr></table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_low_level_query_interface">5.2. Low level query interface</h3>
+<div class="paragraph"><p>All functions that executes queries, uses <span class="monospaced">make-query</span> function behind the scenes. Is a low
+level interface for access to query functionality.</p></div>
+<div class="paragraph"><p>This function has distinct behavior in comparison with his high level siblings. It returns a
+<span class="monospaced">jdbc.types.resultset.ResultSet</span> instance that works as clojure persistent map and contains
+these keys:</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+<span class="monospaced">:stmt</span> key contains a statement instance used for make a query.
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">:rs</span> key contains a raw <span class="monospaced">java.sql.ResultSet</span> instance.
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">:data</span> key contains a real results as lazy-seq or vector depending on parameters.
+</p>
+</li>
+</ul></div>
+<div class="listingblock">
+<div class="title">Example using <span class="monospaced">make-query</span> function</div>
+<div class="content"><div class="highlight"><pre><span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">sql</span>    <span class="p">[</span><span class="s">&quot;SELECT id, name FROM people WHERE age &gt; ?&quot;</span>, <span class="mi">2</span><span class="p">]</span>
+      <span class="nv">result</span> <span class="p">(</span><span class="nf">make-query</span> <span class="nv">conn</span> <span class="nv">sql</span><span class="p">)]</span>
+  <span class="p">(</span><span class="nb">doseq </span><span class="p">[</span><span class="nv">row</span> <span class="p">(</span><span class="ss">:data</span> <span class="nv">result</span><span class="p">)]</span>
+    <span class="p">(</span><span class="nb">println </span><span class="nv">row</span><span class="p">))</span>
+  <span class="p">(</span><span class="nf">.close</span> <span class="nv">result</span><span class="p">))</span>
+</pre></div></div></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+<div class="paragraph"><p>You can see the api documentation to know more about it, but mainly it is
+a container that mantains a reference to the original java jdbc objects
+which are used for executing a query.</p></div>
+</td>
+</tr></table>
+</div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<div class="title">Warning</div>
+</td>
+<td class="content"><span class="monospaced">make-query</span> is a low level interface and you must be careful to use it.</td>
+</tr></table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="connection-pool">5.3. Connection pool</h3>
+<div class="paragraph"><p>All good database library should come with connection pool support.</p></div>
+<div class="paragraph"><p>Java ecosystem comes with various connection pool implementations for jdbc and clojure.jdbc
+comes with following interfaces:</p></div>
+<div class="sect3">
+<h4 id="_c3p0">5.3.1. c3p0</h4>
+<div class="paragraph"><p>c3p0 is an easy-to-use library for making traditional JDBC drivers "enterprise-ready" by
+augmenting them with functionality defined by the jdbc3 spec</p></div>
+<div class="sect4">
+<h5 id="_install_2">Install</h5>
+<div class="listingblock">
+<div class="title"><em>on project.clj</em></div>
+<div class="content"><div class="highlight"><pre><span class="p">[</span><span class="nv">clojure.jdbc/clojure.jdbc-c3p0</span> <span class="s">&quot;0.2.0&quot;</span><span class="p">]</span>
+</pre></div></div></div>
+</div>
+<div class="sect4">
+<h5 id="_usage">Usage</h5>
+<div class="paragraph"><p>For use a connection pool, you should convert your plain dbspec to datasource-dbspec using
+helper function:</p></div>
+<div class="listingblock">
+<div class="content"><div class="highlight"><pre><span class="p">(</span><span class="nf">require</span> <span class="o">&#39;</span><span class="p">[</span><span class="nv">jdbc.pool.c3p0</span> <span class="ss">:as</span> <span class="nv">pool</span><span class="p">])</span>
+<span class="p">(</span><span class="k">def </span><span class="nv">dbspec</span> <span class="p">(</span><span class="nf">pool/make-datasource-spec</span> <span class="p">{</span><span class="ss">:classname</span> <span class="s">&quot;org.postgresql.Driver&quot;</span>
+                                        <span class="ss">:subprotocol</span> <span class="s">&quot;postgresql&quot;</span>
+                                        <span class="ss">:subname</span> <span class="s">&quot;//localhost:5432/dbname&quot;</span><span class="p">}))</span>
+<span class="c1">;; dbspec now contains :datasource key with javax.sql.DataSource instance</span>
+<span class="c1">;; instead of plain dbspec with connection parameters. This dbspec should be used</span>
+<span class="c1">;; like a plain dbspec for open new connection.</span>
+</pre></div></div></div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_apache_commons_dbcp">5.3.2. Apache-Commons DBCP</h4>
+<div class="paragraph"><p>Database connection pooling services from Apache-Commons</p></div>
+<div class="sect4">
+<h5 id="_install_3">Install</h5>
+<div class="listingblock">
+<div class="title"><em>on project.clj</em></div>
+<div class="content"><div class="highlight"><pre><span class="p">[</span><span class="nv">be.niwi/clojure.jdbc-dbcp</span> <span class="s">&quot;0.2.0&quot;</span><span class="p">]</span>
+</pre></div></div></div>
+</div>
+<div class="sect4">
+<h5 id="_usage_2">Usage</h5>
+<div class="paragraph"><p>For use a connection pool, you should convert your plain dbspec to datasource-dbspec using
+helper function:</p></div>
+<div class="listingblock">
+<div class="content"><div class="highlight"><pre><span class="p">(</span><span class="nf">require</span> <span class="o">&#39;</span><span class="p">[</span><span class="nv">jdbc.pool.dbcp</span> <span class="ss">:as</span> <span class="nv">pool</span><span class="p">])</span>
+<span class="p">(</span><span class="k">def </span><span class="nv">dbspec</span> <span class="p">(</span><span class="nf">pool/make-datasource-spec</span> <span class="p">{</span><span class="ss">:classname</span> <span class="s">&quot;org.postgresql.Driver&quot;</span>
+                                        <span class="ss">:subprotocol</span> <span class="s">&quot;postgresql&quot;</span>
+                                        <span class="ss">:subname</span> <span class="s">&quot;//localhost:5432/dbname&quot;</span><span class="p">}))</span>
+</pre></div></div></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">this is a recommended implementation for connection pooling.</td>
+</tr></table>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="transaction-strategy">5.4. Transaction strategy</h3>
+<div class="paragraph"><p>Transactions strategy on <em>clojure.jdbc</em> are implemented using protocols having default implementation explained
+in previous sections. This approach, allows easy way to extend, customize or completely change a transaction
+strategy for your application.</p></div>
+<div class="paragraph"><p>If you want an other strategy, you should create a new type and implement <span class="monospaced">ITransactionStrategy</span> protocol.</p></div>
+<div class="listingblock">
+<div class="title">Sample dummy transaction strategy.</div>
+<div class="content"><div class="highlight"><pre><span class="p">(</span><span class="kd">defrecord </span><span class="nv">DummyTransactionStrategy</span> <span class="p">[]</span>
+  <span class="nv">tx/ITransactionStrategy</span>
+  <span class="p">(</span><span class="nf">begin!</span> <span class="p">[</span><span class="nv">_</span> <span class="nv">conn</span> <span class="nv">opts</span><span class="p">]</span> <span class="nv">conn</span><span class="p">)</span>
+  <span class="p">(</span><span class="nf">rollback!</span> <span class="p">[</span><span class="nv">_</span> <span class="nv">conn</span> <span class="nv">opts</span><span class="p">]</span> <span class="nv">conn</span><span class="p">)</span>
+  <span class="p">(</span><span class="nf">commit!</span> <span class="p">[</span><span class="nv">_</span> <span class="nv">conn</span> <span class="nv">opts</span><span class="p">]</span> <span class="nv">conn</span><span class="p">))</span>
+</pre></div></div></div>
+<div class="paragraph"><p>You can specify that transaction strategy to use with these two ways:</p></div>
+<div class="listingblock">
+<div class="title">Using <span class="monospaced">with-transaction-strategy</span> macro</div>
+<div class="content"><div class="highlight"><pre><span class="p">(</span><span class="nf">with-connection</span> <span class="p">[</span><span class="nv">conn</span> <span class="nv">dbspec</span><span class="p">]</span>
+  <span class="p">(</span><span class="nf">with-transaction-strategy</span> <span class="nv">conn</span> <span class="p">(</span><span class="nf">DummyTransactionStrategy.</span><span class="p">)</span>
+    <span class="p">(</span><span class="nf">do-some-thing</span> <span class="nv">conn</span><span class="p">)))</span>
+</pre></div></div></div>
+<div class="listingblock">
+<div class="title">Using <span class="monospaced">wrap-transaction-strategy</span> function:</div>
+<div class="content"><div class="highlight"><pre><span class="p">(</span><span class="nb">with-open </span><span class="p">[</span><span class="nv">conn</span> <span class="p">(</span><span class="nb">-&gt; </span><span class="p">(</span><span class="nf">make-connection</span> <span class="nv">dbspec</span><span class="p">)</span>
+                     <span class="p">(</span><span class="nf">wrap-transaction-strategy</span> <span class="p">(</span><span class="nf">DummyTransactionStrategy.</span><span class="p">)))]</span>
+  <span class="p">(</span><span class="nf">do-some-thing</span> <span class="nv">conn</span><span class="p">))</span>
+</pre></div></div></div>
+</div>
+<div class="sect2">
+<h3 id="_extend_sql_types">5.5. Extend sql types</h3>
+<div class="paragraph"><p>All related to type handling/conversion are exposed on <span class="monospaced">jdbc.types</span> namespace.</p></div>
+<div class="paragraph"><p>If you want extend some type/class for use it as jdbc parameter without explicit conversion
+to sql compatible type, you should extend your type with <span class="monospaced">jdbc.types/ISQLType</span> protocol.</p></div>
+<div class="paragraph"><p>This is a sample example to extend a java String[] (string array) for pass it as parameter
+to database field that correspons to postgresql text array on a database:</p></div>
+<div class="listingblock">
+<div class="content"><div class="highlight"><pre><span class="p">(</span><span class="nf">extend-protocol</span> <span class="nv">ISQLType</span>
+  <span class="c1">;; Obtain a class for string array</span>
+  <span class="p">(</span><span class="nb">class </span><span class="p">(</span><span class="nb">into-array </span><span class="nv">String</span> <span class="p">[]))</span>
+
+  <span class="p">(</span><span class="nf">set-stmt-parameter!</span> <span class="p">[</span><span class="nv">this</span> <span class="nv">conn</span> <span class="nv">stmt</span> <span class="nv">index</span><span class="p">]</span>
+    <span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">raw-conn</span>        <span class="p">(</span><span class="ss">:connection</span> <span class="nv">conn</span><span class="p">)</span>
+          <span class="nv">prepared-value</span>  <span class="p">(</span><span class="nf">as-sql-type</span> <span class="nv">this</span> <span class="nv">conn</span><span class="p">)</span>
+          <span class="nv">array</span>           <span class="p">(</span><span class="nf">.createArrayOf</span> <span class="nv">raw-conn</span> <span class="s">&quot;text&quot;</span> <span class="nv">prepared-value</span><span class="p">)]</span>
+      <span class="p">(</span><span class="nf">.setArray</span> <span class="nv">stmt</span> <span class="nb">index </span><span class="nv">array</span><span class="p">)))</span>
+
+  <span class="p">(</span><span class="nf">as-sql-type</span> <span class="p">[</span><span class="nv">this</span> <span class="nv">conn</span><span class="p">]</span> <span class="nv">this</span><span class="p">))</span>
+</pre></div></div></div>
+<div class="paragraph"><p>Now, you can pass a string array as jdbc parameter that is automaticlay converted
+to sql array and assigned properly to prepared statement:</p></div>
+<div class="listingblock">
+<div class="content"><div class="highlight"><pre><span class="p">(</span><span class="nf">with-connection</span> <span class="p">[</span><span class="nv">conn</span> <span class="nv">pg-dbspec</span><span class="p">]</span>
+  <span class="p">(</span><span class="nf">execute!</span> <span class="nv">conn</span> <span class="s">&quot;CREATE TABLE arrayfoo (id integer, data text[]);&quot;</span><span class="p">)</span>
+  <span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">mystringarray</span> <span class="p">(</span><span class="nb">into-array </span><span class="nv">String</span> <span class="p">[</span><span class="s">&quot;foo&quot;</span> <span class="s">&quot;bar&quot;</span><span class="p">])]</span>
+    <span class="p">(</span><span class="nf">execute-prepared!</span> <span class="nv">conn</span> <span class="s">&quot;INSERT INTO arrayfoo VALUES (?, ?);&quot;</span>
+                       <span class="p">[</span><span class="mi">1</span>, <span class="nv">mystringarray</span><span class="p">])))</span>
+</pre></div></div></div>
+<div class="paragraph"><p>clojure.jdbc also exposes <span class="monospaced">jdbc.types/ISQLResultSetReadColumn</span> protocol that encapsulates
+a backward conversions from sql types to user defined types.</p></div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_how_to_contribute">6. How to contribute?</h2>
+<div class="sectionbody">
+<div class="paragraph"><p><strong>clojure.jdbc</strong> unlike clojure and other clojure contrib libs, does not have much
+restrictions for contribute. Just follow the following steps depending on the
+situation:</p></div>
+<div class="paragraph"><p><strong>Bugfix</strong>:</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+Fork github repo.
+</p>
+</li>
+<li>
+<p>
+Fix a bug/typo on new branch.
+</p>
+</li>
+<li>
+<p>
+Make a pull-request to master.
+</p>
+</li>
+</ul></div>
+<div class="paragraph"><p><strong>New feature</strong>:</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+Open new issue with new feature purpose.
+</p>
+</li>
+<li>
+<p>
+If it is accepted, follow same steps as "bugfix".
+</p>
+</li>
+</ul></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_faq">7. Faq</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_why_another_jdbc_wrapper">7.1. Why another jdbc wrapper?</h3>
+<div class="paragraph"><p>This is a incomplete list of reasons:</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+Connection management should be explicit. clojure.jdbc has a clear differentiation
+  between connection and dbspec without unnecessary nesting controls and with explicit
+  resource management (using <span class="monospaced">with-open</span> or other specific macros for it, see the
+  examples).
+</p>
+</li>
+<li>
+<p>
+clojure.jdbc has full support for all the transactions api, with the ability to set the
+  database isolation level and use nested transactions (savepoints).
+  It creates a new transaction if no other transaction is active but,
+  when invoked within the context of an already existing transaction, it creates a savepoint.
+</p>
+</li>
+<li>
+<p>
+clojure.jdbc supports extend or overwrite a transaction management if a default
+  behavior is not sufficient for you.
+</p>
+</li>
+<li>
+<p>
+clojure.jdbc has native support for connection pools.
+</p>
+</li>
+<li>
+<p>
+clojure.jdbc has a simpler implementation than clojure.java.jdbc. It has no more
+  complexity than necessary for each available function in public api.<br>
+ <br>
+  As an example:
+</p>
+<div class="ulist"><ul>
+<li>
+<p>
+clojure.java.jdbc has a lot boilerplate connection management around all functions
+    that receives dbspec. It doesn&#8217;t has well designed connection management.<br>
+   <br>
+    Ex: functions like <span class="monospaced">create!</span> can receive plain dbspec or a connection. If you are
+    curious, take a look to <span class="monospaced">with-db-connection</span> implementation of clojure.java.jdbc
+    and compare it with <span class="monospaced">with-connection</span> of clojure.jdbc. You are going to give account of the
+    hidden unnecesary complexity found on clojure.java.jdbc.<br>
+   <br>
+    clojure.java.jdbc has inconsistent connection management. In contrast, with clojure.jdbc,
+    a connection should be created explicitly befor use any other function that
+    requires one connection.
+</p>
+</li>
+<li>
+<p>
+clojure.java.jdbc has repeated transaction handling on each CRUD method
+    (insert!, drop!, etc&#8230;). With clojure.jdbc, if you want that some code to run in a
+    transaction, you should wrap it in a transaction context explicitly, using the
+    <span class="monospaced">with-transaction</span> macro (see the transactions section for more information).
+</p>
+</li>
+</ul></div>
+</li>
+<li>
+<p>
+Much more documentation ;) (a project without documentation is a project that doesn&#8217;t
+  really exist).
+</p>
+</li>
+</ul></div>
+</div>
+<div class="sect2">
+<h3 id="_clojure_jdbc_has_better_performance_than_java_jdbc">7.2. clojure.jdbc has better performance than java.jdbc?</h3>
+<div class="paragraph"><p>Mostly <strong>Yes</strong>, <em>clojure.jdbc</em>  by default has better performance than java.jdbc. You can
+run the micro benchmark code on your environment with: <span class="monospaced">lein with-profile bench run</span></p></div>
+<div class="paragraph"><p>On my environments, the result is:</p></div>
+<div class="listingblock">
+<div class="content"><div class="highlight"><pre>[3/5.0.5]niwi@niwi:~/clojure.jdbc&gt; lein with-profile bench run
+Simple query without connection overhead.
+java.jdbc:
+&quot;Elapsed time: 673.890131 msecs&quot;
+clojure.jdbc:
+&quot;Elapsed time: 450.329706 msecs&quot;
+Simple query with connection overhead.
+java.jdbc:
+&quot;Elapsed time: 2490.233925 msecs&quot;
+clojure.jdbc:
+&quot;Elapsed time: 2239.524395 msecs&quot;
+Simple query with transaction.
+java.jdbc:
+&quot;Elapsed time: 532.151667 msecs&quot;
+clojure.jdbc:
+&quot;Elapsed time: 475.982354 msecs&quot;
+</pre></div></div></div>
+</div>
+<div class="sect2">
+<h3 id="_why_clojure_jdbc_does_not_include_dsl_for_working_with_sql_as_clojure_java_jdbc_0_3">7.3. Why clojure.jdbc does not include dsl for working with sql as clojure.java.jdbc 0.3?</h3>
+<div class="paragraph"><p>clojure.jdbc is a wrapper for Java JDBC interface, it doesn&#8217;t intend provide helpers
+for avoid sql usage. There already are a good number of DSLs for working with SQL.
+clojure.jdbc will not reinvent the wheel.</p></div>
+<div class="paragraph"><p>This is a surely incomple list clojure dsl for sql:</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+<a href="https://github.com/stch-library/sql">https://github.com/stch-library/sql</a>
+</p>
+</li>
+<li>
+<p>
+<a href="https://github.com/r0man/sqlingvo">https://github.com/r0man/sqlingvo</a>
+</p>
+</li>
+<li>
+<p>
+<a href="https://github.com/jkk/honeysql">https://github.com/jkk/honeysql</a>
+</p>
+</li>
+</ul></div>
+</div>
+<div class="sect2">
+<h3 id="_this_is_a_fork_of_clojure_java_jdbc">7.4. This is a fork of clojure.java.jdbc?</h3>
+<div class="paragraph"><p>No. Is just a alternative implementation.</p></div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_license">8. License</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>clojure.jdbc are writen from scratch and is licensed under Apache 2.0 license:</p></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre>Copyright 2013 Andrey Antukh &lt;niwi@niwi.be&gt;
+
+Licensed under the Apache License, Version 2.0 (the "License")
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.</pre>
+</div></div>
+<div class="paragraph"><p>You can see a full license on LICENSE file located on the root of the project
+repo.</p></div>
+<div class="paragraph"><p>Additionaly, I want give thanks to <span class="monospaced">clojure.java.jdbc</span> developers for a good
+initial work. Some intial ideas for clojure.jdbc are taken from it.</p></div>
+</div>
+</div>
+</div>
+<div id="footnotes"><hr></div>
+<div id="footer">
+<div id="footer-text">
+Version 0.2.1<br>
+Last updated 2014-06-29 00:52:52 CEST
+</div>
+</div>
+</body>
+</html>
