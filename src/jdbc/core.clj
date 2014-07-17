@@ -305,8 +305,11 @@ can be complete objects."
      ;; Overwrite default jdbc driver fetch-size when user
      ;; wants lazy result set.
      (when lazy (.setFetchSize stmt fetch-size))
-     (when max-rows (.setMaxRows max-rows))
 
+     ;; Set fetch-size and max-rows if provided by user
+     (when fetch-size (.setFetchSize stmt fetch-size))
+     (when max-rows (.setMaxRows stmt max-rows))
+     
      (when (seq params)
        (->> params
             (map-indexed #(types/set-stmt-parameter! %2 conn stmt (inc %1)))
