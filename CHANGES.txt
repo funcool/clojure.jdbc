@@ -1,6 +1,12 @@
 Changelog
 ---------
 
+Version 0.2.2
+~~~~~~~~~~~~~
+
+- Fixed bug related to max-rows parameter on make-prepared-statement
+- Fixed bug related to fetch-size that it was ignored.
+
 Version 0.2.1
 ~~~~~~~~~~~~~
 
