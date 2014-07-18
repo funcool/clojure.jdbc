@@ -1,7 +1,7 @@
 clojure.jdbc documentation
 ==========================
 Andrey Antukh, <niwi@niwi.be>
-0.2.1, 2014-06-29
+0.2.2, 2014-06-29
 
 :toc:
 :numbered:
