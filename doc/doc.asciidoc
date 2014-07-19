@@ -290,15 +290,12 @@ your queries for return just inserted primary keys.
 Make queries
 ~~~~~~~~~~~~
 
-The basic way to query adatabase is using the `query` function.
-
-`query` function, given an active connection and parametrized sql, executes it and returns
-a evaluated result (as vector of records):
+The basic way to query adatabase is using the `query` function:
 
 [source,clojure]
 ----
 (let [sql    ["SELECT id, name FROM people WHERE age > ?", 2]
-      result (query sql)]
+      result (query conn sql)]
   (doseq [row results]
   (println row))))
 
@@ -335,7 +332,6 @@ and if you need transactions on your code, you should import it:
 ----
 (require '[jdbc.transaction :as tx])
 ----
-
 
 The most idiomatic way to wrap some code in transaction, is using `with-transaction`
 macro:
@@ -759,7 +755,7 @@ This is a surely incomple list clojure dsl for sql:
 This is a fork of clojure.java.jdbc?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-No. Is just a alternative implementation.
+No. Is just an alternative implementation.
 
 
 License
@@ -768,7 +764,7 @@ License
 clojure.jdbc are writen from scratch and is licensed under Apache 2.0 license:
 
 ----
-Copyright 2013 Andrey Antukh <niwi@niwi.be>
+Copyright (c) 2013-2014 Andrey Antukh <niwi@niwi.be>
 
 Licensed under the Apache License, Version 2.0 (the "License")
 you may not use this file except in compliance with the License.
