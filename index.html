@@ -296,12 +296,10 @@ your queries for return just inserted primary keys.</p></div>
 </div>
 <div class="sect2">
 <h3 id="_make_queries">4.3. Make queries</h3>
-<div class="paragraph"><p>The basic way to query adatabase is using the <span class="monospaced">query</span> function.</p></div>
-<div class="paragraph"><p><span class="monospaced">query</span> function, given an active connection and parametrized sql, executes it and returns
-a evaluated result (as vector of records):</p></div>
+<div class="paragraph"><p>The basic way to query adatabase is using the <span class="monospaced">query</span> function:</p></div>
 <div class="listingblock">
 <div class="content"><div class="highlight"><pre><span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">sql</span>    <span class="p">[</span><span class="s">&quot;SELECT id, name FROM people WHERE age &gt; ?&quot;</span>, <span class="mi">2</span><span class="p">]</span>
-      <span class="nv">result</span> <span class="p">(</span><span class="nf">query</span> <span class="nv">sql</span><span class="p">)]</span>
+      <span class="nv">result</span> <span class="p">(</span><span class="nf">query</span> <span class="nv">conn</span> <span class="nv">sql</span><span class="p">)]</span>
   <span class="p">(</span><span class="nb">doseq </span><span class="p">[</span><span class="nv">row</span> <span class="nv">results</span><span class="p">]</span>
   <span class="p">(</span><span class="nb">println </span><span class="nv">row</span><span class="p">))))</span>
 
@@ -839,7 +837,7 @@ clojure.jdbc will not reinvent the wheel.</p></div>
 </div>
 <div class="sect2">
 <h3 id="_this_is_a_fork_of_clojure_java_jdbc">7.4. This is a fork of clojure.java.jdbc?</h3>
-<div class="paragraph"><p>No. Is just a alternative implementation.</p></div>
+<div class="paragraph"><p>No. Is just an alternative implementation.</p></div>
 </div>
 </div>
 </div>
@@ -849,7 +847,7 @@ clojure.jdbc will not reinvent the wheel.</p></div>
 <div class="paragraph"><p>clojure.jdbc are writen from scratch and is licensed under Apache 2.0 license:</p></div>
 <div class="listingblock">
 <div class="content monospaced">
-<pre>Copyright 2013 Andrey Antukh &lt;niwi@niwi.be&gt;
+<pre>Copyright (c) 2013-2014 Andrey Antukh &lt;niwi@niwi.be&gt;
 
 Licensed under the Apache License, Version 2.0 (the "License")
 you may not use this file except in compliance with the License.
@@ -874,7 +872,7 @@ initial work. Some intial ideas for clojure.jdbc are taken from it.</p></div>
 <div id="footer">
 <div id="footer-text">
 Version 0.2.2<br>
-Last updated 2014-07-18 08:36:42 CEST
+Last updated 2014-07-19 14:45:37 CEST
 </div>
 </div>
 </body>
