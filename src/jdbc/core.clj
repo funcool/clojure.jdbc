@@ -15,9 +15,7 @@
 (ns jdbc.core
   "Alternative implementation of jdbc wrapper for clojure."
   (:require [clojure.string :as str]
-            [jdbc.types.connection :refer [->Connection is-connection?]]
-            [jdbc.types.resultset :refer [->ResultSet]]
-            [jdbc.types :as types]
+            [jdbc.types :as types :refer [->Connection ->ResultSet is-connection?]]
             [jdbc.util :refer [with-exception raise-exc]]
             [jdbc.transaction :as tx]
             [jdbc.constants :as constants])
