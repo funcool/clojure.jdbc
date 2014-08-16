@@ -1,5 +1,5 @@
-(defproject clojure.jdbc "0.2.2"
-  :description "clojure.jdbc is a library for low level, jdbc based database access."
+(defproject clojure.jdbc "0.3.0-SNAPSHOT"
+  :description "clojure.jdbc is a library for low level, jdbc-based database access."
   :url "http://github.com/niwibe/clojure.jdbc"
   :license {:name "Apache 2.0"
             :url "http://www.apache.org/licenses/LICENSE-2.0.txt"}
