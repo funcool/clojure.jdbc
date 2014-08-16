@@ -4,11 +4,15 @@ Changelog
 Version 0.2.2
 ~~~~~~~~~~~~~
 
+Date: 2014-07-18
+
 - Fixed bug related to max-rows parameter on make-prepared-statement
 - Fixed bug related to fetch-size that it was ignored.
 
 Version 0.2.1
 ~~~~~~~~~~~~~
+
+Date: 2014-06-29
 
 - `execute-prepared!` now accepts parametrized sql like other `query` methods.
 - Minor fixes.
