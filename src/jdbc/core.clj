@@ -24,7 +24,6 @@
            java.sql.PreparedStatement
            java.sql.ResultSet
            java.sql.Statement
-           javax.sql.DataSource
            java.util.Properties)
   (:refer-clojure :exclude [resultset-seq]))
 
