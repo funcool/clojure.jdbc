@@ -139,7 +139,7 @@
 
 (defn- make-raw-connection
   "Given connection parametes get raw jdbc connection. This
-function is private and is used directly by `make-connection`."
+  function is private and is used directly by `make-connection`."
   [{:keys [connection-uri subprotocol subname
            user password read-only schema
            isolation-level name vendor host port
@@ -176,38 +176,38 @@ function is private and is used directly by `make-connection`."
 
 (defn make-connection
   "Creates a connection to a database from dbspec, and dbspec
-can be:
+  can be:
 
-- map containing connection parameter
-- map containing a datasource
-- URI or string
+  - map containing connection parameter
+  - map containing a datasource
+  - URI or string
 
-The dbspec map has this possible variants:
+  The dbspec map has this possible variants:
 
-Classic approach:
-  :subprotocol -> (required) string that represents a vendor name (ex: postgresql)
-  :subname -> (required) string that represents a database name (ex: test)
-  :classname -> (optional) string that represents a class name.
-  (many others options that are pased directly as driver parameters)
+  Classic approach:
+    :subprotocol -> (required) string that represents a vendor name (ex: postgresql)
+    :subname -> (required) string that represents a database name (ex: test)
+    :classname -> (optional) string that represents a class name.
+    (many others options that are pased directly as driver parameters)
 
-Pretty format:
-  :vendor -> (required) string that represents a vendor name (ex: postgresql)
-  :name -> (required) string that represents a database name (ex: test)
-  :host -> (optional) string that represents a database hostname (default: 127.0.0.1)
-  :port -> (optional) long number that represents a database port (default: driver default)
-  (many others options that are pased directly as driver parameters)
+  Pretty format:
+    :vendor -> (required) string that represents a vendor name (ex: postgresql)
+    :name -> (required) string that represents a database name (ex: test)
+    :host -> (optional) string that represents a database hostname (default: 127.0.0.1)
+    :port -> (optional) long number that represents a database port (default: driver default)
+    (many others options that are pased directly as driver parameters)
 
-Raw format:
-  :connection-uri -> String that passed directly to DriverManager/getConnection
+  Raw format:
+    :connection-uri -> String that passed directly to DriverManager/getConnection
 
-URI or String format:
-  vendor://user:password@host:post/dbname
+  URI or String format:
+    vendor://user:password@host:post/dbname
 
-Additional options for map based dbspecs:
-  :schema -> string that represents a schema name (default: nil)
-  :read-only -> boolean for mark entire connection read only.
+  Additional options for map based dbspecs:
+    :schema -> string that represents a schema name (default: nil)
+    :read-only -> boolean for mark entire connection read only.
 
-For more details, see documentation."
+  For more details, see documentation."
   [{:keys [isolation-level schema read-only]
     :or {read-only false schema nil}
     :as dbspec}]
@@ -250,9 +250,9 @@ For more details, see documentation."
 
 (defn get-returning-records
   "Given a executed prepared statement with expected returning
-values. Return a vector of records of returning values.
-Usually is a id of just inserted objects, but in other cases
-can be complete objects."
+  values. Return a vector of records of returning values.
+  Usually is a id of just inserted objects, but in other cases
+  can be complete objects."
   [conn ^PreparedStatement stmt]
   {:pre [(is-connection? conn)]}
   (let [rs (.getGeneratedKeys stmt)]
@@ -480,23 +480,23 @@ can be complete objects."
 
 (defmacro with-connection
   "Given database connection paramers (dbspec), creates
-a context with new connection to database that are closed
-at end of code block.
+  a context with new connection to database that are closed
+  at end of code block.
 
-If dbspec has datasource (connection pool), instead of create
-a new connection, get it from connection pool and release it
-at the end.
+  If dbspec has datasource (connection pool), instead of create
+  a new connection, get it from connection pool and release it
+  at the end.
 
-Example:
+  Example:
 
-  (with-connection [conn dbspec]
-    (do-somethin-with-connection conn))
+    (with-connection [conn dbspec]
+      (do-somethin-with-connection conn))
 
-Deprecated but yet working example (this behavior should be
-removed on 1.1 version):
+  Deprecated but yet working example (this behavior should be
+  removed on 1.1 version):
 
-  (with-connection dbspec conn
-    (do-something-with conn))
+    (with-connection dbspec conn
+      (do-something-with conn))
   "
   [dbspec & body]
   (if (vector? dbspec)
