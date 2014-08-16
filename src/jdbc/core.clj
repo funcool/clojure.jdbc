@@ -105,16 +105,15 @@
 
 (defn execute-statement!
   "Given a connection statement and paramgroups (can be empty)
-execute the prepared statement and return results from it.
+  execute the prepared statement and return results from it.
 
-This is a low level interface and should be used with precaution. This
-function is used internally for execue raw sql such as CREATE/DROP
-table.
+  This is a low level interface and should be used with precaution. This
+  function is used internally for execue raw sql such as CREATE/DROP
+  table.
 
-Status: Alpha - Implementation and name of this method can change on
-next versions."
-  [conn ^Statement stmt param-groups]
-  {:pre [(instance? Statement stmt)]}
+  Status: Alpha - Implementation and name of this method can change on
+  next versions."
+  [conn ^PreparedStatement stmt param-groups]
   (if-not (seq param-groups)
     (with-exception
       (seq [(.executeUpdate stmt)]))
@@ -142,9 +141,9 @@ next versions."
   "Given connection parametes get raw jdbc connection. This
 function is private and is used directly by `make-connection`."
   [{:keys [connection-uri subprotocol subname
-           datasource user password read-only
-           schema isolation-level name vendor
-           host port]
+           user password read-only schema
+           isolation-level name vendor host port
+           ^javax.sql.DataSource datasource]
     :or {read-only false schema nil}
     :as dbspec}]
   (cond
@@ -212,8 +211,8 @@ For more details, see documentation."
   [{:keys [isolation-level schema read-only]
     :or {read-only false schema nil}
     :as dbspec}]
-  (let [rawconn (make-raw-connection dbspec)
-        metadata (.getMetaData rawconn)]
+  (let [^java.sql.Connection       rawconn  (make-raw-connection dbspec)
+        ^java.sql.DatabaseMetaData metadata (.getMetaData rawconn)]
     (when isolation-level
       (.setTransactionIsolation rawconn (get constants/isolation-levels isolation-level)))
     (when schema
@@ -243,7 +242,7 @@ For more details, see documentation."
   "
   [conn & commands]
   {:pre [(is-connection? conn)]}
-  (let [connection (:connection conn)]
+  (let [^java.sql.Connection connection (:connection conn)]
     (with-open [stmt (.createStatement connection)]
       (dorun (map (fn [command]
                     (.addBatch stmt command)) commands))
@@ -274,10 +273,13 @@ can be complete objects."
                       fetch-size 100}
                  :as options}]
    {:pre [(is-connection? conn) (or (string? sqlvec) (vector? sqlvec))]}
-   (let [rconn  (:connection conn)
+   (let [^java.sql.Connection
+         rconn  (:connection conn)
          sqlvec (if (string? sqlvec) [sqlvec] sqlvec)
          sql    (first sqlvec)
          params (rest sqlvec)
+
+         ^java.sql.PreparedStatement
          stmt   (cond
                  returning
                  (if (= :all returning)
@@ -306,7 +308,6 @@ can be complete objects."
      ;; Set fetch-size and max-rows if provided by user
      (when fetch-size (.setFetchSize stmt fetch-size))
      (when max-rows (.setMaxRows stmt max-rows))
-     
      (when (seq params)
        (->> params
             (map-indexed #(types/set-stmt-parameter! %2 conn stmt (inc %1)))
@@ -359,7 +360,7 @@ can be complete objects."
 
      ;; In other case, build a prepared statement from sql or vector.
      (or (vector? sql) (string? sql))
-     (with-open [stmt (types/normalize sql conn options)]
+     (with-open [^java.sql.PreparedStatement stmt (types/normalize sql conn options)]
        (let [res (execute-statement! conn stmt param-groups)]
          (if (:returning options)
            ;; In case of returning key is found on options
@@ -417,8 +418,7 @@ can be complete objects."
           (println row))))"
   ([conn sql-with-params] (make-query conn sql-with-params {}))
   ([conn sql-with-params {:keys [fetch-size lazy] :or {lazy false} :as options}]
-   (let [connection (:connection conn)
-         stmt       (types/normalize sql-with-params conn options)]
+   (let [^java.sql.PreparedStatement stmt (types/normalize sql-with-params conn options)]
      (let [^ResultSet rs (.executeQuery stmt)]
        (if (not lazy)
          (->ResultSet stmt rs false (result-set->vector conn rs options))
@@ -448,8 +448,7 @@ can be complete objects."
   "
   ([conn sqlvec] (query conn sqlvec {}))
   ([conn sqlvec {:keys [lazy] :or {lazy false} :as options}]
-   (let [connection (:connection conn)
-         stmt       (types/normalize sqlvec conn options)]
+   (let [^java.sql.PreparedStatement stmt (types/normalize sqlvec conn options)]
      (let [^ResultSet rs (.executeQuery stmt)]
        (result-set->vector conn rs options)))))
 
