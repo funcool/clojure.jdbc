@@ -1,4 +1,4 @@
-;; Copyright 2013 Andrey Antukh <niwi@niwi.be>
+;; Copyright 2014 Andrey Antukh <niwi@niwi.be>
 ;;
 ;; Licensed under the Apache License, Version 2.0 (the "License")
 ;; you may not use this file except in compliance with the License.
@@ -15,6 +15,33 @@
 (ns jdbc.types
   "Namespace that encapsulates all related to types and logic
   for extend them.")
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Types (Wrappers)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defrecord Connection [^java.sql.Connection connection
+                       ^java.sql.DatabaseMetaData metadata]
+  java.io.Closeable
+  (close [this]
+    (.close connection)))
+
+(defrecord ResultSet [^java.sql.PreparedStatement stmt
+                      ^java.sql.ResultSet rs
+                      lazy data]
+  java.io.Closeable
+  (close [this]
+    (.close rs)
+    (.close stmt)))
+
+(defn is-connection?
+  "Test if a value is a connection instance."
+  [^Connection c]
+  (instance? Connection c))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Protocols definition
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defprotocol ISQLType
   "Protocol that exposes uniform way for convert user
