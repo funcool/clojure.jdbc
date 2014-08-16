@@ -62,15 +62,19 @@
 (defprotocol ISQLStatement
   (normalize [this conn options]))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Protocols Implementation
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (extend-protocol ISQLType
   Object
-  (as-sql-type [this conn] this)
-  (set-stmt-parameter! [this conn stmt index]
+  (as-sql-type [this ^Connection conn] this)
+  (set-stmt-parameter! [this conn ^java.sql.PreparedStatement stmt ^Long index]
     (.setObject stmt index (as-sql-type this conn)))
 
   nil
   (as-sql-type [this conn] nil)
-  (set-stmt-parameter! [this conn stmt index]
+  (set-stmt-parameter! [this conn ^java.sql.PreparedStatement stmt index]
     (.setObject stmt index (as-sql-type nil conn))))
 
 (extend-protocol ISQLResultSetReadColumn
