@@ -21,7 +21,7 @@
   (rollback! [_ conn opts] "Rollbacks a transaction. Returns nil.")
   (commit! [_ conn opts] "Commits a transaction. Returns nil."))
 
-(defrecord DefaultTransactionStrategy []
+(deftype DefaultTransactionStrategy []
   ITransactionStrategy
   (begin! [_ conn opts]
     (let [^java.sql.Connection rconn (:connection conn)
