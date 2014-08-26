@@ -774,7 +774,7 @@ This is an incomplete list of Clojure DSLs for SQL:
 Is this a fork of clojure.java.jdbc?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-No. It is just an alternative implementation.
+No. It is an alternative implementation.
 
 
 License
