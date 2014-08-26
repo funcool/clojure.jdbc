@@ -590,9 +590,9 @@ If you want another strategy, you should create a new type and implement the `IT
   (commit! [_ conn opts] conn))
 ----
 
-You can specify the transaction strategy to use in these two ways:
+You can specify the transaction strategy to use in these ways:
 
-.Using the `with-transaction-strategy` macro
+.Using the `with-transaction-strategy` macro.
 [source,clojure]
 ----
 (with-connection [conn dbspec]
@@ -600,12 +600,26 @@ You can specify the transaction strategy to use in these two ways:
     (do-some-thing conn)))
 ----
 
+NOTE: `with-transaction-strategy` does not use dynamic vars, it simple associate the
+strategy to connection and exposes it.
+
 .Using the `wrap-transaction-strategy` function:
 [source,clojure]
 ----
 (with-open [conn (-> (make-connection dbspec)
                      (wrap-transaction-strategy (DummyTransactionStrategy.)))]
   (do-some-thing conn))
+----
+
+.Using dynamic vars
+[source, clojure]
+----
+;; Overwritting the default value
+(alter-var-root #'tx/*default-tx-strategy* (fn [_] (DummyTransactionStrategy.)))
+
+;; Or using binding
+(binding [tx/*default-tx-strategy* (DummyTransactionStrategy.)]
+  (some-func-that-uses-transactions))
 ----
 
 Extend SQL Types
