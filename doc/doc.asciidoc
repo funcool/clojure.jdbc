@@ -272,9 +272,10 @@ Returning Inserted Keys
 +++++++++++++++++++++++
 
 In some circumstances, you want use "RETURNING id" or similar functionality on
-your queries to return the primary keys of newly inserted records.
+your queries for return the primary keys of newly inserted records.
 
-.This is how you can do it using clojure.jdbc
+This is how you can do it using clojure.jdbc:
+
 [source, clojure]
 ----
 (let [sql "INSERT INTO foo (name) VALUES (?);"
@@ -285,6 +286,12 @@ your queries to return the primary keys of newly inserted records.
 [{:id 3} {:id 4}]
 ----
 
+Also, you can use `:all` keyword in case of you need statement with "RETURNING *".
+
+[source, clojure]
+----
+(execute-prepared! conn sql ["foo"] {:returning :all})
+----
 
 Make Queries
 ~~~~~~~~~~~~
