@@ -46,10 +46,11 @@
 (defn- parse-querystring
   "Given a URI instance, return its querystring as
   plain map with parsed keys and values."
-  [uri]
-  (->> (for [^String kvs (.split query "&")] (into [] (.split kvs "=")))
-       (into {})
-       (walk/keywordize-keys)))
+  [^URI uri]
+  (let [^String query (.getQuery uri)]
+    (->> (for [^String kvs (.split query "&")] (into [] (.split kvs "=")))
+         (into {})
+         (walk/keywordize-keys))))
 
 (defn uri->dbspec
   "Parses a dbspec as uri into a plain dbspec. This function
@@ -69,7 +70,8 @@
        :subprotocol scheme}
       (when userinfo
         (let [[user password] (str/split userinfo #":")]
-          {:user user :password password})))))
+          {:user user :password password}))
+      (parse-querystring uri))))
 
 (defn result-set->lazyseq
   "Function that wraps result in a lazy seq. This function
