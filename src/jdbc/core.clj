@@ -169,12 +169,9 @@
    (and name vendor)
    (let [host   (or host "127.0.0.1")
          port   (if port (str ":" port) "")
-         dbspec (merge
-                 {:subprotocol vendor
-                  :subname (str "//" host port "/" name)}
-                 (when (and user password)
-                   {:user user
-                    :password password}))]
+         dbspec (-> (dissoc dbspec :name :vendor :host :port)
+                    (assoc :subprotocol vendor
+                           :subname (str "//" host port "/" name)))]
      (make-raw-connection-from-dbspec dbspec))
 
    (and connection-uri)
