@@ -15,6 +15,7 @@
 (ns jdbc.core
   "Alternative implementation of jdbc wrapper for clojure."
   (:require [clojure.string :as str]
+            [clojure.walk :as walk]
             [jdbc.types :as types :refer [->Connection ->ResultSet is-connection?]]
             [jdbc.util :refer [with-exception raise-exc]]
             [jdbc.transaction :as tx]
@@ -41,6 +42,14 @@
   from connection string urls."
   [^String url]
   (str/replace-first url #"^jdbc:" ""))
+
+(defn- parse-querystring
+  "Given a URI instance, return its querystring as
+  plain map with parsed keys and values."
+  [uri]
+  (->> (for [^String kvs (.split query "&")] (into [] (.split kvs "=")))
+       (into {})
+       (walk/keywordize-keys)))
 
 (defn uri->dbspec
   "Parses a dbspec as uri into a plain dbspec. This function
