@@ -27,7 +27,7 @@
            java.util.Properties)
   (:refer-clojure :exclude [resultset-seq]))
 
-(defn map->properties
+(defn ^Properties map->properties
   "Convert hash-map to java.utils.Properties instance. This method is used
   internally for convert dbspec map to properties instance, but it can
   be usefull for other purposes.
