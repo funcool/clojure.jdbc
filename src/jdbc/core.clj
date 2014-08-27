@@ -220,11 +220,11 @@
     :as dbspec}]
   (let [^java.sql.Connection       rawconn  (make-raw-connection dbspec)
         ^java.sql.DatabaseMetaData metadata (.getMetaData rawconn)]
+    (.setReadOnly rawconn read-only)
     (when isolation-level
       (.setTransactionIsolation rawconn (get constants/isolation-levels isolation-level)))
     (when schema
       (.setSchema rawconn schema))
-    (.setReadOnly rawconn read-only)
     (-> (->Connection rawconn metadata)
         (assoc :isolation-level isolation-level))))
 
