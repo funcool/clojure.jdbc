@@ -30,22 +30,21 @@
 (defn ^Properties map->properties
   "Convert hash-map to java.utils.Properties instance. This method is used
   internally for convert dbspec map to properties instance, but it can
-  be usefull for other purposes.
-  "
+  be usefull for other purposes."
   [data]
   (let [p (Properties.)]
     (dorun (map (fn [[k v]] (.setProperty p (name k) (str v))) (seq data)))
     p))
 
 (defn- strip-jdbc-prefix
-  "Siple util function that strip a \"jdbc:\" prefix
+  "Simple util function that strip a \"jdbc:\" prefix
   from connection string urls."
   [^String url]
   (str/replace-first url #"^jdbc:" ""))
 
 (defn uri->dbspec
   "Parses a dbspec as uri into a plain dbspec. This function
-  accepts ``java.net.URI`` or ``String`` as parameter."
+  accepts `java.net.URI` or `String` as parameter."
   [url]
   (let [^URI uri      (if (instance? URI url) url
                           (URI. (strip-jdbc-prefix url)))
