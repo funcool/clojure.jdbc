@@ -134,12 +134,12 @@
         (.addBatch stmt))
       (seq (.executeBatch stmt)))))
 
-(defn- make-raw-connection-from-jdbcurl
+(defn- ^java.sql.Connection make-raw-connection-from-jdbcurl
   "Given a url and optionally params, returns a raw jdbc connection."
   ([url opts] (DriverManager/getConnection url (map->properties opts)))
   ([url] (DriverManager/getConnection url)))
 
-(defn- make-raw-connection-from-dbspec
+(defn- ^java.sql.Connection make-raw-connection-from-dbspec
   "Given a plain dbspec, converts it to a valid jdbc url with
   optionally options and pass it to ``make-raw-connection-from-jdbcurl``"
   [{:keys [subprotocol subname] :as dbspec}]
@@ -147,7 +147,7 @@
         options (dissoc dbspec :subprotocol :subname)]
     (make-raw-connection-from-jdbcurl url options)))
 
-(defn- make-raw-connection
+(defn- ^java.sql.Connection make-raw-connection
   "Given connection parametes get raw jdbc connection. This
   function is private and is used directly by `make-connection`."
   [{:keys [connection-uri subprotocol subname
