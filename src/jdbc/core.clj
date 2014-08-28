@@ -248,7 +248,6 @@
         (execute! conn 'CREATE TABLE foo (id serial, name text);')))
   "
   [conn & commands]
-  {:pre [(is-connection? conn)]}
   (let [^java.sql.Connection connection (:connection conn)]
     (with-open [stmt (.createStatement connection)]
       (dorun (map (fn [command]
@@ -261,7 +260,6 @@
   Usually is a id of just inserted objects, but in other cases
   can be complete objects."
   [conn ^PreparedStatement stmt]
-  {:pre [(is-connection? conn)]}
   (let [rs (.getGeneratedKeys stmt)]
     (result-set->vector conn rs)))
 
@@ -279,7 +277,6 @@
                       result-concurency :read-only
                       fetch-size 100}
                  :as options}]
-   {:pre [(is-connection? conn) (or (string? sqlvec) (vector? sqlvec))]}
    (let [^java.sql.Connection
          rconn  (:connection conn)
          sqlvec (if (string? sqlvec) [sqlvec] sqlvec)
@@ -341,7 +338,6 @@
       (execute-prepared! conn sql [1 2] [2 3] [3 4])))
   "
   [conn sql & param-groups]
-  {:pre [(is-connection? conn)]}
   ;; Try extract options from param-groups varargs. Options
   ;; should be a hash-map and located as the last parameter.
   ;; If any one know more efficient way to do it, pull-request
