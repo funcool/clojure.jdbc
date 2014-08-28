@@ -503,72 +503,76 @@ WARNING: `make-query` is a low-level interface and you must be careful when usin
 Connection pool
 ~~~~~~~~~~~~~~~
 
-All good database libraries should come with connection pool support.
+To make good use of resourses is much recommendable use any style of connection pooling
+in your production code. This can avoid continuosly creating and destroying connections,
+that in the majority of time is a slow operation.
 
-The Java ecosystem comes with various connection pool implementations for JDBC and clojure.jdbc
-comes with following interfaces:
-
-c3p0
-^^^^
-
-c3p0 is an easy-to-use library for making traditional JDBC drivers "enterprise-ready" by
-augmenting them with functionality defined by the jdbc3 spec
+Java ecosystem comes with various of it, and _clojure.jdbc_ has extensios to few of
+them: c3p0 and Apache Commons DBCP.
 
 Install
-+++++++
+^^^^^^^
 
-._on project.clj_
+Connection pool extensions lives as separate clojure packages and them should be installed
+individually. All them works like other clojure packages: you only need put the dependency
+on yout `project.clj` file.
+
 [source, clojure]
 ----
-[clojure.jdbc/clojure.jdbc-c3p0 "0.2.0"]
+;; For c3p0
+[clojure.jdbc/clojure.jdbc-c3p0 "0.3.0"]
+
+;; For dbcp2
+[clojure.jdbc/clojure.jdbc-dbcp "0.3.0"]
 ----
 
-Usage
-+++++
+Basic Usage
+^^^^^^^^^^^
 
-In order to use a connection pool, you should convert your plain dbspec into a datasource-dbspec
-using the helper function:
+In order to use a connection pool, you should convert your plain dbspec into a 
+datasource-dbspec using the helper function provided in each extension.
 
+.Example using c3p0 connection pool
 [source,clojure]
 ----
+;; Import the desired implementation
 (require '[jdbc.pool.c3p0 :as pool])
-(def dbspec (pool/make-datasource-spec {:classname "org.postgresql.Driver"
-                                        :subprotocol "postgresql"
-                                        :subname "//localhost:5432/dbname"}))
-;; dbspec now contains a :datasource key with a javax.sql.DataSource instance
-;; instead of a plain dbspec with connection parameters. This dbspec should be used
-;; like a plain dbspec for opening new connections.
-----
 
-Apache-Commons DBCP
-^^^^^^^^^^^^^^^^^^^
-
-Database connection pooling services from Apache-Commons
-
-Install
-+++++++
-
-._on project.clj_
-[source, clojure]
-----
-[be.niwi/clojure.jdbc-dbcp "0.2.0"]
-----
-
-Usage
-+++++
-
-In order to use a connection pool, you should convert your plain dbspec into a datasource-dbspec
-using the helper function:
-
-[source,clojure]
-----
-(require '[jdbc.pool.dbcp :as pool])
+;; Convert the standard dbspec to an other dbspec with `:datasource` key
 (def dbspec (pool/make-datasource-spec {:classname "org.postgresql.Driver"
                                         :subprotocol "postgresql"
                                         :subname "//localhost:5432/dbname"}))
 ----
 
-NOTE: this is a recommended implementation for connection pooling.
+`dbspec` now contains a `:datasource` key with a `javax.sql.DataSource` instance
+instead of a plain dbspec with connection parameters. This dbspec should be used
+like a plain dbspec for opening new connections.
+
+Advanced configuration
+^^^^^^^^^^^^^^^^^^^^^^
+
+The two connection pool implementations comes with "good" defaults that should
+work in majority standard environments, but obviously, it exposes set of options
+for customize it:
+
+[options="header"]
+|============================================================================
+| Option                          | Description
+| `:min-pool-size`                | Minimum number of Connections a pool will maintain at any given time.
+| `:max-pool-size`                | Maximum number of Connections a pool will maintain at any given time.
+| `:initial-pool-size`            | Number of Connections a pool will try to acquire upon startup.
+| `:max-wait-millis`              | The number of milliseconds a client calling getConnection() will wait for a Connection to be checked-in or acquired when the pool is exhausted.
+| `:max-connection-lifetime`      | The maximum lifetime in seconds of a connection.
+| `:test-connection-query`        | The SQL query that will be used to validate connections from this pool before returning them to the caller. If specified, this query MUST be an SQL SELECT statement that returns at least one row. If not specified, connections will be validation by calling the isValid() method.
+| `:test-connection-on-borrow`    | The indication of whether objects will be validated before being borrowed from the pool.
+| `:test-connection-on-return`    | The indication of whether objects will be validated before being returned to the pool.
+| `:test-idle-connections-period` | The number of seconds to sleep between runs of the idle object evictor thread.
+| `:max-connection-idle-lifetime` | The minimum amount of time an object may sit idle in the pool before it is eligable for eviction by the idle object evictor (if any).
+|============================================================================
+
+Additionally to this options, some extensions offers other specific of each implementation, and you can view it
+on source code of each extension. Also you can view the original documentation of them and apply additional options
+after datasource dbspec is created.
 
 [[transaction-strategy]]
 Transaction Strategy
