@@ -141,7 +141,7 @@
 
 (defn- ^java.sql.Connection make-raw-connection-from-dbspec
   "Given a plain dbspec, converts it to a valid jdbc url with
-  optionally options and pass it to ``make-raw-connection-from-jdbcurl``"
+  optionally options and pass it to `make-raw-connection-from-jdbcurl`"
   [{:keys [subprotocol subname] :as dbspec}]
   (let [url     (format "jdbc:%s:%s" subprotocol subname)
         options (dissoc dbspec :subprotocol :subname)]
@@ -232,7 +232,7 @@
   "Run arbitrary number of raw sql commands such as: CREATE TABLE,
   DROP TABLE, etc... If your want transactions, you can wrap this
   call in transaction using `with-transaction` context block macro
-  that is available in  ``jdbc.transaction`` namespace.
+  that is available in  `jdbc.transaction` namespace.
 
   Warning: not all database servers support ddl in transactions.
 
@@ -390,15 +390,15 @@
   return a instance of ResultSet that works as stantard clojure
   map but implements a closable interface.
 
-  A returned ``jdbc.types.resultset.ResultSet`` works as a wrapper
+  A returned `jdbc.types.resultset.ResultSet` works as a wrapper
   around a prepared statement and java.sql.ResultSet mostly used for
   server side cursors properly resource management.
 
   This functions indents be a low level access for making queries
   and it delegate to a user the resource management.
 
-  NOTE: It strongly recommended not use this function directly and use a ``with-query``
-  macro for make query thar returns large amount of data or simple ``query`` function
+  NOTE: It strongly recommended not use this function directly and use a `with-query`
+  macro for make query thar returns large amount of data or simple `query` function
   that returns directly a evaluated result.
 
   Example using parametrized sql:
@@ -430,7 +430,7 @@
 (defn query
   "Perform a simple sql query and return a evaluated result as vector.
 
-  ``sqlvec`` parameter can be: parametrized sql (vector format), plain sql
+  `sqlvec` parameter can be: parametrized sql (vector format), plain sql
   (simple sql string) or prepared statement instance.
 
   Example using parametrized sql:
@@ -457,14 +457,14 @@
 
 (def query-first
   "Perform a simple sql query and return the first result. It accepts the
-  same arguments as the ``query`` function."
+  same arguments as the `query` function."
   (comp first query))
 
 (defmacro with-query
-  "Idiomatic dsl macro for ``query`` function that handles well queries
+  "Idiomatic dsl macro for `query` function that handles well queries
   what returns a huge amount of results.
 
-  ``sqlvec`` can be in same formats as in ``query`` function.
+  `sqlvec` can be in same formats as in `query` function.
 
   NOTE: This method ensueres a query in one implicit transaction.
 
