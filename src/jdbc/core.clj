@@ -25,8 +25,7 @@
            java.sql.PreparedStatement
            java.sql.ResultSet
            java.sql.Statement
-           java.util.Properties)
-  (:refer-clojure :exclude [resultset-seq]))
+           java.util.Properties))
 
 (defn ^Properties map->properties
   "Convert hash-map to java.utils.Properties instance. This method is used
