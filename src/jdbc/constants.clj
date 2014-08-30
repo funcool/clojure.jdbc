@@ -14,7 +14,7 @@
 
 (ns jdbc.constants
   "Namespace that contains a public constants
-used around this library."
+  used around this library."
   (:import java.sql.ResultSet
            java.sql.Connection))
 
