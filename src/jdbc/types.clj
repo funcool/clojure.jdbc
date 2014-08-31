@@ -13,8 +13,7 @@
 ;; limitations under the License.
 
 (ns jdbc.types
-  "Namespace that encapsulates all related to types and logic
-  for extend them.")
+  "Namespace that encapsulates all related to types and logic for extend them.")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Types (Wrappers)
