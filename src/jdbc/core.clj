@@ -16,7 +16,9 @@
   "Alternative implementation of jdbc wrapper for clojure."
   (:require [clojure.string :as str]
             [clojure.walk :as walk]
-            [jdbc.types :as types :refer [->Connection ->ResultSet is-connection?]]
+            [jdbc.types :refer [->Connection ->ResultSet is-connection?]]
+            [jdbc.impl :as impl]
+            [jdbc.proto :as proto]
             [jdbc.util :refer [with-exception raise-exc]]
             [jdbc.transaction :as tx]
             [jdbc.constants :as constants])
@@ -24,7 +26,6 @@
            java.sql.DriverManager
            java.sql.PreparedStatement
            java.sql.ResultSet
-           java.sql.Statement
            java.util.Properties))
 
 (defn ^Properties map->properties
@@ -97,7 +98,7 @@
         keyseq      (->> idseq
                          (map (fn [^long i] (.getColumnLabel metadata i)))
                          (map (comp keyword identifiers)))
-        values      (fn [] (map (fn [^long i] (types/from-sql-type (.getObject rs i) conn metadata i)) idseq))
+        values      (fn [] (map (fn [^long i] (proto/from-sql-type (.getObject rs i) conn metadata i)) idseq))
         records     (fn thisfn []
                       (when (.next rs)
                         (cons (zipmap keyseq (values)) (lazy-seq (thisfn)))))
@@ -127,7 +128,7 @@
     (with-exception
       (seq [(.executeUpdate stmt)]))
     (let [set-parameter (fn [index value]
-                          (types/set-stmt-parameter! value conn stmt (inc index)))]
+                          (proto/set-stmt-parameter! value conn stmt (inc index)))]
       (doseq [pgroup param-groups]
         (dorun (map-indexed set-parameter pgroup))
         (.addBatch stmt))
@@ -180,7 +181,8 @@
    (make-raw-connection-from-dbspec (uri->dbspec dbspec))
    :else (throw (IllegalArgumentException. "Invalid dbspec format"))))
 
-(defn make-connection
+(defn ^jdbc.types.Connection
+  make-connection
   "Creates a connection to a database from dbspec, and dbspec
   can be:
 
@@ -267,56 +269,6 @@
   [obj]
   (instance? PreparedStatement obj))
 
-(defn make-prepared-statement
-  "Given connection and query, return a prepared statement."
-  ([conn sqlvec] (make-prepared-statement conn sqlvec {}))
-  ([conn sqlvec {:keys [result-type result-concurency fetch-size
-                        max-rows holdability lazy returning]
-                 :or {result-type :forward-only
-                      result-concurency :read-only
-                      fetch-size 100}
-                 :as options}]
-   (let [^java.sql.Connection
-         rconn  (:connection conn)
-         sqlvec (if (string? sqlvec) [sqlvec] sqlvec)
-         sql    (first sqlvec)
-         params (rest sqlvec)
-
-         ^java.sql.PreparedStatement
-         stmt   (cond
-                 returning
-                 (if (= :all returning)
-                   (.prepareStatement rconn sql java.sql.Statement/RETURN_GENERATED_KEYS)
-                   (.prepareStatement rconn sql (into-array String (mapv name returning))))
-
-                 holdability
-                 (.prepareStatement rconn sql
-                                    (result-type constants/resultset-options)
-                                    (result-concurency constants/resultset-options)
-                                    (holdability constants/resultset-options))
-                 :else
-                 (.prepareStatement rconn sql
-                                    (result-type constants/resultset-options)
-                                    (result-concurency constants/resultset-options)))]
-
-     ;; Lazy resultset works with database cursors ant them can not be used
-     ;; without one transaction
-     (when (and (not (:in-transaction conn)) lazy)
-       (throw (IllegalArgumentException. "Can not use cursor resultset without transaction")))
-
-     ;; Overwrite default jdbc driver fetch-size when user
-     ;; wants lazy result set.
-     (when lazy (.setFetchSize stmt fetch-size))
-
-     ;; Set fetch-size and max-rows if provided by user
-     (when fetch-size (.setFetchSize stmt fetch-size))
-     (when max-rows (.setMaxRows stmt max-rows))
-     (when (seq params)
-       (->> params
-            (map-indexed #(types/set-stmt-parameter! %2 conn stmt (inc %1)))
-            (dorun)))
-     stmt)))
-
 (defn execute-prepared!
   "Given a active connection and sql (or prepared statement),
   executes a query in a database. This differs from `execute!` function
@@ -362,7 +314,7 @@
 
      ;; In other case, build a prepared statement from sql or vector.
      (or (vector? sql) (string? sql))
-     (with-open [^java.sql.PreparedStatement stmt (types/normalize sql conn options)]
+     (with-open [^java.sql.PreparedStatement stmt (proto/normalize sql conn options)]
        (let [res (execute-statement! conn stmt param-groups)]
          (if (:returning options)
            ;; In case of returning key is found on options
@@ -371,25 +323,12 @@
            (get-returning-records conn stmt)
            res))))))
 
-(extend-protocol types/ISQLStatement
-  clojure.lang.APersistentVector
-  (normalize [sql-with-params conn options]
-    (make-prepared-statement conn sql-with-params options))
-
-  String
-  (normalize [sql conn options]
-    (make-prepared-statement conn [sql] options))
-
-  PreparedStatement
-  (normalize [prepared-stmt conn options]
-    prepared-stmt))
-
 (defn make-query
   "Given a connection and paramatrized sql, execute a query and
   return a instance of ResultSet that works as stantard clojure
   map but implements a closable interface.
 
-  A returned `jdbc.types.resultset.ResultSet` works as a wrapper
+  A returned `jdbc.types.ResultSet` works as a wrapper
   around a prepared statement and java.sql.ResultSet mostly used for
   server side cursors properly resource management.
 
@@ -420,7 +359,7 @@
           (println row))))"
   ([conn sql-with-params] (make-query conn sql-with-params {}))
   ([conn sql-with-params {:keys [fetch-size lazy] :or {lazy false} :as options}]
-   (let [^java.sql.PreparedStatement stmt (types/normalize sql-with-params conn options)]
+   (let [^java.sql.PreparedStatement stmt (proto/normalize sql-with-params conn options)]
      (let [^ResultSet rs (.executeQuery stmt)]
        (if (not lazy)
          (->ResultSet stmt rs false (result-set->vector conn rs options))
@@ -450,7 +389,7 @@
   "
   ([conn sqlvec] (query conn sqlvec {}))
   ([conn sqlvec {:keys [lazy] :or {lazy false} :as options}]
-   (let [^java.sql.PreparedStatement stmt (types/normalize sqlvec conn options)]
+   (let [^java.sql.PreparedStatement stmt (proto/normalize sqlvec conn options)]
      (let [^ResultSet rs (.executeQuery stmt)]
        (result-set->vector conn rs options)))))
 

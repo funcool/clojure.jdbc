@@ -3,6 +3,8 @@
   (:require [jdbc :refer :all]
             [jdbc.transaction :refer :all]
             [jdbc.types :refer :all]
+            [jdbc.impl :refer :all]
+            [jdbc.proto :refer :all]
             [jdbc.pool.c3p0 :as pool-c3p0]
             [jdbc.pool.dbcp :as ac-dbcp]
             [cheshire.core :as json]
@@ -29,7 +31,6 @@
                        :name "test"
                        :host "localhost"
                        :read-only true})
-
 
 (deftest db-extra-returning-keys
   (testing "Testing basic returning keys"

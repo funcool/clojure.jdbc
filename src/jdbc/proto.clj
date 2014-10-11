@@ -12,27 +12,27 @@
 ;; See the License for the specific language governing permissions and
 ;; limitations under the License.
 
-(ns jdbc.types)
+(ns jdbc.proto)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Types (Wrappers)
+;; Protocols definition
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defrecord Connection [^java.sql.Connection connection
-                       ^java.sql.DatabaseMetaData metadata]
-  java.io.Closeable
-  (close [this]
-    (.close connection)))
+(defprotocol ISQLType
+  "Protocol that exposes uniform way for convert user
+  types to sql/jdbc compatible types and uniform set parameters
+  to prepared statement instance. Default implementation available
+  for Object and nil values."
 
-(defrecord ResultSet [^java.sql.PreparedStatement stmt
-                      ^java.sql.ResultSet rs
-                      lazy data]
-  java.io.Closeable
-  (close [this]
-    (.close rs)
-    (.close stmt)))
+  (as-sql-type [_ conn] "Convert user type to sql type.")
+  (set-stmt-parameter! [this conn stmt index] "Set value to statement."))
 
-(defn is-connection?
-  "Test if a value is a connection instance."
-  [^Connection c]
-  (instance? Connection c))
+(defprotocol ISQLResultSetReadColumn
+  "Protocol that exposes uniform way to convert values
+  obtained from result set to user types. Default implementation
+  available for Object, Boolean, and nil."
+
+  (from-sql-type [_ conn metadata index] "Convert sql type to user type."))
+
+(defprotocol ISQLStatement
+  (normalize [this conn options]))

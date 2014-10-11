@@ -30,7 +30,6 @@
   execute!
   get-returning-records
   is-prepared-statement?
-  make-prepared-statement
   execute-prepared!
   make-query
   query
