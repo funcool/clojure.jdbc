@@ -2,9 +2,10 @@ clojure.jdbc documentation
 ==========================
 Andrey Antukh, <niwi@niwi.be>
 0.3.0, 2014-08-28
-
-:toc:
+:toc: left
 :numbered:
+:source-highlighter: pygments
+:pygments-style: friendly
 
 
 Introduction
@@ -37,7 +38,7 @@ Since _clojure.jdbc_ is a young project there may be some API breakage.
 Install
 -------
 
-This section covers a installing _clojure.jdbc and its requirements.
+This section covers a installing _clojure.jdbc_ and its requirements.
 
 Requirements
 ~~~~~~~~~~~~
@@ -269,7 +270,7 @@ the repeated execution of the same operations with distinct parameters.
 
 
 Returning Inserted Keys
-+++++++++++++++++++++++
+^^^^^^^^^^^^^^^^^^^^^^^
 
 In some circumstances, you want use "RETURNING id" or similar functionality on
 your queries for return the primary keys of newly inserted records.
@@ -329,7 +330,7 @@ Transactions
 ~~~~~~~~~~~~
 
 Getting Started with Transactions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 All transaction related functions in _clojure.jdbc_ are exposed under the `jdbc.transaction`
 namespace and if you need transactions in your code, you should import it:
@@ -709,16 +710,13 @@ This is an incomplete list of reasons:
 - clojure.jdbc has native support for connection pools.
 - clojure.jdbc has a simpler implementation than clojure.java.jdbc. It has no more
   complexity than necessary for each available function in the public API. +
-  +
   As an example:
   * clojure.java.jdbc has a lot boilerplate connection management around all functions
     that receive dbspec. It doesn't have well designed connection management. +
-    +
-    E.g.: functions like `create!` can receive plain a dbspec or a connection. If you are
+    Ex: functions like `create!` can receive plain a dbspec or a connection. If you are
     curious, take a look at the `with-db-connection` implementation of clojure.java.jdbc
     and compare it with `with-connection` of clojure.jdbc. You will get a get a good idea of the
     hidden unnecessary complexity found in clojure.java.jdbc. +
-    +
     clojure.java.jdbc has inconsistent connection management. In contrast, with clojure.jdbc,
     a connection should be created explicitly before using any other function that
     requires one connection.
@@ -770,6 +768,7 @@ clojure.jdbc will not reinvent the wheel.
 
 This is an incomplete list of Clojure DSLs for SQL:
 
+- https://github.com/niwibe/suricatta
 - https://github.com/stch-library/sql
 - https://github.com/r0man/sqlingvo
 - https://github.com/jkk/honeysql
