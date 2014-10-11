@@ -146,9 +146,9 @@
         options (dissoc dbspec :subprotocol :subname)]
     (make-raw-connection-from-jdbcurl url options)))
 
-(defn- ^java.sql.Connection make-raw-connection
-  "Given connection parametes get raw jdbc connection. This
-  function is private and is used directly by `make-connection`."
+(defn ^java.sql.Connection make-raw-connection
+  "Given connection parametes get raw jdbc connection.
+  This function is part of private api."
   [{:keys [connection-uri subprotocol subname
            user password read-only schema
            isolation-level name vendor host port
