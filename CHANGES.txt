@@ -4,7 +4,7 @@ Changelog
 Version 0.3.0
 ~~~~~~~~~~~~~
 
-Date: Unreleased
+Date: 2014-10-11
 
 - Remove jdbc.types.connection namespace (records now on jdbc.types ns).
 - Remove jdbc.types.resultset namespace (records now on jdbc.types ns).

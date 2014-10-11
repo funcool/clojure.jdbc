@@ -71,7 +71,7 @@ vector on your *_project.clj_* file:
 ._on project.clj_
 [source,clojure]
 ----
-[clojure.jdbc "0.2.2"]
+[clojure.jdbc "0.3.0"]
 ----
 
 Gradle
@@ -81,7 +81,7 @@ If you are using gradle, this is a dependency line for gradle dsl:
 
 [source,groovy]
 ----
-compile "clojure.jdbc:clojure.jdbc:0.2.2"
+compile "clojure.jdbc:clojure.jdbc:0.3.0"
 ----
 
 Maven
@@ -105,7 +105,7 @@ this is a XML block that you should put in a dependency section of a maven confi
 <dependency>
   <groupId>clojure.jdbc</groupId>
   <artifactId>clojure.jdbc</artifactId>
-  <version>0.2.2</version>
+  <version>0.3.0</version>
 </dependency>
 ----
 
