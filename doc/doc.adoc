@@ -743,6 +743,8 @@ This adapter does not respects the standard dbspec format, it has its own format
 depends completely of used adapter. This is happens because HikariCP  works as some kind of
 wrapper and it forward almos all parameters to the wrapped datasource. And each datasource
 uses its owns parameter names.
+
+Also, HikariCP adapter targets to only JDK8 version.
 ====
 
 
