@@ -200,6 +200,6 @@
   [conn & body]
   (if (map? (first body))
     `(let [func# (fn [c#] (let [~conn c#] ~@(next body)))]
-       (apply call-in-transaction [~conn func# ~(first body)]))
+       (call-in-transaction ~conn func# ~(first body)))
     `(let [func# (fn [c#] (let [~conn c#] ~@body))]
-       (apply call-in-transaction [~conn func#]))))
+       (call-in-transaction ~conn func#))))
