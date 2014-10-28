@@ -187,7 +187,7 @@ one connection instance as parameter (no dynamic vars are used for it).
 
 NOTE: clojure.jdbc does not use any global/thread-local state, and always tries to ensure immutability.
 
-NOTE: unlike clojure.java.jdbc, with _clojure.jdbc_ you can't use a plain dbspec hash-map as a
+NOTE: unlike java.jdbc, with _clojure.jdbc_ you can't use a plain dbspec hash-map as a
 connection parameter and you should explicitly open a new connection before doing any operation
 with a database.
 
@@ -888,20 +888,20 @@ This is an incomplete list of reasons:
 - clojure.jdbc supports extension or substitution of transaction management if a default
   behavior is not sufficient for you.
 - clojure.jdbc has native support for connection pools.
-- clojure.jdbc has a simpler implementation than clojure.java.jdbc. It has no more
+- clojure.jdbc has a simpler implementation than java.jdbc. It has no more
   complexity than necessary for each available function in the public API. +
   As an example:
-  * clojure.java.jdbc has a lot boilerplate connection management around all functions
+  * java.jdbc has a lot boilerplate connection management around all functions
     that receive dbspec. It doesn't have well designed connection management. +
     Ex: functions like `create!` can receive plain a dbspec or a connection. If you are
-    curious, take a look at the `with-db-connection` implementation of clojure.java.jdbc
+    curious, take a look at the `with-db-connection` implementation of java.jdbc
     and compare it with `with-connection` of clojure.jdbc. You will get a get a good idea of the
-    hidden unnecessary complexity found in clojure.java.jdbc. +
-    clojure.java.jdbc has inconsistent connection management. In contrast, with clojure.jdbc,
+    hidden unnecessary complexity found in java.jdbc. +
+    java.jdbc has inconsistent connection management. In contrast, with clojure.jdbc,
     a connection should be created explicitly before using any other function that
     requires one connection.
 
-    * clojure.java.jdbc has repeated transaction handling on each CRUD method
+    * java.jdbc has repeated transaction handling on each CRUD method
     (insert!, drop!, etc...). With clojure.jdbc, if you want that some code to run in a
     transaction, you should wrap it in a transaction context explicitly, using the
     `with-transaction` macro (see the transactions section for more information).
@@ -939,8 +939,8 @@ clojure.jdbc:
 ----
 
 
-Why does clojure.jdbc not include a DSL for working with SQL as clojure.java.jdbc 0.3 does?
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Why does clojure.jdbc not include a DSL for working with SQL as java.jdbc 0.3 does?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 clojure.jdbc is a wrapper for the Java JDBC interface. It doesn't intend to provide helpers
 to avoid SQL usage. There are already plenty of DSLs for working with SQL.
@@ -954,8 +954,8 @@ This is an incomplete list of Clojure DSLs for SQL:
 - https://github.com/jkk/honeysql
 
 
-Is this a fork of clojure.java.jdbc?
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Is this a fork of java.jdbc?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 No. It is an alternative implementation.
 
@@ -984,5 +984,5 @@ limitations under the License.
 You can see the full license in the LICENSE file located in the root of the project
 repo.
 
-Additionaly, I want to give thanks to the `clojure.java.jdbc` developers for their good
+Additionaly, I want to give thanks to the `java.jdbc` developers for their good
 initial work. Some intial ideas for clojure.jdbc are taken from that project.
