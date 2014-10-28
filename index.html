@@ -480,8 +480,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <h1>clojure.jdbc documentation</h1>
 <div class="details">
 <span id="author" class="author">Andrey Antukh, &lt;niwi@niwi.be&gt;</span><br>
-<span id="revnumber">version 0.3.0,</span>
-<span id="revdate">2014-10-11</span>
+<span id="revdate">0.3.1</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
@@ -514,21 +513,27 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <ul class="sectlevel2">
 <li><a href="#cursor-queries">5.1. Server Side Cursors</a></li>
 <li><a href="#_low_level_query_interface">5.2. Low-level Query Interface</a></li>
-<li><a href="#connection-pool">5.3. Connection pool</a></li>
-<li><a href="#transaction-strategy">5.4. Transaction Strategy</a></li>
-<li><a href="#_extend_sql_types">5.5. Extend SQL Types</a></li>
+<li><a href="#transaction-strategy">5.3. Transaction Strategy</a></li>
+<li><a href="#_extend_sql_types">5.4. Extend SQL Types</a></li>
 </ul>
 </li>
-<li><a href="#_how_to_contribute">6. How to Contribute?</a></li>
-<li><a href="#_faq">7. FAQ</a>
+<li><a href="#connection-pool">6. Connection pool</a>
 <ul class="sectlevel2">
-<li><a href="#_why_another_jdbc_wrapper">7.1. Why another JDBC wrapper?</a></li>
-<li><a href="#_does_clojure_jdbc_have_better_performance_than_java_jdbc">7.2. Does clojure.jdbc have better performance than java.jdbc?</a></li>
-<li><a href="#_why_does_clojure_jdbc_not_include_a_dsl_for_working_with_sql_as_clojure_java_jdbc_0_3_does">7.3. Why does clojure.jdbc not include a DSL for working with SQL as clojure.java.jdbc 0.3 does?</a></li>
-<li><a href="#_is_this_a_fork_of_clojure_java_jdbc">7.4. Is this a fork of clojure.java.jdbc?</a></li>
+<li><a href="#_c3p0">6.1. c3p0</a></li>
+<li><a href="#_dbcp2">6.2. dbcp2</a></li>
+<li><a href="#_hikaricp">6.3. HikariCP</a></li>
 </ul>
 </li>
-<li><a href="#_license">8. License</a></li>
+<li><a href="#_how_to_contribute">7. How to Contribute?</a></li>
+<li><a href="#_faq">8. FAQ</a>
+<ul class="sectlevel2">
+<li><a href="#_why_another_jdbc_wrapper">8.1. Why another JDBC wrapper?</a></li>
+<li><a href="#_does_clojure_jdbc_have_better_performance_than_java_jdbc">8.2. Does clojure.jdbc have better performance than java.jdbc?</a></li>
+<li><a href="#_why_does_clojure_jdbc_not_include_a_dsl_for_working_with_sql_as_java_jdbc_0_3_does">8.3. Why does clojure.jdbc not include a DSL for working with SQL as java.jdbc 0.3 does?</a></li>
+<li><a href="#_is_this_a_fork_of_java_jdbc">8.4. Is this a fork of java.jdbc?</a></li>
+</ul>
+</li>
+<li><a href="#_license">9. License</a></li>
 </ul>
 </div>
 </div>
@@ -626,7 +631,7 @@ vector on your <strong><em>project.clj</em></strong> file:</p>
 <div class="listingblock">
 <div class="title"><em>on project.clj</em></div>
 <div class="content">
-<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">[</span><span class="tok-nv">clojure.jdbc</span> <span class="tok-s">&quot;0.3.0&quot;</span><span class="tok-p">]</span></code></pre>
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">[</span><span class="tok-nv">clojure.jdbc</span> <span class="tok-s">&quot;0.3.1&quot;</span><span class="tok-p">]</span></code></pre>
 </div>
 </div>
 </div>
@@ -637,7 +642,7 @@ vector on your <strong><em>project.clj</em></strong> file:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="groovy"><span class="tok-n">compile</span> <span class="tok-s2">&quot;clojure.jdbc:clojure.jdbc:0.3.0&quot;</span></code></pre>
+<pre class="pygments highlight"><code data-lang="groovy"><span class="tok-n">compile</span> <span class="tok-s2">&quot;clojure.jdbc:clojure.jdbc:0.3.1&quot;</span></code></pre>
 </div>
 </div>
 </div>
@@ -662,7 +667,7 @@ this is a XML block that you should put in a dependency section of a maven confi
 <pre class="pygments highlight"><code data-lang="xml"><span class="tok-nt">&lt;dependency&gt;</span>
   <span class="tok-nt">&lt;groupId&gt;</span>clojure.jdbc<span class="tok-nt">&lt;/groupId&gt;</span>
   <span class="tok-nt">&lt;artifactId&gt;</span>clojure.jdbc<span class="tok-nt">&lt;/artifactId&gt;</span>
-  <span class="tok-nt">&lt;version&gt;</span>0.3.0<span class="tok-nt">&lt;/version&gt;</span>
+  <span class="tok-nt">&lt;version&gt;</span>0.3.1<span class="tok-nt">&lt;/version&gt;</span>
 <span class="tok-nt">&lt;/dependency&gt;</span></code></pre>
 </div>
 </div>
@@ -774,7 +779,7 @@ clojure.jdbc does not use any global/thread-local state, and always tries to ens
 <div class="title">Note</div>
 </td>
 <td class="content">
-unlike clojure.java.jdbc, with <em>clojure.jdbc</em> you can&#8217;t use a plain dbspec hash-map as a
+unlike java.jdbc, with <em>clojure.jdbc</em> you can&#8217;t use a plain dbspec hash-map as a
 connection parameter and you should explicitly open a new connection before doing any operation
 with a database.
 </td>
@@ -1206,127 +1211,7 @@ which are used in executing a query.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="connection-pool">5.3. Connection pool</h3>
-<div class="paragraph">
-<p>To make good use of resourses is much recommendable use any style of connection pooling
-in your production code. This can avoid continuosly creating and destroying connections,
-that in the majority of time is a slow operation.</p>
-</div>
-<div class="paragraph">
-<p>Java ecosystem comes with various of it, and <em>clojure.jdbc</em> has extensios to few of
-them: c3p0 and Apache Commons DBCP.</p>
-</div>
-<div class="sect3">
-<h4 id="_install_2">5.3.1. Install</h4>
-<div class="paragraph">
-<p>Connection pool extensions lives as separate clojure packages and them should be installed
-individually. All them works like other clojure packages: you only need put the dependency
-on yout <code>project.clj</code> file.</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-c1">;; For c3p0</span>
-<span class="tok-p">[</span><span class="tok-nv">clojure.jdbc/clojure.jdbc-c3p0</span> <span class="tok-s">&quot;0.3.0&quot;</span><span class="tok-p">]</span>
-
-<span class="tok-c1">;; For dbcp2</span>
-<span class="tok-p">[</span><span class="tok-nv">clojure.jdbc/clojure.jdbc-dbcp</span> <span class="tok-s">&quot;0.3.0&quot;</span><span class="tok-p">]</span></code></pre>
-</div>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_basic_usage">5.3.2. Basic Usage</h4>
-<div class="paragraph">
-<p>In order to use a connection pool, you should convert your plain dbspec into a
-datasource-dbspec using the helper function provided in each extension.</p>
-</div>
-<div class="listingblock">
-<div class="title">Example using c3p0 connection pool</div>
-<div class="content">
-<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-c1">;; Import the desired implementation</span>
-<span class="tok-p">(</span><span class="tok-nf">require</span> <span class="tok-o">&#39;</span><span class="tok-p">[</span><span class="tok-nv">jdbc.pool.c3p0</span> <span class="tok-ss">:as</span> <span class="tok-nv">pool</span><span class="tok-p">])</span>
-
-<span class="tok-c1">;; Convert the standard dbspec to an other dbspec with `:datasource` key</span>
-<span class="tok-p">(</span><span class="tok-k">def </span><span class="tok-nv">dbspec</span> <span class="tok-p">(</span><span class="tok-nf">pool/make-datasource-spec</span> <span class="tok-p">{</span><span class="tok-ss">:classname</span> <span class="tok-s">&quot;org.postgresql.Driver&quot;</span>
-                                        <span class="tok-ss">:subprotocol</span> <span class="tok-s">&quot;postgresql&quot;</span>
-                                        <span class="tok-ss">:subname</span> <span class="tok-s">&quot;//localhost:5432/dbname&quot;</span><span class="tok-p">}))</span></code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p><code>dbspec</code> now contains a <code>:datasource</code> key with a <code>javax.sql.DataSource</code> instance
-instead of a plain dbspec with connection parameters. This dbspec should be used
-like a plain dbspec for opening new connections.</p>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_advanced_configuration">5.3.3. Advanced configuration</h4>
-<div class="paragraph">
-<p>The two connection pool implementations comes with "good" defaults that should
-work in majority standard environments, but obviously, it exposes set of options
-for customize it:</p>
-</div>
-<table class="tableblock frame-all grid-all spread">
-<colgroup>
-<col style="width: 50%;">
-<col style="width: 50%;">
-</colgroup>
-<thead>
-<tr>
-<th class="tableblock halign-left valign-top">Option</th>
-<th class="tableblock halign-left valign-top">Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:min-pool-size</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Minimum number of Connections a pool will maintain at any given time.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:max-pool-size</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Maximum number of Connections a pool will maintain at any given time.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:initial-pool-size</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Number of Connections a pool will try to acquire upon startup.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:max-wait-millis</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">The number of milliseconds a client calling getConnection() will wait for a Connection to be checked-in or acquired when the pool is exhausted.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:max-connection-lifetime</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">The maximum lifetime in seconds of a connection.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:test-connection-query</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">The SQL query that will be used to validate connections from this pool before returning them to the caller. If specified, this query MUST be an SQL SELECT statement that returns at least one row. If not specified, connections will be validation by calling the isValid() method.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:test-connection-on-borrow</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">The indication of whether objects will be validated before being borrowed from the pool.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:test-connection-on-return</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">The indication of whether objects will be validated before being returned to the pool.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:test-idle-connections-period</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">The number of seconds to sleep between runs of the idle object evictor thread.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:max-connection-idle-lifetime</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">The minimum amount of time an object may sit idle in the pool before it is eligable for eviction by the idle object evictor (if any).</p></td>
-</tr>
-</tbody>
-</table>
-<div class="paragraph">
-<p>Additionally to this options, some extensions offers other specific of each implementation, and you can view it
-on source code of each extension. Also you can view the original documentation of them and apply additional options
-after datasource dbspec is created.</p>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="transaction-strategy">5.4. Transaction Strategy</h3>
+<h3 id="transaction-strategy">5.3. Transaction Strategy</h3>
 <div class="paragraph">
 <p>Transaction strategies in <em>clojure.jdbc</em> are implemented using protocols having default implementations explained
 in the previous sections. This approach allows an easy way to extend, customize or completely change a transaction
@@ -1390,7 +1275,7 @@ strategy to connection and exposes it.
 </div>
 </div>
 <div class="sect2">
-<h3 id="_extend_sql_types">5.5. Extend SQL Types</h3>
+<h3 id="_extend_sql_types">5.4. Extend SQL Types</h3>
 <div class="paragraph">
 <p>Everything related to type handling/conversion is exposed in the <code>jdbc.types</code> namespace.</p>
 </div>
@@ -1438,7 +1323,451 @@ reverse conversions from SQL types to user-defined types.</p>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_how_to_contribute">6. How to Contribute?</h2>
+<h2 id="connection-pool">6. Connection pool</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>To make good use of resourses is much recommendable use any style of connection pooling
+in your production code. This can avoid continuosly creating and destroying connections,
+that in the majority of time is a slow operation.</p>
+</div>
+<div class="paragraph">
+<p>Java ecosystem comes with various of it, and <em>clojure.jdbc</em> has extensios to few of
+them:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>c3p0: <a href="http://www.mchange.com/projects/c3p0/" class="bare">http://www.mchange.com/projects/c3p0/</a></p>
+</li>
+<li>
+<p>Apache DBCP2: <a href="http://commons.apache.org/proper/commons-dbcp/" class="bare">http://commons.apache.org/proper/commons-dbcp/</a></p>
+</li>
+<li>
+<p>HikariCP: <a href="https://github.com/brettwooldridge/HikariCP" class="bare">https://github.com/brettwooldridge/HikariCP</a></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Each connection pool / datasource adapter lives in separated package for not installing
+unnecesary dependencies if it is not used.</p>
+</div>
+<div class="sect2">
+<h3 id="_c3p0">6.1. c3p0</h3>
+<div class="paragraph">
+<p>c3p0, a mature, highly concurrent JDBC connection pooling library for clojure.jdbc.</p>
+</div>
+<div class="sect3">
+<h4 id="_install_2">6.1.1. Install</h4>
+<div class="paragraph">
+<p>In case of <strong>c3p0</strong>, you should put this on your dependencies vector:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">[</span><span class="tok-nv">clojure.jdbc/clojure.jdbc-c3p0</span> <span class="tok-s">&quot;0.3.1&quot;</span><span class="tok-p">]</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_basic_usage">6.1.2. Basic Usage</h4>
+<div class="paragraph">
+<p>In order to use a connection pool, you should convert your plain dbspec into a
+datasource-dbspec using the helper function provided in each extension.</p>
+</div>
+<div class="listingblock">
+<div class="title">Example using c3p0 connection pool</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-c1">;; Import the desired implementation</span>
+<span class="tok-p">(</span><span class="tok-nf">require</span> <span class="tok-o">&#39;</span><span class="tok-p">[</span><span class="tok-nv">jdbc.pool.c3p0</span> <span class="tok-ss">:as</span> <span class="tok-nv">pool</span><span class="tok-p">])</span>
+
+<span class="tok-c1">;; Convert the standard dbspec to an other dbspec with `:datasource` key</span>
+<span class="tok-p">(</span><span class="tok-k">def </span><span class="tok-nv">dbspec</span> <span class="tok-p">(</span><span class="tok-nf">pool/make-datasource-spec</span> <span class="tok-p">{</span><span class="tok-ss">:subprotocol</span> <span class="tok-s">&quot;postgresql&quot;</span>
+                                        <span class="tok-ss">:subname</span> <span class="tok-s">&quot;//localhost:5432/dbname&quot;</span><span class="tok-p">}))</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Now, dbspec should be used like a plain dbspec for creating connections.</p>
+</div>
+<div class="sect4">
+<h5 id="_advanced_configuration">Advanced configuration</h5>
+<div class="paragraph">
+<p>c3p0 comes with "good" defaults that should work in majority standard environments,
+but obviously, it exposes set of options for customize it:</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Option</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:min-pool-size</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Minimum number of Connections a pool will maintain at any given time.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:max-pool-size</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Maximum number of Connections a pool will maintain at any given time.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:initial-pool-size</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Number of Connections a pool will try to acquire upon startup.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:max-wait</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The number of milliseconds a client calling getConnection() will wait for a Connection to be checked-in or acquired when the pool is exhausted.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:max-connection-lifetime</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The maximum lifetime in milliseconds of a connection.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:test-connection-query</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The SQL query that will be used to validate connections from this pool before returning them to the caller. If specified, this query MUST be an SQL SELECT statement that returns at least one row. If not specified, connections will be validation by calling the isValid() method.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:test-connection-on-borrow</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The indication of whether objects will be validated before being borrowed from the pool.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:test-connection-on-return</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The indication of whether objects will be validated before being returned to the pool.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:test-idle-connections-period</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The number of milliseconds to sleep between runs of the idle object evictor thread.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:max-connection-idle-lifetime</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The minimum amount of time (in milliseconds) an object may sit idle in the pool before it is eligable for eviction by the idle object evictor (if any).</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_dbcp2">6.2. dbcp2</h3>
+<div class="paragraph">
+<p>Apache commons DBCP (JDBC) connection pool implementation for clojure.jdbc</p>
+</div>
+<div class="sect3">
+<h4 id="_install_3">6.2.1. Install</h4>
+<div class="paragraph">
+<p>In case of Apache DBCP2, this is a dependency that you should put on your dependencies
+vector:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">[</span><span class="tok-nv">clojure.jdbc/clojure.jdbc-dbcp</span> <span class="tok-s">&quot;0.3.1&quot;</span><span class="tok-p">]</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_basic_usage_2">6.2.2. Basic Usage</h4>
+<div class="paragraph">
+<p>In order to use a connection pool, you should convert your plain dbspec into a
+datasource-dbspec using the helper function provided in each extension.</p>
+</div>
+<div class="listingblock">
+<div class="title">Example using DBCP connection pool</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-c1">;; Import the desired implementation</span>
+<span class="tok-p">(</span><span class="tok-nf">require</span> <span class="tok-o">&#39;</span><span class="tok-p">[</span><span class="tok-nv">jdbc.pool.dbcp</span> <span class="tok-ss">:as</span> <span class="tok-nv">pool</span><span class="tok-p">])</span>
+
+<span class="tok-c1">;; Convert the standard dbspec to an other dbspec with `:datasource` key</span>
+<span class="tok-p">(</span><span class="tok-k">def </span><span class="tok-nv">dbspec</span> <span class="tok-p">(</span><span class="tok-nf">pool/make-datasource-spec</span> <span class="tok-p">{</span><span class="tok-ss">:subprotocol</span> <span class="tok-s">&quot;postgresql&quot;</span>
+                                        <span class="tok-ss">:subname</span> <span class="tok-s">&quot;//localhost:5432/dbname&quot;</span><span class="tok-p">}))</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Now, dbspec should be used like a plain dbspec for creating connections.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_advanced_configuration_2">6.2.3. Advanced configuration</h4>
+<div class="paragraph">
+<p>DBCP comes with "good" defaults that should work in majority standard environments,
+but obviously, it exposes set of options for customize it:</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Option</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:min-pool-size</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Minimum number of Connections a pool will maintain at any given time.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:max-pool-size</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Maximum number of Connections a pool will maintain at any given time.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:initial-pool-size</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Number of Connections a pool will try to acquire upon startup.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:max-wait</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The number of milliseconds a client calling getConnection() will wait for a Connection to be checked-in or acquired when the pool is exhausted.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:max-connection-lifetime</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The maximum lifetime in milliseconds of a connection.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:test-connection-query</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The SQL query that will be used to validate connections from this pool before returning them to the caller. If specified, this query MUST be an SQL SELECT statement that returns at least one row. If not specified, connections will be validation by calling the isValid() method.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:test-connection-on-borrow</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The indication of whether objects will be validated before being borrowed from the pool.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:test-connection-on-return</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The indication of whether objects will be validated before being returned to the pool.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:test-idle-connections-period</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The number of milliseconds to sleep between runs of the idle object evictor thread.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:max-connection-idle-lifetime</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The minimum amount of time (in milliseconds) an object may sit idle in the pool before it is eligable for eviction by the idle object evictor (if any).</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_hikaricp">6.3. HikariCP</h3>
+<div class="paragraph">
+<p>Fast, simple, reliable. HikariCP is a "zero-overhead" production ready JDBC connection pool.</p>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Warning</div>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>This adapter does not respects the standard dbspec format, it has its own format and
+depends completely of used adapter. This is happens because HikariCP  works as some kind of
+wrapper and it forward almost all parameters to the wrapped datasource.</p>
+</div>
+<div class="paragraph">
+<p>Also, HikariCP adapter targets to only JDK8 version.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_install_4">6.3.1. Install</h4>
+<div class="paragraph">
+<p>In case of HikariCP, this is a dependency that you should put on your dependencies
+vector:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">[</span><span class="tok-nv">clojure.jdbc/clojure.jdbc-hikari</span> <span class="tok-s">&quot;0.3.0&quot;</span><span class="tok-p">]</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_basic_usage_3">6.3.2. Basic Usage</h4>
+<div class="paragraph">
+<p>In order to use a connection pool, you should convert your plain dbspec into a
+datasource-dbspec using the helper function provided in each extension.</p>
+</div>
+<div class="listingblock">
+<div class="title">Example using DBCP connection pool</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-c1">;; Import the desired implementation</span>
+<span class="tok-p">(</span><span class="tok-nf">require</span> <span class="tok-o">&#39;</span><span class="tok-p">[</span><span class="tok-nv">jdbc.pool.dbcp</span> <span class="tok-ss">:as</span> <span class="tok-nv">pool</span><span class="tok-p">])</span>
+
+<span class="tok-c1">;; Convert the standard dbspec to an other dbspec with `:datasource` key</span>
+<span class="tok-p">(</span><span class="tok-k">def </span><span class="tok-nv">dbspec</span> <span class="tok-p">(</span><span class="tok-nf">pool/make-datasource-spec</span> <span class="tok-p">{</span><span class="tok-ss">:database-name</span> <span class="tok-s">&quot;test&quot;</span>
+                                        <span class="tok-ss">:adapter</span> <span class="tok-ss">:postgresql</span><span class="tok-p">}))</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_advanced_configuration_3">6.3.3. Advanced configuration</h4>
+<div class="paragraph">
+<p>HikariCP comes with "good" defaults that should work in majority standard environments,
+but obviously, it exposes set of options for customize it:</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<caption class="title">Table 1. Specific generic options of HikariCP</caption>
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Option</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:auto-commit</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">This property controls the default auto-commit behavior of connections returned from the pool. It is a boolean value. (default <code>true</code>)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:read-only</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">This property controls whether Connections obtained from the pool are in read-only mode by default. (default `false)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:connection-timeout</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">This property controls the maximum number of milliseconds that a client will wait for a connection from the pool. If this time is exceeded without a connection becoming available, a SQLException will be thrown. 100ms is the minimum value. (default <code>10000</code>)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:idle-timeout</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">This property controls the maximum amount of time (in milliseconds) that a connection is allowed to sit idle in the pool. (default <code>60000</code>)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:max-lifetime</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">This property controls the maximum lifetime of a connection in the pool. A value of 0 indicates no maximum lifetime (infinite lifetime). (default <code>1800000</code>)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:minimum-idle</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">This property controls the minimum number of idle connections that HikariCP tries to maintain in the pool. (default <code>10</code>)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:maximum-pool-size</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">This property controls the maximum size that the pool is allowed to reach, including both idle and in-use connections. Basically this value will determine the maximum number of actual connections to the database backend. (default <code>10</code>)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:adapter</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">This property sets the database adapter. Please check <a href="#list-of-hikari-adapters">Adapters and corresponding datasource class names</a> for the full list of supported adapters and their datasource class names. (<strong>this parameter is mandatory</strong>)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:username</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">This property sets the default authentication username used when obtaining Connections from the underlying driver. (default <code>nil</code>)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:password</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">This property sets the default authentication password used when obtaining Connections from the underlying driver. (default <code>nil</code>)</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>HikariCP, unlike other datasource implementations, requires to setup explicitly that adapter should
+be used. This is a list of supported adapters:</p>
+</div>
+<table id="list-of-hikari-adapters" class="tableblock frame-all grid-all spread">
+<caption class="title">Table 2. List of adapters supported by HikariCP</caption>
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Adapter</th>
+<th class="tableblock halign-left valign-top">Datasource class name</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:derby</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>org.apache.derby.jdbc.ClientDataSource</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:firebird</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>org.firebirdsql.pool.FBSimpleDataSource</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:db2</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>com.ibm.db2.jcc.DB2SimpleDataSource</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:h2</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>org.h2.jdbcx.JdbcDataSource</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:hsqldb</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>org.hsqldb.jdbc.JDBCDataSource</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:mariadb</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>org.mariadb.jdbc.MySQLDataSource</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:mysql</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>com.mysql.jdbc.jdbc2.optional.MysqlDataSource</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:sqlserver-jtds</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>net.sourceforge.jtds.jdbcx.JtdsDataSource</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:sqlserver</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>com.microsoft.sqlserver.jdbc.SQLServerDataSource</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:oracle</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>oracle.jdbc.pool.OracleDataSource</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:pgjdbc-ng</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>com.impossibl.postgres.jdbc.PGDataSource</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:postgresql</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>org.postgresql.ds.PGSimpleDataSource</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:sybase</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>com.sybase.jdbcx.SybDataSource</code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_examples">6.3.4. Examples</h4>
+<div class="listingblock">
+<div class="title">Examples using HikariCP with h2 adapter.</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-k">def </span><span class="tok-nv">dbspec</span>
+  <span class="tok-p">(</span><span class="tok-nb">-&gt; </span><span class="tok-p">{</span><span class="tok-ss">:adapter</span> <span class="tok-ss">:h2</span>
+       <span class="tok-ss">:url</span> <span class="tok-s">&quot;jdbc:h2:/tmp/test&quot;</span><span class="tok-p">}</span>
+      <span class="tok-p">(</span><span class="tok-nf">pool/make-datasource-spec</span><span class="tok-p">)))</span></code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">Example using HikariCP with postgresql adapter.</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-c1">;; Convert the standard dbspec to an other dbspec with `:datasource` key</span>
+<span class="tok-p">(</span><span class="tok-k">def </span><span class="tok-nv">dbspec</span>
+  <span class="tok-p">(</span><span class="tok-nb">-&gt; </span><span class="tok-p">{</span><span class="tok-ss">:database-name</span> <span class="tok-s">&quot;test&quot;</span>
+       <span class="tok-ss">:username</span> <span class="tok-s">&quot;foo&quot;</span>
+       <span class="tok-ss">:password</span> <span class="tok-s">&quot;secret&quot;</span>
+       <span class="tok-ss">:server-name</span> <span class="tok-s">&quot;localhost&quot;</span>
+       <span class="tok-ss">:port-number</span> <span class="tok-mi">5432</span>
+       <span class="tok-ss">:adapter</span> <span class="tok-ss">:postgresql</span><span class="tok-p">}</span>
+      <span class="tok-p">(</span><span class="tok-nf">pool/make-datasource-spec</span><span class="tok-p">)))</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_how_to_contribute">7. How to Contribute?</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p><strong>clojure.jdbc</strong> unlike Clojure and other Clojure contrib libs, does not have many
@@ -1477,10 +1806,10 @@ situation:</p>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_faq">7. FAQ</h2>
+<h2 id="_faq">8. FAQ</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_why_another_jdbc_wrapper">7.1. Why another JDBC wrapper?</h3>
+<h3 id="_why_another_jdbc_wrapper">8.1. Why another JDBC wrapper?</h3>
 <div class="paragraph">
 <p>This is an incomplete list of reasons:</p>
 </div>
@@ -1506,24 +1835,24 @@ behavior is not sufficient for you.</p>
 <p>clojure.jdbc has native support for connection pools.</p>
 </li>
 <li>
-<p>clojure.jdbc has a simpler implementation than clojure.java.jdbc. It has no more
+<p>clojure.jdbc has a simpler implementation than java.jdbc. It has no more
 complexity than necessary for each available function in the public API.<br>
 As an example:</p>
 <div class="ulist">
 <ul>
 <li>
-<p>clojure.java.jdbc has a lot boilerplate connection management around all functions
+<p>java.jdbc has a lot boilerplate connection management around all functions
 that receive dbspec. It doesn&#8217;t have well designed connection management.<br>
 Ex: functions like <code>create!</code> can receive plain a dbspec or a connection. If you are
-curious, take a look at the <code>with-db-connection</code> implementation of clojure.java.jdbc
+curious, take a look at the <code>with-db-connection</code> implementation of java.jdbc
 and compare it with <code>with-connection</code> of clojure.jdbc. You will get a get a good idea of the
-hidden unnecessary complexity found in clojure.java.jdbc.<br>
-clojure.java.jdbc has inconsistent connection management. In contrast, with clojure.jdbc,
+hidden unnecessary complexity found in java.jdbc.<br>
+java.jdbc has inconsistent connection management. In contrast, with clojure.jdbc
 a connection should be created explicitly before using any other function that
 requires one connection.</p>
 </li>
 <li>
-<p>clojure.java.jdbc has repeated transaction handling on each CRUD method
+<p>java.jdbc has repeated transaction handling on each CRUD method
 (insert!, drop!, etc&#8230;&#8203;). With clojure.jdbc, if you want that some code to run in a
 transaction, you should wrap it in a transaction context explicitly, using the
 <code>with-transaction</code> macro (see the transactions section for more information).</p>
@@ -1539,7 +1868,7 @@ really exist).</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_does_clojure_jdbc_have_better_performance_than_java_jdbc">7.2. Does clojure.jdbc have better performance than java.jdbc?</h3>
+<h3 id="_does_clojure_jdbc_have_better_performance_than_java_jdbc">8.2. Does clojure.jdbc have better performance than java.jdbc?</h3>
 <div class="paragraph">
 <p>Mostly <strong>Yes</strong>, <em>clojure.jdbc</em>  by default has better performance than java.jdbc. You can
 run the micro benchmark code in your environment with: <code>lein with-profile bench run</code></p>
@@ -1564,12 +1893,12 @@ Simple query with transaction.
 java.jdbc:
 &quot;Elapsed time: 532.151667 msecs&quot;
 clojure.jdbc:
-&quot;Elapsed time: 475.982354 msecs&quot;</code></pre>
+&quot;Elapsed time: 602.482932 msecs&quot;</code></pre>
 </div>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_why_does_clojure_jdbc_not_include_a_dsl_for_working_with_sql_as_clojure_java_jdbc_0_3_does">7.3. Why does clojure.jdbc not include a DSL for working with SQL as clojure.java.jdbc 0.3 does?</h3>
+<h3 id="_why_does_clojure_jdbc_not_include_a_dsl_for_working_with_sql_as_java_jdbc_0_3_does">8.3. Why does clojure.jdbc not include a DSL for working with SQL as java.jdbc 0.3 does?</h3>
 <div class="paragraph">
 <p>clojure.jdbc is a wrapper for the Java JDBC interface. It doesn&#8217;t intend to provide helpers
 to avoid SQL usage. There are already plenty of DSLs for working with SQL.
@@ -1596,7 +1925,7 @@ clojure.jdbc will not reinvent the wheel.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_is_this_a_fork_of_clojure_java_jdbc">7.4. Is this a fork of clojure.java.jdbc?</h3>
+<h3 id="_is_this_a_fork_of_java_jdbc">8.4. Is this a fork of java.jdbc?</h3>
 <div class="paragraph">
 <p>No. It is an alternative implementation.</p>
 </div>
@@ -1604,7 +1933,7 @@ clojure.jdbc will not reinvent the wheel.</p>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_license">8. License</h2>
+<h2 id="_license">9. License</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>clojure.jdbc is writen from scratch and is licensed under Apache 2.0 license:</p>
@@ -1631,7 +1960,7 @@ limitations under the License.</pre>
 repo.</p>
 </div>
 <div class="paragraph">
-<p>Additionaly, I want to give thanks to the <code>clojure.java.jdbc</code> developers for their good
+<p>Additionaly, I want to give thanks to the <code>java.jdbc</code> developers for their good
 initial work. Some intial ideas for clojure.jdbc are taken from that project.</p>
 </div>
 </div>
@@ -1639,8 +1968,7 @@ initial work. Some intial ideas for clojure.jdbc are taken from that project.</p
 </div>
 <div id="footer">
 <div id="footer-text">
-Version 0.3.0<br>
-Last updated 2014-10-11 22:20:11 CEST
+Last updated 2014-10-28 19:26:08 CET
 </div>
 </div>
 </body>
