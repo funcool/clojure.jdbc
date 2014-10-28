@@ -16,6 +16,4 @@
                                     [postgresql "9.3-1101.jdbc41"]]}
              :test {:dependencies [[com.h2database/h2 "1.3.176"]
                                    [postgresql "9.3-1101.jdbc41"]
-                                   [cheshire "5.3.1"]]
-                    :jvm-opts ["-Dcom.mchange.v2.log.MLog=com.mchange.v2.log.FallbackMLog"
-                               "-Dcom.mchange.v2.log.FallbackMLog.DEFAULT_CUTOFF_LEVEL=OFF"]}})
+                                   [cheshire "5.3.1"]]}})
