@@ -6,8 +6,7 @@
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [potemkin "0.3.4" :exclusions [org.clojure/clojure]]]
   :plugins [[lein-marginalia "0.7.1"]
-            [codox "0.8.9"]
-            [lein-sub "0.3.0"]]
+            [codox "0.8.9"]]
   :codox {:output-dir "doc/api"
           :src-dir-uri "http://github.com/niwibe/clojure.jdbc/blob/master/"
           :src-linenum-anchor-prefix "L"}
