@@ -662,13 +662,13 @@ but obviously, it exposes set of options for customize it:
 | `:min-pool-size`                | Minimum number of Connections a pool will maintain at any given time.
 | `:max-pool-size`                | Maximum number of Connections a pool will maintain at any given time.
 | `:initial-pool-size`            | Number of Connections a pool will try to acquire upon startup.
-| `:max-wait-millis`              | The number of milliseconds a client calling getConnection() will wait for a Connection to be checked-in or acquired when the pool is exhausted.
-| `:max-connection-lifetime`      | The maximum lifetime in seconds of a connection.
+| `:max-wait`                     | The number of milliseconds a client calling getConnection() will wait for a Connection to be checked-in or acquired when the pool is exhausted.
+| `:max-connection-lifetime`      | The maximum lifetime in milliseconds of a connection.
 | `:test-connection-query`        | The SQL query that will be used to validate connections from this pool before returning them to the caller. If specified, this query MUST be an SQL SELECT statement that returns at least one row. If not specified, connections will be validation by calling the isValid() method.
 | `:test-connection-on-borrow`    | The indication of whether objects will be validated before being borrowed from the pool.
 | `:test-connection-on-return`    | The indication of whether objects will be validated before being returned to the pool.
-| `:test-idle-connections-period` | The number of seconds to sleep between runs of the idle object evictor thread.
-| `:max-connection-idle-lifetime` | The minimum amount of time an object may sit idle in the pool before it is eligable for eviction by the idle object evictor (if any).
+| `:test-idle-connections-period` | The number of milliseconds to sleep between runs of the idle object evictor thread.
+| `:max-connection-idle-lifetime` | The minimum amount of time (in milliseconds) an object may sit idle in the pool before it is eligable for eviction by the idle object evictor (if any).
 |============================================================================
 
 
@@ -722,18 +722,19 @@ but obviously, it exposes set of options for customize it:
 | `:min-pool-size`                | Minimum number of Connections a pool will maintain at any given time.
 | `:max-pool-size`                | Maximum number of Connections a pool will maintain at any given time.
 | `:initial-pool-size`            | Number of Connections a pool will try to acquire upon startup.
-| `:max-wait-millis`              | The number of milliseconds a client calling getConnection() will wait for a Connection to be checked-in or acquired when the pool is exhausted.
-| `:max-connection-lifetime`      | The maximum lifetime in seconds of a connection.
+| `:max-wait`                     | The number of milliseconds a client calling getConnection() will wait for a Connection to be checked-in or acquired when the pool is exhausted.
+| `:max-connection-lifetime`      | The maximum lifetime in milliseconds of a connection.
 | `:test-connection-query`        | The SQL query that will be used to validate connections from this pool before returning them to the caller. If specified, this query MUST be an SQL SELECT statement that returns at least one row. If not specified, connections will be validation by calling the isValid() method.
 | `:test-connection-on-borrow`    | The indication of whether objects will be validated before being borrowed from the pool.
 | `:test-connection-on-return`    | The indication of whether objects will be validated before being returned to the pool.
-| `:test-idle-connections-period` | The number of seconds to sleep between runs of the idle object evictor thread.
-| `:max-connection-idle-lifetime` | The minimum amount of time an object may sit idle in the pool before it is eligable for eviction by the idle object evictor (if any).
+| `:test-idle-connections-period` | The number of milliseconds to sleep between runs of the idle object evictor thread.
+| `:max-connection-idle-lifetime` | The minimum amount of time (in milliseconds) an object may sit idle in the pool before it is eligable for eviction by the idle object evictor (if any).
 |============================================================================
 
 
 HikariCP
 ~~~~~~~~
+
 Fast, simple, reliable. HikariCP is a "zero-overhead" production ready JDBC connection pool.
 
 
@@ -741,8 +742,7 @@ Fast, simple, reliable. HikariCP is a "zero-overhead" production ready JDBC conn
 ====
 This adapter does not respects the standard dbspec format, it has its own format and
 depends completely of used adapter. This is happens because HikariCP  works as some kind of
-wrapper and it forward almos all parameters to the wrapped datasource. And each datasource
-uses its owns parameter names.
+wrapper and it forward almost all parameters to the wrapped datasource.
 
 Also, HikariCP adapter targets to only JDK8 version.
 ====
@@ -800,8 +800,8 @@ but obviously, it exposes set of options for customize it:
 | `:password`           | This property sets the default authentication password used when obtaining Connections from the underlying driver. (default `nil`)
 |============================================================================
 
-HikariCP, unlike other datasource implementations, requires to setup explicitly that adapter should be used. This is a list of
-supported adapters:
+HikariCP, unlike other datasource implementations, requires to setup explicitly that adapter should
+be used. This is a list of supported adapters:
 
 [[list-of-hikari-adapters]]
 .List of adapters supported by HikariCP
