@@ -460,8 +460,8 @@ and exposes a lazy seq of records (instead of a fully evaluated vector) in a mac
 
 [NOTE]
 ====
-The `with-query` macro implicitly ensures that all code inside a created context is executed 
-in one transaction or subtransaction. This is mandatory because server-side cursors only work 
+The `with-query` macro implicitly ensures that all code inside a created context is executed
+in one transaction or subtransaction. This is mandatory because server-side cursors only work
 inside one transaction.
 ====
 
@@ -500,80 +500,6 @@ which are used in executing a query.
 
 WARNING: `make-query` is a low-level interface and you must be careful when using it.
 
-[[connection-pool]]
-Connection pool
-~~~~~~~~~~~~~~~
-
-To make good use of resourses is much recommendable use any style of connection pooling
-in your production code. This can avoid continuosly creating and destroying connections,
-that in the majority of time is a slow operation.
-
-Java ecosystem comes with various of it, and _clojure.jdbc_ has extensios to few of
-them: c3p0 and Apache Commons DBCP.
-
-Install
-^^^^^^^
-
-Connection pool extensions lives as separate clojure packages and them should be installed
-individually. All them works like other clojure packages: you only need put the dependency
-on yout `project.clj` file.
-
-[source, clojure]
-----
-;; For c3p0
-[clojure.jdbc/clojure.jdbc-c3p0 "0.3.0"]
-
-;; For dbcp2
-[clojure.jdbc/clojure.jdbc-dbcp "0.3.0"]
-----
-
-Basic Usage
-^^^^^^^^^^^
-
-In order to use a connection pool, you should convert your plain dbspec into a 
-datasource-dbspec using the helper function provided in each extension.
-
-.Example using c3p0 connection pool
-[source,clojure]
-----
-;; Import the desired implementation
-(require '[jdbc.pool.c3p0 :as pool])
-
-;; Convert the standard dbspec to an other dbspec with `:datasource` key
-(def dbspec (pool/make-datasource-spec {:classname "org.postgresql.Driver"
-                                        :subprotocol "postgresql"
-                                        :subname "//localhost:5432/dbname"}))
-----
-
-`dbspec` now contains a `:datasource` key with a `javax.sql.DataSource` instance
-instead of a plain dbspec with connection parameters. This dbspec should be used
-like a plain dbspec for opening new connections.
-
-Advanced configuration
-^^^^^^^^^^^^^^^^^^^^^^
-
-The two connection pool implementations comes with "good" defaults that should
-work in majority standard environments, but obviously, it exposes set of options
-for customize it:
-
-[options="header"]
-|============================================================================
-| Option                          | Description
-| `:min-pool-size`                | Minimum number of Connections a pool will maintain at any given time.
-| `:max-pool-size`                | Maximum number of Connections a pool will maintain at any given time.
-| `:initial-pool-size`            | Number of Connections a pool will try to acquire upon startup.
-| `:max-wait-millis`              | The number of milliseconds a client calling getConnection() will wait for a Connection to be checked-in or acquired when the pool is exhausted.
-| `:max-connection-lifetime`      | The maximum lifetime in seconds of a connection.
-| `:test-connection-query`        | The SQL query that will be used to validate connections from this pool before returning them to the caller. If specified, this query MUST be an SQL SELECT statement that returns at least one row. If not specified, connections will be validation by calling the isValid() method.
-| `:test-connection-on-borrow`    | The indication of whether objects will be validated before being borrowed from the pool.
-| `:test-connection-on-return`    | The indication of whether objects will be validated before being returned to the pool.
-| `:test-idle-connections-period` | The number of seconds to sleep between runs of the idle object evictor thread.
-| `:max-connection-idle-lifetime` | The minimum amount of time an object may sit idle in the pool before it is eligable for eviction by the idle object evictor (if any).
-|============================================================================
-
-Additionally to this options, some extensions offers other specific of each implementation, and you can view it
-on source code of each extension. Also you can view the original documentation of them and apply additional options
-after datasource dbspec is created.
 
 [[transaction-strategy]]
 Transaction Strategy
@@ -669,6 +595,261 @@ to an SQL array and assigned properly in a prepared statement:
 clojure.jdbc also exposes the `jdbc.types/ISQLResultSetReadColumn` protocol that encapsulates
 reverse conversions from SQL types to user-defined types.
 
+[[connection-pool]]
+Connection pool
+---------------
+To make good use of resourses is much recommendable use any style of connection pooling
+in your production code. This can avoid continuosly creating and destroying connections,
+that in the majority of time is a slow operation.
+
+Java ecosystem comes with various of it, and _clojure.jdbc_ has extensios to few of
+them:
+
+- c3p0: http://www.mchange.com/projects/c3p0/
+- Apache DBCP2: http://commons.apache.org/proper/commons-dbcp/
+- HikariCP: https://github.com/brettwooldridge/HikariCP
+
+Each connection pool / datasource adapter lives in separated package for not installing
+unnecesary dependencies if it is not used.
+
+
+c3p0
+~~~~
+
+c3p0, a mature, highly concurrent JDBC connection pooling library for clojure.jdbc.
+
+
+Install
+^^^^^^^
+
+In case of *c3p0*, you should put this on your dependencies vector:
+
+[source, clojure]
+----
+;; For c3p0
+[clojure.jdbc/clojure.jdbc-c3p0 "0.3.0"]
+----
+
+
+Basic Usage
+^^^^^^^^^^^
+
+In order to use a connection pool, you should convert your plain dbspec into a
+datasource-dbspec using the helper function provided in each extension.
+
+.Example using c3p0 connection pool
+[source,clojure]
+----
+;; Import the desired implementation
+(require '[jdbc.pool.c3p0 :as pool])
+
+;; Convert the standard dbspec to an other dbspec with `:datasource` key
+(def dbspec (pool/make-datasource-spec {:subprotocol "postgresql"
+                                        :subname "//localhost:5432/dbname"}))
+----
+
+Now, dbspec should be used like a plain dbspec for creating connections.
+
+
+Advanced configuration
+++++++++++++++++++++++
+
+c3p0 comes with "good" defaults that should work in majority standard environments,
+but obviously, it exposes set of options for customize it:
+
+[options="header"]
+|============================================================================
+| Option                          | Description
+| `:min-pool-size`                | Minimum number of Connections a pool will maintain at any given time.
+| `:max-pool-size`                | Maximum number of Connections a pool will maintain at any given time.
+| `:initial-pool-size`            | Number of Connections a pool will try to acquire upon startup.
+| `:max-wait-millis`              | The number of milliseconds a client calling getConnection() will wait for a Connection to be checked-in or acquired when the pool is exhausted.
+| `:max-connection-lifetime`      | The maximum lifetime in seconds of a connection.
+| `:test-connection-query`        | The SQL query that will be used to validate connections from this pool before returning them to the caller. If specified, this query MUST be an SQL SELECT statement that returns at least one row. If not specified, connections will be validation by calling the isValid() method.
+| `:test-connection-on-borrow`    | The indication of whether objects will be validated before being borrowed from the pool.
+| `:test-connection-on-return`    | The indication of whether objects will be validated before being returned to the pool.
+| `:test-idle-connections-period` | The number of seconds to sleep between runs of the idle object evictor thread.
+| `:max-connection-idle-lifetime` | The minimum amount of time an object may sit idle in the pool before it is eligable for eviction by the idle object evictor (if any).
+|============================================================================
+
+
+dbcp2
+~~~~~
+
+Apache commons DBCP (JDBC) connection pool implementation for clojure.jdbc
+
+
+Install
+^^^^^^^
+
+In case of Apache DBCP2, this is a dependency that you should put on your dependencies
+vector:
+
+[source, clojure]
+----
+;; For dbcp2
+[clojure.jdbc/clojure.jdbc-dbcp "0.3.0"]
+----
+
+
+Basic Usage
+^^^^^^^^^^^
+
+In order to use a connection pool, you should convert your plain dbspec into a
+datasource-dbspec using the helper function provided in each extension.
+
+.Example using DBCP connection pool
+[source,clojure]
+----
+;; Import the desired implementation
+(require '[jdbc.pool.dbcp :as pool])
+
+;; Convert the standard dbspec to an other dbspec with `:datasource` key
+(def dbspec (pool/make-datasource-spec {:subprotocol "postgresql"
+                                        :subname "//localhost:5432/dbname"}))
+----
+
+Now, dbspec should be used like a plain dbspec for creating connections.
+
+
+Advanced configuration
+^^^^^^^^^^^^^^^^^^^^^^
+
+DBCP comes with "good" defaults that should work in majority standard environments,
+but obviously, it exposes set of options for customize it:
+
+[options="header"]
+|============================================================================
+| Option                          | Description
+| `:min-pool-size`                | Minimum number of Connections a pool will maintain at any given time.
+| `:max-pool-size`                | Maximum number of Connections a pool will maintain at any given time.
+| `:initial-pool-size`            | Number of Connections a pool will try to acquire upon startup.
+| `:max-wait-millis`              | The number of milliseconds a client calling getConnection() will wait for a Connection to be checked-in or acquired when the pool is exhausted.
+| `:max-connection-lifetime`      | The maximum lifetime in seconds of a connection.
+| `:test-connection-query`        | The SQL query that will be used to validate connections from this pool before returning them to the caller. If specified, this query MUST be an SQL SELECT statement that returns at least one row. If not specified, connections will be validation by calling the isValid() method.
+| `:test-connection-on-borrow`    | The indication of whether objects will be validated before being borrowed from the pool.
+| `:test-connection-on-return`    | The indication of whether objects will be validated before being returned to the pool.
+| `:test-idle-connections-period` | The number of seconds to sleep between runs of the idle object evictor thread.
+| `:max-connection-idle-lifetime` | The minimum amount of time an object may sit idle in the pool before it is eligable for eviction by the idle object evictor (if any).
+|============================================================================
+
+
+HikariCP
+~~~~~~~~
+Fast, simple, reliable. HikariCP is a "zero-overhead" production ready JDBC connection pool.
+
+
+[WARNING]
+====
+This adapter does not respects the standard dbspec format, it has its own format and
+depends completely of used adapter. This is happens because HikariCP  works as some kind of
+wrapper and it forward almos all parameters to the wrapped datasource. And each datasource
+uses its owns parameter names.
+====
+
+
+Install
+^^^^^^^
+
+In case of HikariCP, this is a dependency that you should put on your dependencies
+vector:
+
+[source, clojure]
+----
+;; For dbcp2
+[clojure.jdbc/clojure.jdbc-hikari "0.3.0"]
+----
+
+
+Basic Usage
+^^^^^^^^^^^
+
+In order to use a connection pool, you should convert your plain dbspec into a
+datasource-dbspec using the helper function provided in each extension.
+
+.Example using DBCP connection pool
+[source,clojure]
+----
+;; Import the desired implementation
+(require '[jdbc.pool.dbcp :as pool])
+
+;; Convert the standard dbspec to an other dbspec with `:datasource` key
+(def dbspec (pool/make-datasource-spec {:database-name "test"
+                                        :adapter :postgresql}))
+----
+
+
+Advanced configuration
+^^^^^^^^^^^^^^^^^^^^^^
+
+HikariCP comes with "good" defaults that should work in majority standard environments,
+but obviously, it exposes set of options for customize it:
+
+.Specific generic options of HikariCP
+[options="header"]
+|============================================================================
+| Option                | Description
+| `:auto-commit`        | This property controls the default auto-commit behavior of connections returned from the pool. It is a boolean value. (default `true`)
+| `:read-only`          | This property controls whether Connections obtained from the pool are in read-only mode by default. (default `false)
+| `:connection-timeout` | This property controls the maximum number of milliseconds that a client will wait for a connection from the pool. If this time is exceeded without a connection becoming available, a SQLException will be thrown. 100ms is the minimum value. (default `10000`)
+| `:idle-timeout`       | This property controls the maximum amount of time (in milliseconds) that a connection is allowed to sit idle in the pool. (default `60000`)
+| `:max-lifetime`       | This property controls the maximum lifetime of a connection in the pool. A value of 0 indicates no maximum lifetime (infinite lifetime). (default `1800000`)
+| `:minimum-idle`       | This property controls the minimum number of idle connections that HikariCP tries to maintain in the pool. (default `10`)
+| `:maximum-pool-size`  | This property controls the maximum size that the pool is allowed to reach, including both idle and in-use connections. Basically this value will determine the maximum number of actual connections to the database backend. (default `10`)
+| `:adapter`            | This property sets the database adapter. Please check <<list-of-hikari-adapters,Adapters and corresponding datasource class names>> for the full list of supported adapters and their datasource class names. (*this parameter is mandatory*)
+| `:username`           | This property sets the default authentication username used when obtaining Connections from the underlying driver. (default `nil`)
+| `:password`           | This property sets the default authentication password used when obtaining Connections from the underlying driver. (default `nil`)
+|============================================================================
+
+HikariCP, unlike other datasource implementations, requires to setup explicitly that adapter should be used. This is a list of
+supported adapters:
+
+[[list-of-hikari-adapters]]
+.List of adapters supported by HikariCP
+[options="header"]
+|============================================================================
+| Adapter           | Datasource class name
+| `:derby`          | `org.apache.derby.jdbc.ClientDataSource`
+| `:firebird`       | `org.firebirdsql.pool.FBSimpleDataSource`
+| `:db2`            | `com.ibm.db2.jcc.DB2SimpleDataSource`
+| `:h2`             | `org.h2.jdbcx.JdbcDataSource`
+| `:hsqldb`         | `org.hsqldb.jdbc.JDBCDataSource`
+| `:mariadb`        | `org.mariadb.jdbc.MySQLDataSource`
+| `:mysql`          | `com.mysql.jdbc.jdbc2.optional.MysqlDataSource`
+| `:sqlserver-jtds` | `net.sourceforge.jtds.jdbcx.JtdsDataSource`
+| `:sqlserver`      | `com.microsoft.sqlserver.jdbc.SQLServerDataSource`
+| `:oracle`         | `oracle.jdbc.pool.OracleDataSource`
+| `:pgjdbc-ng`      | `com.impossibl.postgres.jdbc.PGDataSource`
+| `:postgresql`     | `org.postgresql.ds.PGSimpleDataSource`
+| `:sybase`         | `com.sybase.jdbcx.SybDataSource`
+|============================================================================
+
+
+Examples
+^^^^^^^^
+
+.Examples using HikariCP with h2 adapter.
+[source, clojure]
+----
+(def dbspec
+  (-> {:adapter :h2
+       :url "jdbc:h2:/tmp/test"}
+      (pool/make-datasource-spec)))
+----
+
+.Example using HikariCP with postgresql adapter.
+[source, clojure]
+----
+;; Convert the standard dbspec to an other dbspec with `:datasource` key
+(def dbspec
+  (-> {:database-name "test"
+       :username "foo"
+       :password "secret"
+       :server-name "localhost"
+       :port-number 5432
+       :adapter :postgresql}
+      (pool/make-datasource-spec)))
+----
 
 How to Contribute?
 ------------------
