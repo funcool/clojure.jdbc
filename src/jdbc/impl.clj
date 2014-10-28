@@ -37,7 +37,7 @@
    (let [^java.sql.Connection
          rconn  (:connection conn)
          sqlvec (if (string? sqlvec) [sqlvec] sqlvec)
-         sql    (first sqlvec)
+         ^String sql (first sqlvec)
          params (rest sqlvec)
 
          ^java.sql.PreparedStatement
@@ -45,7 +45,8 @@
                  returning
                  (if (= :all returning)
                    (.prepareStatement rconn sql java.sql.Statement/RETURN_GENERATED_KEYS)
-                   (.prepareStatement rconn sql (into-array String (mapv name returning))))
+                   (.prepareStatement rconn sql
+                                      #^"[Ljava.lang.String;" (into-array String (mapv name returning))))
 
                  holdability
                  (.prepareStatement rconn sql
