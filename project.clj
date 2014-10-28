@@ -13,14 +13,10 @@
           :src-linenum-anchor-prefix "L"}
   :profiles {:bench {:source-paths ["bench/"]
                      :main jdbc.bench
-                     :dependencies [[org.clojure/java.jdbc "0.3.3"]
+                     :dependencies [[org.clojure/java.jdbc "0.3.5"]
                                     [postgresql "9.3-1101.jdbc41"]]}
              :test {:dependencies [[com.h2database/h2 "1.3.176"]
                                    [postgresql "9.3-1101.jdbc41"]
-                                   [com.mchange/c3p0 "0.9.5-pre8"]
-                                   [org.apache.commons/commons-dbcp2 "2.0.1"]
-                                   [clojure.jdbc/clojure.jdbc-dbcp "0.3.0"]
-                                   [clojure.jdbc/clojure.jdbc-c3p0 "0.3.0"]
                                    [cheshire "5.3.1"]]
                     :jvm-opts ["-Dcom.mchange.v2.log.MLog=com.mchange.v2.log.FallbackMLog"
                                "-Dcom.mchange.v2.log.FallbackMLog.DEFAULT_CUTOFF_LEVEL=OFF"]}})

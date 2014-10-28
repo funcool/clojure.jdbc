@@ -5,8 +5,6 @@
             [jdbc.types :refer :all]
             [jdbc.impl :refer :all]
             [jdbc.proto :refer :all]
-            [jdbc.pool.c3p0 :as pool-c3p0]
-            [jdbc.pool.dbcp :as ac-dbcp]
             [cheshire.core :as json]
             [clojure.test :refer :all]))
 
@@ -239,26 +237,6 @@
               (is (= (count rr) 2))
               (is (= (get rr 0) "foo"))
               (is (= (get rr 1) "bar")))))))))
-
-(deftest db-pool
-  (testing "C3P0 connection pool testing."
-    (let [spec (pool-c3p0/make-datasource-spec h2-dbspec1)]
-      (is (instance? javax.sql.DataSource (:datasource spec)))
-      (with-open [conn (make-connection spec)]
-        (is (instance? jdbc.types.Connection conn))
-        (is (instance? java.sql.Connection (:connection conn)))
-
-        (let [result (query conn ["SELECT 1 + 1 as foo;"])]
-          (is (= [{:foo 2}] result))))))
-
-  (testing "Apache commons DBCP connection pool testing."
-    (let [spec (ac-dbcp/make-datasource-spec h2-dbspec1)]
-      (is (instance? javax.sql.DataSource (:datasource spec)))
-      (with-open [conn (make-connection spec)]
-        (is (instance? jdbc.types.Connection conn))
-        (is (instance? java.sql.Connection (:connection conn)))
-        (let [result (query conn ["SELECT 1 + 1 as foo;"])]
-          (is (= [{:foo 2}] result)))))))
 
 (defrecord BasicTransactionStrategy []
   ITransactionStrategy
