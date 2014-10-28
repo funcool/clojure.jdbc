@@ -626,8 +626,7 @@ In case of *c3p0*, you should put this on your dependencies vector:
 
 [source, clojure]
 ----
-;; For c3p0
-[clojure.jdbc/clojure.jdbc-c3p0 "0.3.0"]
+[clojure.jdbc/clojure.jdbc-c3p0 "0.3.1"]
 ----
 
 
@@ -687,8 +686,7 @@ vector:
 
 [source, clojure]
 ----
-;; For dbcp2
-[clojure.jdbc/clojure.jdbc-dbcp "0.3.0"]
+[clojure.jdbc/clojure.jdbc-dbcp "0.3.1"]
 ----
 
 
@@ -756,7 +754,6 @@ vector:
 
 [source, clojure]
 ----
-;; For dbcp2
 [clojure.jdbc/clojure.jdbc-hikari "0.3.0"]
 ----
 
