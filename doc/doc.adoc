@@ -556,10 +556,10 @@ strategy to connection and exposes it.
 Extend SQL Types
 ~~~~~~~~~~~~~~~~
 
-Everything related to type handling/conversion is exposed in the `jdbc.types` namespace.
+Everything related to type handling/conversion is exposed in the `jdbc.proto` namespace.
 
 If you want to extend some type/class to use it as JDBC parameter without explicit conversion
-to an SQL-compatible type, you should extend your type with the `jdbc.types/ISQLType` protocol.
+to an SQL-compatible type, you should extend your type with the `jdbc.proto/ISQLType` protocol.
 
 Here is an example which extends Java's String[] (string array) in order to pass it as
 a query parameter that corresponds to PostgreSQL text array in the database:
@@ -592,7 +592,7 @@ to an SQL array and assigned properly in a prepared statement:
 ----
 
 
-clojure.jdbc also exposes the `jdbc.types/ISQLResultSetReadColumn` protocol that encapsulates
+clojure.jdbc also exposes the `jdbc.proto/ISQLResultSetReadColumn` protocol that encapsulates
 reverse conversions from SQL types to user-defined types.
 
 [[connection-pool]]
