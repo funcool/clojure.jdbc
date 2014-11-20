@@ -756,7 +756,7 @@ vector:
 
 [source, clojure]
 ----
-[clojure.jdbc/clojure.jdbc-hikari "0.3.1"]
+[clojure.jdbc/clojure.jdbc-hikari "0.3.2"]
 ----
 
 
