@@ -480,7 +480,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <h1>clojure.jdbc documentation</h1>
 <div class="details">
 <span id="author" class="author">Andrey Antukh, &lt;niwi@niwi.be&gt;</span><br>
-<span id="revdate">0.3.1</span>
+<span id="revdate">0.3.2</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
@@ -631,7 +631,7 @@ vector on your <strong><em>project.clj</em></strong> file:</p>
 <div class="listingblock">
 <div class="title"><em>on project.clj</em></div>
 <div class="content">
-<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">[</span><span class="tok-nv">clojure.jdbc</span> <span class="tok-s">&quot;0.3.1&quot;</span><span class="tok-p">]</span></code></pre>
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">[</span><span class="tok-nv">clojure.jdbc</span> <span class="tok-s">&quot;0.3.2&quot;</span><span class="tok-p">]</span></code></pre>
 </div>
 </div>
 </div>
@@ -642,7 +642,7 @@ vector on your <strong><em>project.clj</em></strong> file:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="groovy"><span class="tok-n">compile</span> <span class="tok-s2">&quot;clojure.jdbc:clojure.jdbc:0.3.1&quot;</span></code></pre>
+<pre class="pygments highlight"><code data-lang="groovy"><span class="tok-n">compile</span> <span class="tok-s2">&quot;clojure.jdbc:clojure.jdbc:0.3.2&quot;</span></code></pre>
 </div>
 </div>
 </div>
@@ -667,7 +667,7 @@ this is a XML block that you should put in a dependency section of a maven confi
 <pre class="pygments highlight"><code data-lang="xml"><span class="tok-nt">&lt;dependency&gt;</span>
   <span class="tok-nt">&lt;groupId&gt;</span>clojure.jdbc<span class="tok-nt">&lt;/groupId&gt;</span>
   <span class="tok-nt">&lt;artifactId&gt;</span>clojure.jdbc<span class="tok-nt">&lt;/artifactId&gt;</span>
-  <span class="tok-nt">&lt;version&gt;</span>0.3.1<span class="tok-nt">&lt;/version&gt;</span>
+  <span class="tok-nt">&lt;version&gt;</span>0.3.2<span class="tok-nt">&lt;/version&gt;</span>
 <span class="tok-nt">&lt;/dependency&gt;</span></code></pre>
 </div>
 </div>
@@ -1277,11 +1277,11 @@ strategy to connection and exposes it.
 <div class="sect2">
 <h3 id="_extend_sql_types">5.4. Extend SQL Types</h3>
 <div class="paragraph">
-<p>Everything related to type handling/conversion is exposed in the <code>jdbc.types</code> namespace.</p>
+<p>Everything related to type handling/conversion is exposed in the <code>jdbc.proto</code> namespace.</p>
 </div>
 <div class="paragraph">
 <p>If you want to extend some type/class to use it as JDBC parameter without explicit conversion
-to an SQL-compatible type, you should extend your type with the <code>jdbc.types/ISQLType</code> protocol.</p>
+to an SQL-compatible type, you should extend your type with the <code>jdbc.proto/ISQLType</code> protocol.</p>
 </div>
 <div class="paragraph">
 <p>Here is an example which extends Java&#8217;s String[] (string array) in order to pass it as
@@ -1316,7 +1316,7 @@ to an SQL array and assigned properly in a prepared statement:</p>
 </div>
 </div>
 <div class="paragraph">
-<p>clojure.jdbc also exposes the <code>jdbc.types/ISQLResultSetReadColumn</code> protocol that encapsulates
+<p>clojure.jdbc also exposes the <code>jdbc.proto/ISQLResultSetReadColumn</code> protocol that encapsulates
 reverse conversions from SQL types to user-defined types.</p>
 </div>
 </div>
@@ -1968,7 +1968,7 @@ initial work. Some intial ideas for clojure.jdbc are taken from that project.</p
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2014-11-20 22:48:03 CET
+Last updated 2014-11-21 10:32:14 CET
 </div>
 </div>
 </body>
