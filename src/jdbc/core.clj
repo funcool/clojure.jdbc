@@ -15,10 +15,11 @@
 (ns jdbc.core
   "Alternative implementation of jdbc wrapper for clojure."
   (:require [clojure.string :as str]
-            [jdbc.types :refer [->Connection ->ResultSet is-connection?]]
+            [jdbc.types :as types]
             [jdbc.impl :as impl]
             [jdbc.proto :as proto]
-            [jdbc.util :refer [with-exception raise-exc]]
+            [jdbc.util.exceptions :refer [with-exception raise-exc]]
+            [jdbc.util.resultset :refer [result-set->lazyseq result-set->vector]]
             [jdbc.transaction :as tx]
             [jdbc.constants :as constants])
   (:import java.sql.PreparedStatement
@@ -45,7 +46,7 @@
         (.addBatch stmt))
       (seq (.executeBatch stmt)))))
 
-(defn ^jdbc.types.Connection connection
+(defn connection
   "Creates a connection to a database. As parameter accepts:
 
   - dbspec map containing connection parameters
@@ -101,10 +102,7 @@
      ;; Set the schema if it found on the options map
      (some->> (:schema options)
               (.setSchema conn))
-
-     (assoc
-      (->Connection conn metadata)
-      :isolation-level (:isolation-level options)))))
+     (types/->connection conn))))
 
 ;; Backward compatibility alias.
 (def make-connection connection)
@@ -129,7 +127,7 @@
         (execute! conn 'CREATE TABLE foo (id serial, name text);')))
   "
   [conn & commands]
-  (let [^java.sql.Connection connection (:connection conn)]
+  (let [^java.sql.Connection connection (proto/get-connection conn)]
     (with-open [stmt (.createStatement connection)]
       (dorun (map (fn [command]
                     (.addBatch stmt command)) commands))
@@ -142,7 +140,7 @@
   can be complete objects."
   [conn ^PreparedStatement stmt]
   (let [rs (.getGeneratedKeys stmt)]
-    (result-set->vector conn rs)))
+    (result-set->vector conn rs {})))
 
 (defn is-prepared-statement?
   "Check if specified object is prepared statement."
@@ -209,48 +207,6 @@
            (get-returning-records conn stmt)
            res))))))
 
-(defn make-query
-  "Given a connection and paramatrized sql, execute a query and
-  return a instance of ResultSet that works as stantard clojure
-  map but implements a closable interface.
-
-  A returned `jdbc.types.ResultSet` works as a wrapper
-  around a prepared statement and java.sql.ResultSet mostly used for
-  server side cursors properly resource management.
-
-  This functions indents be a low level access for making queries
-  and it delegate to a user the resource management.
-
-  NOTE: It strongly recommended not use this function directly and use a `with-query`
-  macro for make query thar returns large amount of data or simple `query` function
-  that returns directly a evaluated result.
-
-  Example using parametrized sql:
-
-    (with-open [result (make-query conn [\"SELECT foo FROM bar WHERE id = ?\" 1])]
-      (doseq [row (:data result)]
-        (println row)))
-
-  Example using plain sql (without parameters):
-
-    (with-open [result (make-query conn \"SELECT version();\")]
-      (doseq [row (:data result)]
-        (println row)))
-
-  Example using extern prepared statement:
-
-    (let [stmt (make-prepared-statement conn [\"SELECT foo FROM bar WHERE id = ?\" 1])]
-      (with-open [result (make-query conn stmt)]
-        (doseq [row (:data result)]
-          (println row))))"
-  ([conn sql-with-params] (make-query conn sql-with-params {}))
-  ([conn sql-with-params {:keys [fetch-size lazy] :or {lazy false} :as options}]
-   (let [^java.sql.PreparedStatement stmt (proto/prepared-statement sql-with-params conn options)]
-     (let [^ResultSet rs (.executeQuery stmt)]
-       (if (not lazy)
-         (->ResultSet stmt rs false (result-set->vector conn rs options))
-         (->ResultSet stmt rs true (result-set->lazyseq conn rs options)))))))
-
 (defn query
   "Perform a simple sql query and return a evaluated result as vector.
 
@@ -284,26 +240,27 @@
   same arguments as the `query` function."
   (comp first query))
 
-(defmacro with-query
-  "Idiomatic dsl macro for `query` function that handles well queries
-  what returns a huge amount of results.
+(defn lazy-query
+  "Perform a lazy query using server side cursors if them are available.
 
-  `sqlvec` can be in same formats as in `query` function.
+  This function returns a cursor instance. That cursor allows create
+  arbitrary number of lazyseqs.
 
-  NOTE: This method ensueres a query in one implicit transaction.
+  Some databases requires that this funcion and lazyseq iteration
+  should be used in a transactoion context.
 
-  Example:
+  The returned cursor should be used with `with-open` clojure function
+  for proper resource handling."
+  ([conn sqlvec] (lazy-query conn sqlvec {}))
+  ([conn sqlvec options]
+   (let [^java.sql.PreparedStatement stmt (proto/prepared-statement sqlvec conn options)]
+     (types/->cursor conn stmt))))
 
-    (with-query conn results
-      [\"SELECT name FROM people WHERE id = ?\" 1]
-      (doseq [row results]
-        (println row)))
-  "
-  [conn bindname sqlvec & body]
-  `(tx/with-transaction ~conn
-     (with-open [rs# (make-query ~conn ~sqlvec {:lazy true})]
-       (let [~bindname (:data rs#)]
-         ~@body))))
+(defn cursor->lazyseq
+  "Execute a cursor query and return a lazyseq with results."
+  ([cursor] (cursor->lazyseq cursor {}))
+  ([cursor options]
+   (proto/get-lazyseq cursor options)))
 
 (defmacro with-connection
   "Given database connection paramers (dbspec), creates

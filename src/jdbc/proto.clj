@@ -22,6 +22,18 @@
   "Responsible of building a raw jdbc connection."
   (connection [_] "Create jdbc connection."))
 
+(defprotocol IConnection
+  "Represents a connection like object that wraps
+  a raw jdbc connection with some other data."
+  (get-connection [_] "Get inner jdbc connection."))
+
+(defprotocol ICursor
+  (get-lazyseq [_ opts] "Get lazy seq from cursor."))
+
+(defprotocol IDatabaseMetadata
+  "Allows uniform database metadata extraction."
+  (get-database-metadata [_] "Get metadata instance."))
+
 (defprotocol IPreparedStatementConstructor
   "Responsible of building prepared statements."
   (prepared-statement [_ connection options] "Create a prepared statement."))

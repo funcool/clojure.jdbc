@@ -14,8 +14,8 @@
 
 (ns jdbc.meta
   "Connection metadata access methods."
-  (:require [jdbc.types :as types])
-  (:import jdbc.types.Connection))
+  (:require [jdbc.types :as types]
+            [jdbc.proto :as proto]))
 
 (defn vendor-name
   "Get connection vendor name."
@@ -26,20 +26,20 @@
 (defn catalog-name
   "Given a connection, get a catalog name."
   [^Connection c]
-  (let [^java.sql.Connection conn (:connection c)]
+  (let [^java.sql.Connection conn (proto/get-connection c)]
     (.getCatalog conn)))
 
 (defn schema-name
   "Given a connection, get a schema name."
   [^Connection c]
-  (let [^java.sql.Connection conn (:connection c)]
+  (let [^java.sql.Connection conn (proto/get-connection c)]
     (.getSchema conn)))
 
 (defn is-readonly?
   "Returns true if a current connection is
   in read-only model."
   [^Connection c]
-  (let [^java.sql.Connection conn (:connection c)]
+  (let [^java.sql.Connection conn (proto/get-connection c)]
     (.isReadOnly conn)))
 
 (defn is-valid?
@@ -48,19 +48,19 @@
   ([^Connection c]
      (is-valid? c 0))
   ([^Connection c ^long timeout]
-     (let [^java.sql.Connection conn (:connection c)]
+     (let [^java.sql.Connection conn (proto/get-connection c)]
        (.isValid conn timeout))))
 
 (defn network-timeout
   "Given a connection, get network timeout."
   [^Connection c]
-  (let [^java.sql.Connection conn (:connection c)]
+  (let [^java.sql.Connection conn (proto/get-connection c)]
     (.getNetworkTimeout conn)))
 
 (defn isolation-level
   "Given a connection, get a current isolation level."
   [^Connection c]
-  (let [^java.sql.Connection conn (:connection c)
+  (let [^java.sql.Connection conn (proto/get-connection c)
         ilvalue (.getTransactionIsolation conn)]
     (condp = ilvalue
       java.sql.Connection/TRANSACTION_READ_UNCOMMITTED :read-commited
@@ -72,40 +72,40 @@
   "Given a connection, return a database major
   version number."
   [^Connection c]
-  (let [^java.sql.DatabaseMetaData meta (:metadata c)]
+  (let [^java.sql.DatabaseMetaData meta (proto/get-database-metadata c)]
     (.getDatabaseMajorVersion meta)))
 
 (defn db-minor-version
   "Given a connection, return a database minor
   version number."
   [^Connection c]
-  (let [^java.sql.DatabaseMetaData meta (:metadata c)]
+  (let [^java.sql.DatabaseMetaData meta (proto/get-database-metadata c)]
     (.getDatabaseMinorVersion meta)))
 
 (defn db-product-name
   "Given a connection, return a database product
   name from it metadata."
   [^Connection c]
-  (let [^java.sql.DatabaseMetaData meta (:metadata c)]
+  (let [^java.sql.DatabaseMetaData meta (proto/get-database-metadata c)]
     (.getDatabaseProductName meta)))
 
 (defn db-product-version
   "Given a connection, return a database product
   version from it metadata."
   [^Connection c]
-  (let [^java.sql.DatabaseMetaData meta (:metadata c)]
+  (let [^java.sql.DatabaseMetaData meta (proto/get-database-metadata c)]
     (.getDatabaseProductVersion meta)))
 
 (defn driver-name
   "Given a connection, return a current driver name
   used for this connection."
   [^Connection c]
-  (let [^java.sql.DatabaseMetaData meta (:metadata c)]
+  (let [^java.sql.DatabaseMetaData meta (proto/get-database-metadata c)]
     (.getDriverName meta)))
 
 (defn driver-version
   "Given a connection, return a current driver version
   used for this connection."
   [^Connection c]
-  (let [^java.sql.DatabaseMetaData meta (:metadata c)]
+  (let [^java.sql.DatabaseMetaData meta (proto/get-database-metadata c)]
     (.getDriverVersion meta)))

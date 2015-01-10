@@ -19,8 +19,7 @@
             [jdbc.proto :as proto]
             [jdbc.types :as types]
             [jdbc.constants :as constants])
-  (:import jdbc.types.Connection
-           java.net.URI
+  (:import java.net.URI
            java.util.Properties
            java.sql.DriverManager
            java.sql.PreparedStatement))
@@ -138,13 +137,12 @@
   "Given connection and query, return a prepared statement."
   ([conn sqlvec] (make-prepared-statement conn sqlvec {}))
   ([conn sqlvec {:keys [result-type result-concurency fetch-size
-                        max-rows holdability lazy returning]
+                        max-rows holdability returning]
                  :or {result-type :forward-only
                       result-concurency :read-only
                       fetch-size 100}
                  :as options}]
-   (let [^java.sql.Connection
-         rconn  (:connection conn)
+   (let [rconn  (proto/get-connection conn)
          sqlvec (if (string? sqlvec) [sqlvec] sqlvec)
          ^String sql (first sqlvec)
          params (rest sqlvec)
@@ -167,15 +165,6 @@
                                     (result-type constants/resultset-options)
                                     (result-concurency constants/resultset-options)))]
 
-     ;; Lazy resultset works with database cursors ant them can not be used
-     ;; without one transaction
-     (when (and (not (:in-transaction conn)) lazy)
-       (throw (IllegalArgumentException. "Can not use cursor resultset without transaction")))
-
-     ;; Overwrite default jdbc driver fetch-size when user
-     ;; wants lazy result set.
-     (when lazy (.setFetchSize stmt fetch-size))
-
      ;; Set fetch-size and max-rows if provided by user
      (when fetch-size (.setFetchSize stmt fetch-size))
      (when max-rows (.setMaxRows stmt max-rows))
@@ -191,7 +180,7 @@
 
 (extend-protocol proto/ISQLType
   Object
-  (as-sql-type [this ^Connection conn] this)
+  (as-sql-type [this conn] this)
   (set-stmt-parameter! [this conn ^java.sql.PreparedStatement stmt ^Long index]
     (.setObject stmt index (proto/as-sql-type this conn)))
 

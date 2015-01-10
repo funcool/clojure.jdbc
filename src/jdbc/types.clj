@@ -12,27 +12,48 @@
 ;; See the License for the specific language governing permissions and
 ;; limitations under the License.
 
-(ns jdbc.types)
+(ns jdbc.types
+  (:require [jdbc.proto :as proto]
+            [jdbc.util.resultset :refer [result-set->lazyseq]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Types (Wrappers)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defrecord Connection [^java.sql.Connection connection
-                       ^java.sql.DatabaseMetaData metadata]
-  java.io.Closeable
-  (close [this]
-    (.close connection)))
+(defn ->connection
+  [^java.sql.Connection connection]
+  (reify
+    proto/IConnection
+    (get-connection [_] connection)
 
-(defrecord ResultSet [^java.sql.PreparedStatement stmt
-                      ^java.sql.ResultSet rs
-                      lazy data]
-  java.io.Closeable
-  (close [this]
-    (.close rs)
-    (.close stmt)))
+    proto/IDatabaseMetadata
+    (get-database-metadata [_]
+      (.getMetaData connection))
+
+    java.io.Closeable
+    (close [_]
+      (.close connection))))
+
+(extend-protocol proto/IConnection
+  java.sql.Connection
+  (get-connection [this] this))
+
+(defn ->cursor
+  [conn ^java.sql.PreparedStatement stmt]
+  (reify
+    proto/IConnection
+    (get-connection [_] (proto/get-connection conn))
+
+    proto/ICursor
+    (get-lazyseq [_ opts]
+      (let [^java.sql.ResultSet rs (.executeQuery stmt)]
+        (result-set->lazyseq conn rs opts)))
+
+    java.io.Closeable
+    (close [_]
+      (.close stmt))))
 
 (defn is-connection?
   "Test if a value is a connection instance."
-  [^Connection c]
-  (instance? Connection c))
+  [c]
+  (satisfies? proto/IConnection c))

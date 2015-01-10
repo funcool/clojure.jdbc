@@ -14,7 +14,8 @@
 
 (ns jdbc.transaction
   "Transactions support for clojure.jdbc"
-  (:require [jdbc.constants :as constants]))
+  (:require [jdbc.constants :as constants]
+            [jdbc.proto :as proto]))
 
 (defprotocol ITransactionStrategy
   (begin! [_ conn opts] "Starts a transaction and return a connection instance.")
@@ -26,61 +27,48 @@
   *default-tx-strategy*
   (reify ITransactionStrategy
     (begin! [_ conn opts]
-      (let [^java.sql.Connection rconn (:connection conn)
-            conn           (assoc conn :rollback (atom false))
-            old-isolation  (.getTransactionIsolation rconn)
-            old-readonly   (.isReadOnly rconn)]
-        (if (:in-transaction conn)
-          ;; If connection is already in a transaction, isolation
-          ;; level and read only flag can not to be changed.
-          (do
-            (when (:isolation-level opts)
-              (throw (RuntimeException. "Can not set isolation level in transaction")))
-            (when (:read-only opts)
-              (throw (RuntimeException. "Can not change read only in transaction")))
-            (assoc conn :savepoint (.setSavepoint rconn)))
+      (let [rconn (proto/get-connection conn)
+            metadata (-> (meta conn)
+                         (assoc :rollback (atom false)
+                                :prev-isolation (.getTransactionIsolation rconn)
+                                :prev-readonly (.isReadOnly rconn)))]
+        (if (:transaction metadata)
+          (let [sp (.setSavepoint rconn)]
+            (with-meta conn
+              (assoc metadata :savepoint sp :transaction true)))
 
-          (let [old-autocommit (.getAutoCommit rconn)]
+          (let [prev-autocommit (.getAutoCommit rconn)]
             (.setAutoCommit rconn false)
             (when-let [isolation (:isolation-level opts)]
               (.setTransactionIsolation rconn (get constants/isolation-levels isolation)))
             (when-let [read-only (:read-only opts)]
               (.setReadOnly rconn read-only))
-            (assoc conn
-                   :old-autocommit old-autocommit
-                   :old-isolation old-isolation
-                   :old-readonly old-readonly
-                   :in-transaction true
-                   :isolation-level (or (:isolation-level opts)
-                                        (:isolation-level conn)))))))
-    (rollback! [_ conn opts]
-      (let [^java.sql.Connection rconn (:connection conn)
-            savepoint      (:savepoint conn)
-            old-readonly   (:old-readonly conn)
-            old-isolation  (:old-isolation conn)
-            old-autocommit (:old-autocommit conn)]
+            (with-meta conn
+              (assoc metadata :prev-autocommit prev-autocommit :transaction true))))))
 
-        (if savepoint
+    (rollback! [_ conn opts]
+      (let [rconn (proto/get-connection conn)
+            metadata (meta conn)]
+        (if-let [savepoint (:savepoint metadata)]
           (.rollback rconn savepoint)
           (do
             (.rollback rconn)
-            (.setAutoCommit rconn old-autocommit)
-            (.setTransactionIsolation rconn old-isolation)
-            (.setReadOnly rconn old-readonly)))))
+            (.setAutoCommit rconn (:prev-autocommit metadata))
+            (.setTransactionIsolation rconn (:prev-isolation metadata))
+            (.setReadOnly rconn (:prev-readonly metadata))))))
 
     (commit! [_ conn opts]
-      (let [^java.sql.Connection rconn (:connection conn)
-            savepoint      (:savepoint conn)
-            old-readonly   (:old-readonly conn)
-            old-isolation  (:old-isolation conn)
-            old-autocommit (:old-autocommit conn)]
-        (if savepoint
+      (let [rconn (proto/get-connection conn)
+            metadata  (meta conn)]
+        (if-let [savepoint (:savepoint metadata)]
           (.releaseSavepoint rconn savepoint)
           (do
             (.commit rconn)
-            (.setAutoCommit rconn old-autocommit)
-            (.setTransactionIsolation rconn old-isolation)
-            (.setReadOnly rconn old-readonly)))))))
+
+            (.setAutoCommit rconn (:prev-autocommit metadata))
+            (.setTransactionIsolation rconn (:prev-isolation metadata))
+            (.setReadOnly rconn (:prev-readonly metadata))))))))
+
 
 (defn wrap-transaction-strategy
   "Simple helper function that associate a strategy
@@ -93,7 +81,8 @@
     (use-your-new-conn conn))
   "
   [conn strategy]
-  (assoc conn :transaction-strategy strategy))
+  (let [metadata (meta conn)]
+    (with-meta conn (assoc metadata :transaction-strategy strategy))))
 
 (defn set-rollback!
   "Mark a current connection for rollback.
@@ -111,16 +100,18 @@
     (set-rollback! conn))
   "
   [conn]
-  (when-let [rollback-flag (:rollback conn)]
-    (swap! rollback-flag (fn [_] true))))
+  (let [metadata (meta conn)]
+    (when-let [rollback-flag (:rollback metadata)]
+      (reset! rollback-flag true))))
 
 (defn unset-rollback!
   "Revert flag setted by `set-rollback!` function.
   This function should be used inside of a transaction
   block, otherwise this function does nothing."
   [conn]
-  (when-let [rollback-flag (:rollback conn)]
-    (swap! rollback-flag (fn [_] false))))
+  (let [metadata (meta conn)]
+    (when-let [rollback-flag (:rollback metadata)]
+      (reset! rollback-flag false))))
 
 (defn is-rollback-set?
   "Check if a current connection in one transaction
@@ -129,9 +120,10 @@
   This should be used in one transaction, in other case this
   function always return false."
   [conn]
-  (if-let [rollback-flag (:rollback conn)]
-    (deref rollback-flag)
-    false))
+  (let [metadata (meta conn)]
+    (if-let [rollback-flag (:rollback metadata)]
+      (deref rollback-flag)
+      false)))
 
 (defn call-in-transaction
   "Wrap function in one transaction.
@@ -157,15 +149,18 @@
   - `:read-only` - set current transaction to read only
   "
   [conn func & [{:keys [savepoints strategy] :or {savepoints true} :as opts}]]
-  (let [tx-strategy (or strategy
-                        (:transaction-strategy conn)
+  (let [metadata (meta conn)
+        tx-strategy (or strategy
+                        (:transaction-strategy metadata)
                         *default-tx-strategy*)]
-    (when (and (:in-transaction conn) (not savepoints))
+    (when (and (:transaction metadata) (not savepoints))
       (throw (RuntimeException. "Savepoints explicitly disabled.")))
-    (let [conn (begin! tx-strategy conn opts)]
+
+    (let [conn (begin! tx-strategy conn opts)
+          metadata (meta conn)]
       (try
         (let [returnvalue (func conn)]
-          (if @(:rollback conn)
+          (if @(:rollback metadata)
             (rollback! tx-strategy conn opts)
             (commit! tx-strategy conn opts))
           returnvalue)
