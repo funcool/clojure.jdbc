@@ -12,6 +12,8 @@ Date: unreleased
 - The function responsible of creating a connection, is renamed: `make-connection` -> `connection` (conserving an alias for backward compatibility)
 - Deprecated dbspecs with datasource as key. Now datasource instances can be passed directly to `connection` function.
 - The `connection` function now accepts a optional second parameter for cases where dbspec is not a clojure hash-map.
+- Deprecated own connection pool extensions. Because they are less flexible that creating own datasource instance.
+- The documentation is updated with examples of how to create datasource instances.
 
 
 Version 0.3.2
