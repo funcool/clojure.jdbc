@@ -610,6 +610,8 @@ an little example on how it can be done:
           (.setIdleConnectionTestPeriod 600)))
 ----
 
+You can found all configuration parameters here: http://www.mchange.com/projects/c3p0/#configuration
+
 
 Now, the new created datasource should be used like a plain dbspec for creating connections:
 
@@ -661,6 +663,8 @@ an little example on how it can be done:
           (.setNumTestsPerEvictionRun 4)
           (.setMinEvictableIdleTimeMillis 1800000))) ;; 1/2 hours
 ----
+
+You can found all configuration parameters here: http://commons.apache.org/proper/commons-dbcp/configuration.html
 
 Now, the new created datasource should be used like a plain dbspec for creating connections:
 
