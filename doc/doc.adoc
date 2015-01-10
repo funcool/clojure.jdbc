@@ -142,7 +142,7 @@ Creating a connection
 With clojure.jdbc every function that interacts with a database explicitly requires
 one connection instance as parameter (no dynamic vars are used for it).
 
-.Example using `connection` function
+.Create one connection using `connection` function:
 [source,clojure]
 ----
 (require '[jdbc.core :as jdbc])
@@ -152,18 +152,15 @@ one connection instance as parameter (no dynamic vars are used for it).
   (.close conn))
 ----
 
-The `connection` function exposes a low-level interface for creating a connection,
-and delegates connection resource management to the user. A connection is not automatically
-closed and so use of the `with-open` macro is strongly recommended for clear resource management.
+As you can see in previous example, you should explicltly close connection for proper
+resource management. You can use the `with-open` clojure macro for make code looks
+more clean and idiomatic.
 
-.Better way.
 [source,clojure]
 ----
 (with-open [conn (jdbc/connection dbspec)]
   (do-something-with conn))
 ----
-
-NOTE: clojure.jdbc does not use any global/thread-local state, and always tries to ensure immutability.
 
 
 Execute Database Commands
