@@ -59,7 +59,7 @@ vector on your *_project.clj_* file:
 ._on project.clj_
 [source,clojure]
 ----
-[clojure.jdbc "0.3.2"]
+[clojure.jdbc "0.4.0-SNAPSHOT"]
 ----
 
 Gradle
@@ -69,7 +69,7 @@ If you are using gradle, this is a dependency line for gradle dsl:
 
 [source,groovy]
 ----
-compile "clojure.jdbc:clojure.jdbc:0.3.2"
+compile "clojure.jdbc:clojure.jdbc:0.4.0-SNAPSHOT"
 ----
 
 
@@ -160,16 +160,6 @@ closed and so use of the `with-open` macro is strongly recommended for clear res
 [source,clojure]
 ----
 (with-open [conn (jdbc/connection dbspec)]
-  (do-something-with conn))
-----
-
-However, the `with-connection` macro intends to be a high-level abstraction and
-works like the `with-open` clojure macro. This is an equivalent piece of code using
-`with-connection` macro:
-
-[source,clojure]
-----
-(jdbc/with-connection [conn dbspec]
   (do-something-with conn))
 ----
 
@@ -407,51 +397,21 @@ this behavior.
 If you have an extremely large resultset and you want retrieve it and process each item, this is
 exactly what you need.
 
-For this purpose, _clojure.jdbc_ exposes the `with-query` macro that uses server-side cursors internally
-and exposes a lazy seq of records (instead of a fully evaluated vector) in a macro-created context:
+For this purpose, _clojure.jdbc_ exposes the `lazy-query` function, that returns a some kind of 
+cursor instance. At the moment of creating cursor, no query is executed.
+
+The cursor can be used converting it into clojure lazyseq using `cursor->lazyseq` function:
 
 [source,clojure]
 ----
-(let [sql ["SELECT id, name FROM people;"]]
-  (jdbc/with-query conn sql results
-    (doseq [row results]
-      (println row))))
+(with-transaction conn
+  (with-open [cursor (jdbc/lazy-query conn ["SELECT id, name FROM people;"])]
+    (doseq [row (jdbc/cursor->lazyseq cursor)]
+      (println row)))
 ----
 
-[NOTE]
-====
-The `with-query` macro implicitly ensures that all code inside a created context is executed
-in one transaction or subtransaction. This is mandatory because server-side cursors only work
-inside one transaction.
-====
-
-
-Low-level Query Interface
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-All functions that execute queries, use the `make-query` function behind the scenes. It is a low-level
-interface for access to query functionality.
-
-This function has distinct behavior in comparison with its high-level siblings. It returns a
-`jdbc.types.resultset.ResultSet` instance that works as a Clojure persistent map and contains
-these keys:
-
-- the `:stmt` key contains a statement instance used to make the query.
-- the `:rs` key contains a raw `java.sql.ResultSet` instance.
-- the `:data` key contains the results as lazy-seq or vector depending on parameters.
-
-
-.Example using `make-query` function
-[source,clojure]
-----
-(let [sql    ["SELECT id, name FROM people WHERE age > ?", 2]
-      result (jdbc/make-query conn sql)]
-  (doseq [row (:data result)]
-    (println row))
-  (.close result))
-----
-
-WARNING: `make-query` is a low-level interface and you must be careful when using it.
+In some databases, it requires that cursor should be evaluated in a context of one
+transaction.
 
 
 [[transaction-strategy]]
@@ -522,14 +482,16 @@ a query parameter that corresponds to PostgreSQL text array in the database:
 
 [source,clojure]
 ----
+(require '[jdbc.proto :as proto])
+
 (extend-protocol ISQLType
   ;; Obtain a class for string array
   (class (into-array String []))
 
   (set-stmt-parameter! [this conn stmt index]
-    (let [raw-conn        (:connection conn)
-          prepared-value  (as-sql-type this conn)
-          array           (.createArrayOf raw-conn "text" prepared-value)]
+    (let [rconn (proto/get-connection conn)
+          value (proto/as-sql-type this conn)
+          array (.createArrayOf raw-conn "text" value)]
       (.setArray stmt index array)))
 
   (as-sql-type [this conn] this))
