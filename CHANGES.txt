@@ -6,14 +6,38 @@ Version 0.4.0
 
 Date: unreleased
 
-- Set more consistent name to protocol and protocol method that responsible for create preapare statements: `ISQLStatement/normalize` -> `IPreparedStatementConstructor/prepared-statement`
+This release is focused to simplify the code and use more clojure native constructions
+like `with-open` instead of own defined macros.
+
+Relevant changes:
+
+- Connection is not longer defined as defrecord. It breaks apps that relies on hash-map
+  interface of the connection. Now the connection is more extensible and it is defined
+  in terms of protocols.
+- `with-connection` macro is marked as deprecated, now the recommended way to handle
+  connection resources is using clojure builtin `with-open` macro.
+- The `make-query` function is replaced by `lazy-query`. It is not simple rename.
+  `lazy-query` function returns some kind of cursor object. That cursor allows create an
+  arbitrary number of lazyseqs (with new `cursor->lazyseq function) executing a query
+  using server side cursors if them are available.
+- Removed `with-query` macro (because it depends on now also removed `make-query` function)
+  and the behavior is replaced by `lazy-query`.
+
+Other changes:
+
+- Set more consistent name to protocol and protocol method that responsible for create preapare
+  statements: `ISQLStatement/normalize` -> `IPreparedStatementConstructor/prepared-statement`
 - Make connection constructor extensible and implemented as `IConnectionConstructor` protocol.
+- The function responsible of creating a connection, is renamed: `make-connection` -> `connection`
+  (conserving an alias for backward compatibility).
 - Remove the `:connection-uri` option because is almost same thing that uri.
-- The function responsible of creating a connection, is renamed: `make-connection` -> `connection` (conserving an alias for backward compatibility)
-- Deprecated dbspecs with datasource as key. Now datasource instances can be passed directly to `connection` function.
-- The `connection` function now accepts a optional second parameter for cases where dbspec is not a clojure hash-map.
-- Deprecated own connection pool extensions. Because they are less flexible that creating own datasource instance.
-- The documentation is updated with examples of how to create datasource instances.
+- Deprecated dbspecs with datasource as key. Now datasource instances can be passed directly to
+  `connection` function without wrapping it in a hash-map.
+- The `connection` function now accepts a optional second parameter in case when dbspec is not
+  in clojure hash-map format.
+- Deprecated own connection pool extensions. Because they are less flexible that creating own
+  datasource instance. The documentation is updated with examples of how to create datasource
+  instances for all previously supported connection pool implementations.
 
 
 Version 0.3.2
