@@ -1,5 +1,5 @@
 (ns jdbc.bench
-  (:require [jdbc :as j1]
+  (:require [jdbc.core :as j1]
             [jdbc.transaction :as tx1]
             [clojure.java.jdbc :as j2])
   (:gen-class))
@@ -21,7 +21,7 @@
         (time (f))))
 
     ;; clojure.jdbc
-    (j1/with-connection dbspec conn
+    (with-open [conn (j1/connection dbspec)]
       (let [f (fn []
                 (dotimes [i 500]
                   (j1/query conn sql)))]
@@ -42,7 +42,7 @@
     ;; clojure.jdbc
     (let [f (fn []
               (dotimes [i 500]
-                (j1/with-connection dbspec conn
+                (with-open [conn (j1/connection dbspec)]
                   (j1/query conn sql))))]
       (println "clojure.jdbc:")
       (time (f)))))
@@ -61,7 +61,7 @@
         (time (f))))
 
     ;; clojure.jdbc
-    (j1/with-connection dbspec conn
+    (with-open [conn (j1/connection dbspec)]
       (let [f (fn []
                 (dotimes [i 500]
                   (tx1/with-transaction conn
