@@ -4,7 +4,7 @@
             [jdbc.transaction :refer :all]
             [jdbc.types :refer :all]
             [jdbc.impl :refer :all]
-            [jdbc.proto :refer :all]
+            [jdbc.proto :as proto]
             [cheshire.core :as json]
             [clojure.test :refer :all]))
 
@@ -147,7 +147,7 @@
 
   (testing "Pass prepared statement."
     (with-connection h2-dbspec3 conn
-      (let [stmt    (make-prepared-statement conn ["SELECT 1 + 1 as foo;"])
+      (let [stmt    (prepared-statement conn ["SELECT 1 + 1 as foo;"])
             result  (query conn stmt {:as-rows? true})]
         (is (= [2] (first result))))))
 
@@ -186,10 +186,11 @@
       (let [res (execute-prepared! conn "INSERT INTO foo (name,age) VALUES (?, ?);"
                                    ["foo", 1]  ["bar", 2])]
         (is (= res (seq [1 1]))))))
+
   (testing "Executing self defined prepared statement"
     (with-connection [conn h2-dbspec3]
       (execute! conn "CREATE TABLE foo (name varchar(255), age integer);")
-      (let [stmt (make-prepared-statement conn "INSERT INTO foo (name,age) VALUES (?, ?);")
+      (let [stmt (prepared-statement conn "INSERT INTO foo (name,age) VALUES (?, ?);")
             res1  (execute-prepared! conn stmt ["foo", 1] ["bar", 2])
             res2  (execute-prepared! conn stmt ["fooo", 1] ["barr", 2])]
         (with-query conn results ["SELECT count(age) as total FROM foo;"]
@@ -210,12 +211,12 @@
           (is (instance? (Class/forName "[B") (:data res)))
           (is (= (get (:data res) 2) 2)))))))
 
-(extend-protocol ISQLType
+(extend-protocol proto/ISQLType
   (class (into-array String []))
 
   (set-stmt-parameter! [this conn stmt index]
     (let [raw-conn        (:connection conn)
-          prepared-value  (as-sql-type this conn)
+          prepared-value  (proto/as-sql-type this conn)
           array           (.createArrayOf raw-conn "text" prepared-value)]
       (.setArray stmt index array)))
 
@@ -418,16 +419,16 @@
 
 ;; PostgreSQL json support
 
-(extend-protocol ISQLType
+(extend-protocol proto/ISQLType
   clojure.lang.IPersistentMap
   (set-stmt-parameter! [self conn stmt index]
-    (.setObject stmt index (as-sql-type self conn)))
+    (.setObject stmt index (proto/as-sql-type self conn)))
   (as-sql-type [self conn]
     (doto (PGobject.)
       (.setType "json")
       (.setValue (json/generate-string self)))))
 
-(extend-protocol ISQLResultSetReadColumn
+(extend-protocol proto/ISQLResultSetReadColumn
   PGobject
   (from-sql-type [pgobj conn metadata i]
     (let [type  (.getType pgobj)

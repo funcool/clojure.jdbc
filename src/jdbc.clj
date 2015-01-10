@@ -22,6 +22,7 @@
  [jdbc.core
   result-set->lazyseq
   result-set->vector
+  prepared-statement
   execute-statement!
   is-prepared-statement?
   execute-prepared!

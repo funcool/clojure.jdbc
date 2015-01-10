@@ -189,6 +189,12 @@
   [obj]
   (instance? PreparedStatement obj))
 
+(defn prepared-statement
+  "Given a string or parametrized sql in sqlvec format
+  return an instance of prepared statement."
+  ([conn sqlvec] (prepared-statement conn sqlvec {}))
+  ([conn sqlvec options] (proto/prepared-statement sqlvec conn options)))
+
 (defn execute-prepared!
   "Given a active connection and sql (or prepared statement),
   executes a query in a database. This differs from `execute!` function
