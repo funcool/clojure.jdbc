@@ -1,6 +1,19 @@
 Changelog
 ---------
 
+Version 0.4.0
+~~~~~~~~~~~~~
+
+Date: unreleased
+
+- Set more consistent name to protocol and protocol method that responsible for create preapare statements: `ISQLStatement/normalize` -> `IPreparedStatementConstructor/prepared-statement`
+- Make connection constructor extensible and implemented as `IConnectionConstructor` protocol.
+- Remove the `:connection-uri` option because is almost same thing that uri.
+- The function responsible of creating a connection, is renamed: `make-connection` -> `connection` (conserving an alias for backward compatibility)
+- Deprecated dbspecs with datasource as key. Now datasource instances can be passed directly to `connection` function.
+- The `connection` function now accepts a optional second parameter for cases where dbspec is not a clojure hash-map.
+
+
 Version 0.3.2
 ~~~~~~~~~~~~~
 
