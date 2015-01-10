@@ -72,31 +72,6 @@ If you are using gradle, this is a dependency line for gradle dsl:
 compile "clojure.jdbc:clojure.jdbc:0.3.2"
 ----
 
-Maven
-~~~~~
-
-And for old school people, who are using a ugly XML files to configure everything,
-this is a XML block that you should put in a dependency section of a maven config file:
-
-.Repository entry.
-[source,xml]
-----
-<repository>
-    <id>clojars.org</id>
-    <url>http://clojars.org/repo</url>
-</repository>
-----
-
-.Dependency entry.
-[source,xml]
-----
-<dependency>
-  <groupId>clojure.jdbc</groupId>
-  <artifactId>clojure.jdbc</artifactId>
-  <version>0.3.2</version>
-</dependency>
-----
-
 
 Get the Code
 ~~~~~~~~~~~~
