@@ -13,7 +13,8 @@
   :profiles {:bench {:source-paths ["bench/"]
                      :main jdbc.bench
                      :dependencies [[org.clojure/java.jdbc "0.3.5"]
-                                    [postgresql "9.3-1102.jdbc41"]]}
+                                    [com.h2database/h2 "1.3.176"]
+                                    [criterium "0.4.3"]]}
              :test {:dependencies [[com.h2database/h2 "1.3.176"]
                                    [postgresql "9.3-1102.jdbc41"]
                                    [hikari-cp "0.13.0" :exclusions [com.zaxxer/HikariCP]]

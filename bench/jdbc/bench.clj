@@ -1,76 +1,110 @@
 (ns jdbc.bench
-  (:require [jdbc.core :as j1]
+  (:require [jdbc.core :as clojure.jdbc]
             [jdbc.transaction :as tx1]
-            [clojure.java.jdbc :as j2])
+            [clojure.java.jdbc :as java.jdbc]
+            [criterium.core :refer [bench quick-bench]])
   (:gen-class))
 
-(def dbspec {:classname "org.postgresql.Driver"
-             :subprotocol "postgresql"
-             :subname "//localhost:5432/test"})
+(def dbspec {:subprotocol "h2"
+             :subname "mem:"})
+(def sql "select * from system_range(0, 100);")
 
-(defn bench-01-without-connection-overhead
+(def ^:dynamic *iterations* 1000)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Benchmark 1
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn bench-1-java-jdbc
   []
-  (println "Simple query without connection overhead.")
-  (let [sql ["select * from generate_series(0, 100);"]]
-    ;; Clojure Java JDBC
-    (j2/with-db-connection [con-db dbspec]
-      (let [f (fn []
-                (dotimes [i 500]
-                  (j2/query con-db sql)))]
-        (println "java.jdbc:")
-        (time (f))))
+  (println)
+  (println "Benchmark: One query without connection overhead.")
+  (println "Results for java.jdbc:")
 
-    ;; clojure.jdbc
-    (with-open [conn (j1/connection dbspec)]
-      (let [f (fn []
-                (dotimes [i 500]
-                  (j1/query conn sql)))]
-        (println "clojure.jdbc:")
-        (time (f))))))
+  (java.jdbc/with-db-connection [conn dbspec]
+    (quick-bench
+     (dotimes [i *iterations*]
+       (java.jdbc/query conn sql)))))
 
-(defn bench-02-with-connection-overhead
+(defn bench-1-clojure-jdbc
   []
-  (println "Simple query with connection overhead.")
-  (let [sql ["select * from generate_series(0, 100);"]]
-    ;; Clojure Java JDBC
-    (let [f (fn []
-              (dotimes [i 500]
-                (j2/query dbspec sql)))]
-      (println "java.jdbc:")
-      (time (f)))
+  (println)
+  (println "Benchmark: One query without connection overhead.")
+  (println "Results for clojure.jdbc:")
 
-    ;; clojure.jdbc
-    (let [f (fn []
-              (dotimes [i 500]
-                (with-open [conn (j1/connection dbspec)]
-                  (j1/query conn sql))))]
-      (println "clojure.jdbc:")
-      (time (f)))))
+  (with-open [conn (clojure.jdbc/connection dbspec)]
+    (quick-bench
+     (dotimes [i *iterations*]
+       (clojure.jdbc/query conn sql)))))
 
-(defn bench-03-with-transactions
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Benchmark 2
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn bench-2-java-jdbc
   []
-  (println "Simple query with transaction.")
-  (let [sql ["select * from generate_series(0, 100);"]]
-    ;; Clojure Java JDBC
-    (j2/with-db-connection [con-db dbspec]
-      (let [f (fn []
-                (dotimes [i 500]
-                  (j2/with-db-transaction [con-db con-db]
-                    (j2/query con-db sql))))]
-        (println "java.jdbc:")
-        (time (f))))
+  (println)
+  (println "Benchmark: One query with connection overhead.")
+  (println "Results for java.jdbc:")
 
-    ;; clojure.jdbc
-    (with-open [conn (j1/connection dbspec)]
-      (let [f (fn []
-                (dotimes [i 500]
-                  (tx1/with-transaction conn
-                    (j1/query conn sql))))]
-        (println "clojure.jdbc:")
-        (time (f))))))
+  (quick-bench
+   (dotimes [i *iterations*]
+     (java.jdbc/with-db-connection [conn dbspec]
+       (java.jdbc/query conn sql)))))
+
+(defn bench-2-clojure-jdbc
+  []
+  (println)
+  (println "Benchmark: One query with connection overhead.")
+  (println "Results for clojure.jdbc:")
+
+  (quick-bench
+   (dotimes [i *iterations*]
+     (with-open [conn (clojure.jdbc/connection dbspec)]
+       (clojure.jdbc/query conn sql)))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Benchmark 3
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn bench-3-java-jdbc
+  []
+  (println)
+  (println "Benchmark: Simple query in a transaction without connection overhead")
+  (println "Results for java.jdbc:")
+
+  (java.jdbc/with-db-connection [conn dbspec]
+    (quick-bench
+     (dotimes [i *iterations*]
+       (java.jdbc/with-db-transaction [conn conn]
+         (java.jdbc/query conn sql))))))
+
+
+(defn bench-3-clojure-jdbc
+  []
+  (println)
+  (println "Benchmark: Simple query in a transaction without connection overhead")
+  (println "Results for clojure.jdbc:")
+
+  (with-open [conn (clojure.jdbc/connection dbspec)]
+    (quick-bench
+     (dotimes [i *iterations*]
+       (tx1/with-transaction conn
+         (clojure.jdbc/query conn sql))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Main
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn -main
   [& args]
-  (bench-01-without-connection-overhead)
-  (bench-02-with-connection-overhead)
-  (bench-03-with-transactions))
+  (bench-1-java-jdbc)
+  (bench-1-clojure-jdbc)
+
+  (bench-2-java-jdbc)
+  (bench-2-clojure-jdbc)
+
+  (bench-3-java-jdbc)
+  (bench-3-clojure-jdbc)
+)
+  ;; (bench-03-with-transactions))
