@@ -35,6 +35,7 @@ Project Maturity
 
 Since _clojure.jdbc_ is a young project there may be some API breakage.
 
+
 Install
 -------
 
@@ -47,19 +48,6 @@ _clojure.jdbc_ is tested with these platforms:
 
 - JDK7
 - JDK8
-
-Coming from clj.jdbc
-~~~~~~~~~~~~~~~~~~~~
-
-Only a package name is changed, all API is maintained as is with expected
-small changes as described in changelog.
-
-You should change your dependency entry on project.clj to new package name:
-
-[source, clojure]
-----
-[clojure.jdbc "x.y.z"]
-----
 
 
 Leiningen
