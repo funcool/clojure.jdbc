@@ -118,7 +118,7 @@
 
   Opions can be passed as part of dbspec map, or as optional second argument.
   For more details, see documentation."
-  ([dbspec] (make-connection dbspec {}))
+  ([dbspec] (connection dbspec {}))
   ([dbspec options]
    (let [^java.sql.Connection conn (proto/connection dbspec)
          ^java.sql.DatabaseMetaData metadata (.getMetaData conn)
