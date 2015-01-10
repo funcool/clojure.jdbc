@@ -1,10 +1,11 @@
 (ns jdbc-test
   (:import org.postgresql.util.PGobject)
-  (:require [jdbc :refer :all]
+  (:require [jdbc.core :refer :all]
             [jdbc.transaction :refer :all]
             [jdbc.types :refer :all]
             [jdbc.impl :refer :all]
             [jdbc.proto :as proto]
+            [hikari-cp.core :as hikari]
             [cheshire.core :as json]
             [clojure.test :refer :all]))
 
@@ -29,6 +30,18 @@
                        :name "test"
                        :host "localhost"
                        :read-only true})
+
+(deftest datasource-spec
+  (testing "Connection pool testing."
+    (let [ds (hikari/make-datasource {:adapter "h2"
+                                      :url "jdbc:h2:/tmp/test"})]
+      (is (instance? javax.sql.DataSource ds))
+      (with-open [conn (connection ds)]
+        (is (instance? jdbc.types.Connection conn))
+        (is (instance? java.sql.Connection (:connection conn)))
+        (let [result (query conn ["SELECT 1 + 1 as foo;"])]
+          (is (= [{:foo 2}] result)))))))
+
 
 (deftest db-extra-returning-keys
   (testing "Testing basic returning keys"

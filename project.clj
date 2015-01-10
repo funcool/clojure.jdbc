@@ -17,4 +17,6 @@
                                     [postgresql "9.3-1102.jdbc41"]]}
              :test {:dependencies [[com.h2database/h2 "1.3.176"]
                                    [postgresql "9.3-1102.jdbc41"]
+                                   [hikari-cp "0.13.0" :exclusions [com.zaxxer/HikariCP]]
+                                   [com.zaxxer/HikariCP-java6 "2.2.5"]
                                    [cheshire "5.3.1"]]}})
