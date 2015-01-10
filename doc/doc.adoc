@@ -795,7 +795,7 @@ This is an incomplete list of reasons:
     that receive dbspec. It doesn't have well designed connection management. +
     Ex: functions like `create!` can receive plain a dbspec or a connection. If you are
     curious, take a look at the `with-db-connection` implementation of java.jdbc
-    and compare it with `with-connection` of clojure.jdbc. You will get a get a good idea of the
+    and compare it with clojure.jdbc. It will get you a good idea of the
     hidden unnecessary complexity found in java.jdbc. +
     java.jdbc has inconsistent connection management. In contrast, with clojure.jdbc
     a connection should be created explicitly before using any other function that
