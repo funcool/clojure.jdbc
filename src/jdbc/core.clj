@@ -24,46 +24,6 @@
   (:import java.sql.PreparedStatement
            java.sql.ResultSet))
 
-(defn result-set->lazyseq
-  "Function that wraps result in a lazy seq. This function
-  is part of public api but can not be used directly (you should pass
-  this function as parameter to `query` function).
-
-  Required parameters:
-    rs: ResultSet instance.
-
-  Optional named parameters:
-    :identifiers -> function that is applied for column name
-                    when as-arrays? is false
-    :as-rows?    -> by default this function return a lazy seq of
-                    records (map), but in certain circumstances you
-                    need results as a lazy-seq of vectors. With this keywork
-                    parameter you can enable this behavior and return a lazy-seq
-                    of vectors instead of records (maps).
-  "
-  [conn, ^ResultSet rs & [{:keys [identifiers as-rows?]
-                                       :or {identifiers str/lower-case as-rows? false}
-                                       :as options}]]
-  (let [metadata    (.getMetaData rs)
-        idseq       (range 1 (inc (.getColumnCount metadata)))
-        keyseq      (->> idseq
-                         (map (fn [^long i] (.getColumnLabel metadata i)))
-                         (map (comp keyword identifiers)))
-        values      (fn [] (map (fn [^long i] (proto/from-sql-type (.getObject rs i) conn metadata i)) idseq))
-        records     (fn thisfn []
-                      (when (.next rs)
-                        (cons (zipmap keyseq (values)) (lazy-seq (thisfn)))))
-        rows        (fn thisfn []
-                      (when (.next rs)
-                        (cons (vec (values)) (lazy-seq (thisfn)))))]
-    (if as-rows? (rows) (records))))
-
-(defn result-set->vector
-  "Function that evaluates a result into one clojure persistent
-  vector. Accept same parameters as `result-set->lazyseq`."
-  [& args]
-  (vec (apply result-set->lazyseq args)))
-
 (defn execute-statement!
   "Given a connection statement and paramgroups (can be empty)
   execute the prepared statement and return results from it.
