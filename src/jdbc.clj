@@ -20,17 +20,14 @@
 
 (import-vars
  [jdbc.core
-
-  map->properties
-  uri->dbspec
   result-set->lazyseq
   result-set->vector
   execute-statement!
+  is-prepared-statement?
+  execute-prepared!
   make-connection
   execute!
   get-returning-records
-  is-prepared-statement?
-  execute-prepared!
   make-query
   query
   query-first

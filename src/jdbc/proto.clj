@@ -15,7 +15,21 @@
 (ns jdbc.proto)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Protocols definition
+;; Internal Protocols
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defprotocol IConnectionConstructor
+  "Responsible of building a raw jdbc connection."
+  (connection [_] "Create jdbc connection."))
+
+(defprotocol IPreparedStatementConstructor
+  "Responsible of building prepared statements."
+  (prepared-statement [_ connection options] "Create a prepared statement."))
+
+  ;; (normalize [this conn options] "Create a prepared statement."))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; SQL Extension Protocols
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defprotocol ISQLType
@@ -33,6 +47,3 @@
   available for Object, Boolean, and nil."
 
   (from-sql-type [_ conn metadata index] "Convert sql type to user type."))
-
-(defprotocol ISQLStatement
-  (normalize [this conn options]))

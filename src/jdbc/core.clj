@@ -15,63 +15,14 @@
 (ns jdbc.core
   "Alternative implementation of jdbc wrapper for clojure."
   (:require [clojure.string :as str]
-            [clojure.walk :as walk]
             [jdbc.types :refer [->Connection ->ResultSet is-connection?]]
             [jdbc.impl :as impl]
             [jdbc.proto :as proto]
             [jdbc.util :refer [with-exception raise-exc]]
             [jdbc.transaction :as tx]
             [jdbc.constants :as constants])
-  (:import java.net.URI
-           java.sql.DriverManager
-           java.sql.PreparedStatement
-           java.sql.ResultSet
-           java.util.Properties))
-
-(defn ^Properties map->properties
-  "Convert hash-map to java.utils.Properties instance. This method is used
-  internally for convert dbspec map to properties instance, but it can
-  be usefull for other purposes."
-  [data]
-  (let [p (Properties.)]
-    (dorun (map (fn [[k v]] (.setProperty p (name k) (str v))) (seq data)))
-    p))
-
-(defn- strip-jdbc-prefix
-  "Simple util function that strip a \"jdbc:\" prefix
-  from connection string urls."
-  [^String url]
-  (str/replace-first url #"^jdbc:" ""))
-
-(defn- parse-querystring
-  "Given a URI instance, return its querystring as
-  plain map with parsed keys and values."
-  [^URI uri]
-  (let [^String query (.getQuery uri)]
-    (->> (for [^String kvs (.split query "&")] (into [] (.split kvs "=")))
-         (into {})
-         (walk/keywordize-keys))))
-
-(defn uri->dbspec
-  "Parses a dbspec as uri into a plain dbspec. This function
-  accepts `java.net.URI` or `String` as parameter."
-  [url]
-  (let [^URI uri      (if (instance? URI url) url
-                          (URI. (strip-jdbc-prefix url)))
-             host     (.getHost uri)
-             port     (.getPort uri)
-             path     (.getPath uri)
-             scheme   (.getScheme uri)
-             userinfo (.getUserInfo uri)]
-    (merge
-      {:subname (if (pos? port)
-                 (str "//" host ":" port path)
-                 (str "//" host path))
-       :subprotocol scheme}
-      (when userinfo
-        (let [[user password] (str/split userinfo #":")]
-          {:user user :password password}))
-      (parse-querystring uri))))
+  (:import java.sql.PreparedStatement
+           java.sql.ResultSet))
 
 (defn result-set->lazyseq
   "Function that wraps result in a lazy seq. This function
@@ -134,68 +85,19 @@
         (.addBatch stmt))
       (seq (.executeBatch stmt)))))
 
-(defn- ^java.sql.Connection make-raw-connection-from-jdbcurl
-  "Given a url and optionally params, returns a raw jdbc connection."
-  ([url opts] (DriverManager/getConnection url (map->properties opts)))
-  ([url] (DriverManager/getConnection url)))
+(defn ^jdbc.types.Connection connection
+  "Creates a connection to a database. As parameter accepts:
 
-(defn- ^java.sql.Connection make-raw-connection-from-dbspec
-  "Given a plain dbspec, converts it to a valid jdbc url with
-  optionally options and pass it to `make-raw-connection-from-jdbcurl`"
-  [{:keys [subprotocol subname] :as dbspec}]
-  (let [url     (format "jdbc:%s:%s" subprotocol subname)
-        options (dissoc dbspec :subprotocol :subname)]
-    (make-raw-connection-from-jdbcurl url options)))
-
-(defn ^java.sql.Connection make-raw-connection
-  "Given connection parametes get raw jdbc connection.
-  This function is part of private api."
-  [{:keys [connection-uri subprotocol subname
-           user password read-only schema
-           isolation-level name vendor host port
-           ^javax.sql.DataSource datasource]
-    :or {read-only false schema nil}
-    :as dbspec}]
-  (cond
-   (and datasource user password)
-   (.getConnection datasource user password)
-
-   (and datasource)
-   (.getConnection datasource)
-
-   (and subprotocol subname)
-   (make-raw-connection-from-dbspec dbspec)
-
-   (and name vendor)
-   (let [host   (or host "127.0.0.1")
-         port   (if port (str ":" port) "")
-         dbspec (-> (dissoc dbspec :name :vendor :host :port)
-                    (assoc :subprotocol vendor
-                           :subname (str "//" host port "/" name)))]
-     (make-raw-connection-from-dbspec dbspec))
-
-   (and connection-uri)
-   (make-raw-connection-from-jdbcurl connection-uri)
-
-   (or (string? dbspec) (instance? URI dbspec))
-   (make-raw-connection-from-dbspec (uri->dbspec dbspec))
-   :else (throw (IllegalArgumentException. "Invalid dbspec format"))))
-
-(defn ^jdbc.types.Connection
-  make-connection
-  "Creates a connection to a database from dbspec, and dbspec
-  can be:
-
-  - map containing connection parameter
-  - map containing a datasource
-  - URI or string
+  - dbspec map containing connection parameters
+  - dbspec map containing a datasource (deprecated)
+  - URI or string (interpreted as uri)
+  - DataSource instance
 
   The dbspec map has this possible variants:
 
   Classic approach:
     :subprotocol -> (required) string that represents a vendor name (ex: postgresql)
     :subname -> (required) string that represents a database name (ex: test)
-    :classname -> (optional) string that represents a class name.
     (many others options that are pased directly as driver parameters)
 
   Pretty format:
@@ -205,29 +107,47 @@
     :port -> (optional) long number that represents a database port (default: driver default)
     (many others options that are pased directly as driver parameters)
 
-  Raw format:
-    :connection-uri -> String that passed directly to DriverManager/getConnection
-
   URI or String format:
-    vendor://user:password@host:post/dbname
+    vendor://user:password@host:post/dbname?param1=value
 
-  Additional options for map based dbspecs:
+  Additional options:
     :schema -> string that represents a schema name (default: nil)
     :read-only -> boolean for mark entire connection read only.
+    :isolation-level -> keyword that represents a isolation level (:none, :read-committed,
+                        :read-uncommitted, :repeatable-read, :serializable)
 
+  Opions can be passed as part of dbspec map, or as optional second argument.
   For more details, see documentation."
-  [{:keys [isolation-level schema read-only]
-    :or {read-only false schema nil}
-    :as dbspec}]
-  (let [^java.sql.Connection       rawconn  (make-raw-connection dbspec)
-        ^java.sql.DatabaseMetaData metadata (.getMetaData rawconn)]
-    (.setReadOnly rawconn read-only)
-    (when isolation-level
-      (.setTransactionIsolation rawconn (get constants/isolation-levels isolation-level)))
-    (when schema
-      (.setSchema rawconn schema))
-    (-> (->Connection rawconn metadata)
-        (assoc :isolation-level isolation-level))))
+  ([dbspec] (make-connection dbspec {}))
+  ([dbspec options]
+   (let [^java.sql.Connection conn (proto/connection dbspec)
+         ^java.sql.DatabaseMetaData metadata (.getMetaData conn)
+         options (merge
+                  (when (map? dbspec)
+                    (dissoc dbspec
+                            :user :password :subprotocol :subname
+                            :datasource :vendor :name :host :port))
+                  options)]
+     ;; Set readonly flag if it found on the options map
+     (some->> (:read-only options)
+              (.setReadOnly conn))
+
+     ;; Set the concrete isolation level if it found
+     ;; on the options map
+     (some->> (:isolation-level options)
+              (get constants/isolation-levels)
+              (.setTransactionIsolation conn))
+
+     ;; Set the schema if it found on the options map
+     (some->> (:schema options)
+              (.setSchema conn))
+
+     (assoc
+      (->Connection conn metadata)
+      :isolation-level (:isolation-level options)))))
+
+;; Backward compatibility alias.
+(def make-connection connection)
 
 (defn execute!
   "Run arbitrary number of raw sql commands such as: CREATE TABLE,
@@ -314,7 +234,7 @@
 
      ;; In other case, build a prepared statement from sql or vector.
      (or (vector? sql) (string? sql))
-     (with-open [^java.sql.PreparedStatement stmt (proto/normalize sql conn options)]
+     (with-open [^java.sql.PreparedStatement stmt (proto/prepared-statement sql conn options)]
        (let [res (execute-statement! conn stmt param-groups)]
          (if (:returning options)
            ;; In case of returning key is found on options
@@ -359,7 +279,7 @@
           (println row))))"
   ([conn sql-with-params] (make-query conn sql-with-params {}))
   ([conn sql-with-params {:keys [fetch-size lazy] :or {lazy false} :as options}]
-   (let [^java.sql.PreparedStatement stmt (proto/normalize sql-with-params conn options)]
+   (let [^java.sql.PreparedStatement stmt (proto/prepared-statement sql-with-params conn options)]
      (let [^ResultSet rs (.executeQuery stmt)]
        (if (not lazy)
          (->ResultSet stmt rs false (result-set->vector conn rs options))
@@ -389,7 +309,7 @@
   "
   ([conn sqlvec] (query conn sqlvec {}))
   ([conn sqlvec {:keys [lazy] :or {lazy false} :as options}]
-   (let [^java.sql.PreparedStatement stmt (proto/normalize sqlvec conn options)]
+   (let [^java.sql.PreparedStatement stmt (proto/prepared-statement sqlvec conn options)]
      (let [^ResultSet rs (.executeQuery stmt)]
        (result-set->vector conn rs options)))))
 
