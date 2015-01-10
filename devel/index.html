@@ -704,7 +704,7 @@ and most idiomatic way in Clojure to define configuration parameters.</p>
 one connection instance as parameter (no dynamic vars are used for it).</p>
 </div>
 <div class="listingblock">
-<div class="title">Example using <code>connection</code> function</div>
+<div class="title">Create one connection using <code>connection</code> function:</div>
 <div class="content">
 <pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-nf">require</span> <span class="tok-o">&#39;</span><span class="tok-p">[</span><span class="tok-nv">jdbc.core</span> <span class="tok-ss">:as</span> <span class="tok-nv">jdbc</span><span class="tok-p">])</span>
 
@@ -714,28 +714,15 @@ one connection instance as parameter (no dynamic vars are used for it).</p>
 </div>
 </div>
 <div class="paragraph">
-<p>The <code>connection</code> function exposes a low-level interface for creating a connection,
-and delegates connection resource management to the user. A connection is not automatically
-closed and so use of the <code>with-open</code> macro is strongly recommended for clear resource management.</p>
+<p>As you can see in previous example, you should explicltly close connection for proper
+resource management. You can use the <code>with-open</code> clojure macro for make code looks
+more clean and idiomatic.</p>
 </div>
 <div class="listingblock">
-<div class="title">Better way.</div>
 <div class="content">
 <pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-nb">with-open </span><span class="tok-p">[</span><span class="tok-nv">conn</span> <span class="tok-p">(</span><span class="tok-nf">jdbc/connection</span> <span class="tok-nv">dbspec</span><span class="tok-p">)]</span>
   <span class="tok-p">(</span><span class="tok-nf">do-something-with</span> <span class="tok-nv">conn</span><span class="tok-p">))</span></code></pre>
 </div>
-</div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<div class="title">Note</div>
-</td>
-<td class="content">
-clojure.jdbc does not use any global/thread-local state, and always tries to ensure immutability.
-</td>
-</tr>
-</table>
 </div>
 </div>
 </div>
@@ -1643,7 +1630,7 @@ initial work. Some intial ideas for clojure.jdbc are taken from that project.</p
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-01-10 23:11:45 CET
+Last updated 2015-01-10 23:15:54 CET
 </div>
 </div>
 </body>
