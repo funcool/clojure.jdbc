@@ -76,7 +76,7 @@ compile "clojure.jdbc:clojure.jdbc:0.3.2"
 Get the Code
 ~~~~~~~~~~~~
 
-_clojure.jdbc_ is open source and is entirely developed on link:https://github.com/niwibe/clojure.jdbc[github].
+_clojure.jdbc_ is open source and you can found the source on link:https://github.com/niwibe/clojure.jdbc[github].
 
 You can clone the public repository with this command:
 
@@ -125,12 +125,7 @@ Also, _clojure.jdbc_ comes with alternative, more human comprehensible format, l
              :password "password"}) ;; Optional
 ----
 
-[NOTE]
-====
-The `:classname` parameter represents a class location/route of the JDBC driver. Each driver has one;
-in this example it is a path to a Postgresql JDBC driver.  This parameter can be omited and in that
-case it is automatically resolved from a predefined list using the `:subprotocol` key.
-====
+But it has some disadvantages: it does not supports all options of a default dbspec format.
 
 Also, *dbspec* can be represented as a URI.
 
@@ -147,31 +142,24 @@ Creating a connection
 With clojure.jdbc every function that interacts with a database explicitly requires
 one connection instance as parameter (no dynamic vars are used for it).
 
-
-NOTE: clojure.jdbc does not use any global/thread-local state, and always tries to ensure immutability.
-
-NOTE: unlike java.jdbc, with _clojure.jdbc_ you can't use a plain dbspec hash-map as a
-connection parameter and you should explicitly open a new connection before doing any operation
-with a database.
-
-.Example using `make-connection` function
+.Example using `connection` function
 [source,clojure]
 ----
-(require '[jdbc.core :refer :all])
+(require '[jdbc.core :as jdbc])
 
-(let [conn (make-connection dbspec)]
+(let [conn (jdbc/connection dbspec)]
   (do-something-with conn)
   (.close conn))
 ----
 
-The `make-connection` function exposes a low-level interface for creating a connection,
+The `connection` function exposes a low-level interface for creating a connection,
 and delegates connection resource management to the user. A connection is not automatically
 closed and so use of the `with-open` macro is strongly recommended for clear resource management.
 
 .Better way.
 [source,clojure]
 ----
-(with-open [conn (make-connection dbspec)]
+(with-open [conn (jdbc/connection dbspec)]
   (do-something-with conn))
 ----
 
@@ -181,13 +169,16 @@ works like the `with-open` clojure macro. This is an equivalent piece of code us
 
 [source,clojure]
 ----
-(with-connection [conn dbspec]
+(jdbc/with-connection [conn dbspec]
   (do-something-with conn))
 ----
+
+NOTE: clojure.jdbc does not use any global/thread-local state, and always tries to ensure immutability.
 
 
 Execute Database Commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~
+
 
 Execute Raw SQL Statements
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -197,8 +188,8 @@ an active connection as the first parameter followed by SQL sentences:
 
 [source,clojure]
 ----
-(with-connection [conn dbspec]
-  (execute! conn "CREATE TABLE foo (id serial, name text);"))
+(with-open [conn (jdbc/connection dbspec)]
+  (jdbc/execute! conn "CREATE TABLE foo (id serial, name text);"))
 ----
 
 
@@ -217,14 +208,14 @@ the repeated execution of the same operations with distinct parameters.
 [source,clojure]
 ----
 (let [sql "INSERT INTO foo (name) VALUES (?)"]
-  (execute-prepared! conn [sql "Foo"]))
+  (jdbc/execute-prepared! conn [sql "Foo"]))
 ----
 
 .Bulk insert example.
 [source,clojure]
 ----
 (let [sql "INSERT INTO foo (name) VALUES (?)"]
-  (execute-prepared! conn sql ["Foo"] ["Bar"]))
+  (jdbc/execute-prepared! conn sql ["Foo"] ["Bar"]))
 
 ;; This should emit this sql:
 ;;   INSERT INTO foo (name) VALUES ('Foo');
@@ -243,7 +234,7 @@ This is how you can do it using clojure.jdbc:
 [source, clojure]
 ----
 (let [sql "INSERT INTO foo (name) VALUES (?);"
-      res (execute-prepared! conn sql ["Foo"] ["Bar"] {:returning [:id]})]
+      res (jdbc/execute-prepared! conn sql ["Foo"] ["Bar"] {:returning [:id]})]
   (println res))
 
 ;; This should print something like this to standard output:
@@ -254,8 +245,9 @@ Also, you can use `:all` keyword in case of you need statement with "RETURNING *
 
 [source, clojure]
 ----
-(execute-prepared! conn sql ["foo"] {:returning :all})
+(jdbc/execute-prepared! conn sql ["foo"] {:returning :all})
 ----
+
 
 Make Queries
 ~~~~~~~~~~~~
@@ -265,9 +257,9 @@ The basic way to query a database is using the `query` function:
 [source,clojure]
 ----
 (let [sql    ["SELECT id, name FROM people WHERE age > ?", 2]
-      result (query conn sql)]
+      result (jdbc/query conn sql)]
   (doseq [row results]
-  (println row))))
+    (println row))))
 
 ;; It should print this:
 ;; => {:id 1 :name "Foo"}
@@ -291,6 +283,7 @@ that are explained in the xref:cursor-queries[Advanced usage] section.
 
 Transactions
 ~~~~~~~~~~~~
+
 
 Getting Started with Transactions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -355,7 +348,7 @@ clojure.jdbc by default does nothing with the isolation level and keeps it to de
 .You can set the isolation level when creating a connection by specifying it in your dbspec.
 [source,clojure]
 ----
-(def dbsoec {:subprotocol "h2"
+(def dbspec {:subprotocol "h2"
              :subname "mem:"
              :isolation-level :serializable})
 ----
@@ -363,11 +356,11 @@ clojure.jdbc by default does nothing with the isolation level and keeps it to de
 .Or set it when executing a transaction
 [source, clojure]
 ----
-(call-in-transaction conn do-something {:isolation-level :serializable})
+(tx/call-in-transaction conn do-something {:isolation-level :serializable})
 
 ;; Or...
 
-(with-transaction conn {:isolation-level :serializable}
+(tx/with-transaction conn {:isolation-level :serializable}
   (do-something conn))
 ----
 
@@ -394,9 +387,11 @@ optimizations for this operation.
 .You can set transaction read-only using transaction options
 [source, clojure]
 ----
-(with-transaction conn {:isolation-level :serializable :read-only true}
+(tx/with-transaction conn {:isolation-level :serializable
+                           :read-only true}
   (query-something conn))
 ----
+
 
 Advanced usage
 --------------
@@ -405,10 +400,12 @@ Advanced usage
 Server Side Cursors
 ~~~~~~~~~~~~~~~~~~~
 
-By default, most JDBC drivers prefetch all results into memory make the use of lazy structures totally useless
-for fetching data. Luckily, some databases implement server-side cursors that avoid this behavior.
+By default, most JDBC drivers prefetch all results into memory make the use of lazy structures
+totally useless for fetching data. Luckily, some databases implement server-side cursors that avoid
+this behavior.
 
-If you have an extremely large resultset and you want retrieve it and process each item, this is exactly what you need.
+If you have an extremely large resultset and you want retrieve it and process each item, this is
+exactly what you need.
 
 For this purpose, _clojure.jdbc_ exposes the `with-query` macro that uses server-side cursors internally
 and exposes a lazy seq of records (instead of a fully evaluated vector) in a macro-created context:
@@ -416,7 +413,7 @@ and exposes a lazy seq of records (instead of a fully evaluated vector) in a mac
 [source,clojure]
 ----
 (let [sql ["SELECT id, name FROM people;"]]
-  (with-query conn sql results
+  (jdbc/with-query conn sql results
     (doseq [row results]
       (println row))))
 ----
@@ -448,18 +445,11 @@ these keys:
 [source,clojure]
 ----
 (let [sql    ["SELECT id, name FROM people WHERE age > ?", 2]
-      result (make-query conn sql)]
+      result (jdbc/make-query conn sql)]
   (doseq [row (:data result)]
     (println row))
   (.close result))
 ----
-
-[NOTE]
-====
-You can see the API documentation to find out more about it, but mainly it is
-a container that mantains a reference to the original Java JDBC objects
-which are used in executing a query.
-====
 
 WARNING: `make-query` is a low-level interface and you must be careful when using it.
 
@@ -468,29 +458,31 @@ WARNING: `make-query` is a low-level interface and you must be careful when usin
 Transaction Strategy
 ~~~~~~~~~~~~~~~~~~~~
 
-Transaction strategies in _clojure.jdbc_ are implemented using protocols having default implementations explained
-in the previous sections. This approach allows an easy way to extend, customize or completely change a transaction
-strategy for your application.
+Transaction strategies in _clojure.jdbc_ are implemented using protocols having default
+implementation explained in the previous sections. This approach allows an easy way to extend,
+customize or completely change a transaction strategy for your application.
 
-If you want another strategy, you should create a new type and implement the `ITransactionStrategy` protocol.
+If you want another strategy, you should create a new type and implement the 
+`ITransactionStrategy` protocol.
 
 .Sample dummy transaction strategy.
 [source,clojure]
 ----
-(defrecord DummyTransactionStrategy []
-  tx/ITransactionStrategy
-  (begin! [_ conn opts] conn)
-  (rollback! [_ conn opts] conn)
-  (commit! [_ conn opts] conn))
+(def dummy-tx-strategy
+  (reify tx/ITransactionStrategy
+    (begin! [_ conn opts] conn)
+    (rollback! [_ conn opts] conn)
+    (commit! [_ conn opts] conn)))
 ----
+
 
 You can specify the transaction strategy to use in these ways:
 
 .Using the `with-transaction-strategy` macro.
 [source,clojure]
 ----
-(with-connection [conn dbspec]
-  (with-transaction-strategy conn (DummyTransactionStrategy.)
+(with-open [conn (jdbc/connection conn)]
+  (tx/with-transaction-strategy conn dummy-tx-strategy
     (do-some-thing conn)))
 ----
 
@@ -500,8 +492,8 @@ strategy to connection and exposes it.
 .Using the `wrap-transaction-strategy` function:
 [source,clojure]
 ----
-(with-open [conn (-> (make-connection dbspec)
-                     (wrap-transaction-strategy (DummyTransactionStrategy.)))]
+(with-open [conn (-> (jdbc/connection dbspec)
+                     (jdbc/wrap-transaction-strategy dummy-tx-strategy))]
   (do-some-thing conn))
 ----
 
@@ -509,12 +501,13 @@ strategy to connection and exposes it.
 [source, clojure]
 ----
 ;; Overwritting the default value
-(alter-var-root #'tx/*default-tx-strategy* (fn [_] (DummyTransactionStrategy.)))
+(alter-var-root #'tx/*default-tx-strategy* (fn [_] dummy-tx-strategy))
 
 ;; Or using binding
-(binding [tx/*default-tx-strategy* (DummyTransactionStrategy.)]
+(binding [tx/*default-tx-strategy* dummy-tx-strategy]
   (some-func-that-uses-transactions))
 ----
+
 
 Extend SQL Types
 ~~~~~~~~~~~~~~~~
@@ -547,16 +540,18 @@ to an SQL array and assigned properly in a prepared statement:
 
 [source,clojure]
 ----
-(with-connection [conn pg-dbspec]
-  (execute! conn "CREATE TABLE arrayfoo (id integer, data text[]);")
+(with-open [conn (jdbc/connection pg-dbspec)]
+  (jdbc/execute! conn "CREATE TABLE arrayfoo (id integer, data text[]);")
   (let [mystringarray (into-array String ["foo" "bar"])]
-    (execute-prepared! conn "INSERT INTO arrayfoo VALUES (?, ?);"
-                       [1, mystringarray])))
+    (jdbc/execute-prepared! conn "INSERT INTO arrayfoo VALUES (?, ?);"
+                            [1, mystringarray])))
 ----
-
 
 clojure.jdbc also exposes the `jdbc.proto/ISQLResultSetReadColumn` protocol that encapsulates
 reverse conversions from SQL types to user-defined types.
+
+You can read more about that in this blog post: http://www.niwi.be/2014/04/13/postgresql-json-field-with-clojure-and-jdbc/
+
 
 [[connection-pool]]
 Connection pool
