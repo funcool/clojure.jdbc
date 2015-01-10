@@ -21,63 +21,66 @@
   (rollback! [_ conn opts] "Rollbacks a transaction. Returns nil.")
   (commit! [_ conn opts] "Commits a transaction. Returns nil."))
 
-(deftype DefaultTransactionStrategy []
-  ITransactionStrategy
-  (begin! [_ conn opts]
-    (let [^java.sql.Connection rconn (:connection conn)
-          conn           (assoc conn :rollback (atom false))
-          old-isolation  (.getTransactionIsolation rconn)
-          old-readonly   (.isReadOnly rconn)]
-      (if (:in-transaction conn)
-        ;; If connection is already in a transaction, isolation
-        ;; level and read only flag can not to be changed.
-        (do
-          (when (:isolation-level opts)
-            (throw (RuntimeException. "Can not set isolation level in transaction")))
-          (when (:read-only opts)
-            (throw (RuntimeException. "Can not change read only in transaction")))
-          (assoc conn :savepoint (.setSavepoint rconn)))
+(def ^{:doc "Default transaction strategy implementation."
+       :dynamic true}
+  *default-tx-strategy*
+  (reify ITransactionStrategy
+    (begin! [_ conn opts]
+      (let [^java.sql.Connection rconn (:connection conn)
+            conn           (assoc conn :rollback (atom false))
+            old-isolation  (.getTransactionIsolation rconn)
+            old-readonly   (.isReadOnly rconn)]
+        (if (:in-transaction conn)
+          ;; If connection is already in a transaction, isolation
+          ;; level and read only flag can not to be changed.
+          (do
+            (when (:isolation-level opts)
+              (throw (RuntimeException. "Can not set isolation level in transaction")))
+            (when (:read-only opts)
+              (throw (RuntimeException. "Can not change read only in transaction")))
+            (assoc conn :savepoint (.setSavepoint rconn)))
 
-        (let [old-autocommit (.getAutoCommit rconn)]
-          (.setAutoCommit rconn false)
-          (when-let [isolation (:isolation-level opts)]
-            (.setTransactionIsolation rconn (get constants/isolation-levels isolation)))
-          (when-let [read-only (:read-only opts)]
-            (.setReadOnly rconn read-only))
-          (assoc conn :old-autocommit old-autocommit
-                      :old-isolation old-isolation
-                      :old-readonly old-readonly
-                      :in-transaction true
-                      :isolation-level (or (:isolation-level opts)
-                                           (:isolation-level conn)))))))
-  (rollback! [_ conn opts]
-    (let [^java.sql.Connection rconn (:connection conn)
-          savepoint      (:savepoint conn)
-          old-readonly   (:old-readonly conn)
-          old-isolation  (:old-isolation conn)
-          old-autocommit (:old-autocommit conn)]
+          (let [old-autocommit (.getAutoCommit rconn)]
+            (.setAutoCommit rconn false)
+            (when-let [isolation (:isolation-level opts)]
+              (.setTransactionIsolation rconn (get constants/isolation-levels isolation)))
+            (when-let [read-only (:read-only opts)]
+              (.setReadOnly rconn read-only))
+            (assoc conn
+                   :old-autocommit old-autocommit
+                   :old-isolation old-isolation
+                   :old-readonly old-readonly
+                   :in-transaction true
+                   :isolation-level (or (:isolation-level opts)
+                                        (:isolation-level conn)))))))
+    (rollback! [_ conn opts]
+      (let [^java.sql.Connection rconn (:connection conn)
+            savepoint      (:savepoint conn)
+            old-readonly   (:old-readonly conn)
+            old-isolation  (:old-isolation conn)
+            old-autocommit (:old-autocommit conn)]
 
-      (if savepoint
-        (.rollback rconn savepoint)
-        (do
-          (.rollback rconn)
-          (.setAutoCommit rconn old-autocommit)
-          (.setTransactionIsolation rconn old-isolation)
-          (.setReadOnly rconn old-readonly)))))
+        (if savepoint
+          (.rollback rconn savepoint)
+          (do
+            (.rollback rconn)
+            (.setAutoCommit rconn old-autocommit)
+            (.setTransactionIsolation rconn old-isolation)
+            (.setReadOnly rconn old-readonly)))))
 
-  (commit! [_ conn opts]
-    (let [^java.sql.Connection rconn (:connection conn)
-          savepoint      (:savepoint conn)
-          old-readonly   (:old-readonly conn)
-          old-isolation  (:old-isolation conn)
-          old-autocommit (:old-autocommit conn)]
-      (if savepoint
-        (.releaseSavepoint rconn savepoint)
-        (do
-          (.commit rconn)
-          (.setAutoCommit rconn old-autocommit)
-          (.setTransactionIsolation rconn old-isolation)
-          (.setReadOnly rconn old-readonly))))))
+    (commit! [_ conn opts]
+      (let [^java.sql.Connection rconn (:connection conn)
+            savepoint      (:savepoint conn)
+            old-readonly   (:old-readonly conn)
+            old-isolation  (:old-isolation conn)
+            old-autocommit (:old-autocommit conn)]
+        (if savepoint
+          (.releaseSavepoint rconn savepoint)
+          (do
+            (.commit rconn)
+            (.setAutoCommit rconn old-autocommit)
+            (.setTransactionIsolation rconn old-isolation)
+            (.setReadOnly rconn old-readonly)))))))
 
 (defn wrap-transaction-strategy
   "Simple helper function that associate a strategy
@@ -129,8 +132,6 @@
   (if-let [rollback-flag (:rollback conn)]
     (deref rollback-flag)
     false))
-
-(def ^:dynamic *default-tx-strategy* (DefaultTransactionStrategy.))
 
 (defn call-in-transaction
   "Wrap function in one transaction.
