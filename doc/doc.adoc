@@ -1,7 +1,7 @@
 clojure.jdbc documentation
 ==========================
 Andrey Antukh, <niwi@niwi.be>
-0.3.2
+0.4.0-SNAPSHOT
 :toc: left
 :numbered:
 :source-highlighter: pygments
