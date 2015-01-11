@@ -58,17 +58,21 @@
             (.setTransactionIsolation rconn (:prev-isolation metadata))
             (.setReadOnly rconn (:prev-readonly metadata))))))
 
-    (commit! [_ conn opts]
+    (commit! [ts conn opts]
       (let [^Connection rconn (proto/get-connection conn)
             metadata  (meta conn)]
-        (if-let [savepoint (:savepoint metadata)]
-          (.releaseSavepoint rconn savepoint)
-          (do
-            (.commit rconn)
+        ;; In case on commit and rollback flag is set, commit action
+        ;; should be ignored and rollback will performed.
+        (if @(:rollback metadata)
+          (rollback! ts conn opts)
+          (if-let [savepoint (:savepoint metadata)]
+            (.releaseSavepoint rconn savepoint)
+            (do
+              (.commit rconn)
 
-            (.setAutoCommit rconn (:prev-autocommit metadata))
-            (.setTransactionIsolation rconn (:prev-isolation metadata))
-            (.setReadOnly rconn (:prev-readonly metadata))))))))
+              (.setAutoCommit rconn (:prev-autocommit metadata))
+              (.setTransactionIsolation rconn (:prev-isolation metadata))
+              (.setReadOnly rconn (:prev-readonly metadata)))))))))
 
 
 (defn wrap-transaction-strategy
@@ -161,9 +165,7 @@
           metadata (meta conn)]
       (try
         (let [returnvalue (func conn)]
-          (if @(:rollback metadata)
-            (rollback! tx-strategy conn opts)
-            (commit! tx-strategy conn opts))
+          (commit! tx-strategy conn opts)
           returnvalue)
         (catch Throwable t
           (rollback! tx-strategy conn opts)
