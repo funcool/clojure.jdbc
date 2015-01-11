@@ -37,6 +37,9 @@ Other changes:
 - Deprecated own connection pool extensions. Because they are less flexible that creating own
   datasource instance. The documentation is updated with examples of how to create datasource
   instances for all previously supported connection pool implementations.
+- Move the rollback flag check to transaction strategy, instead of having it hardcoded in the
+  call-in-transaction function. This change simplifies a little bit creating own transaction
+  strategies implementations, removing unnecesary accidental complexity.
 
 
 == Version 0.3.2
