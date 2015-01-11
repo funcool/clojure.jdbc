@@ -142,7 +142,7 @@
                       result-concurency :read-only
                       fetch-size 100}
                  :as options}]
-   (let [rconn  (proto/get-connection conn)
+   (let [^java.sql.Connection rconn  (proto/get-connection conn)
          sqlvec (if (string? sqlvec) [sqlvec] sqlvec)
          ^String sql (first sqlvec)
          params (rest sqlvec)

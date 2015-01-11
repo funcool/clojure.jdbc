@@ -17,6 +17,7 @@
   (:require [clojure.string :as str]
             [jdbc.proto :as proto])
   (:import java.sql.PreparedStatement
+           java.sql.ResultSetMetaData
            java.sql.ResultSet))
 
 (defn result-set->lazyseq
@@ -39,22 +40,28 @@
   [conn ^ResultSet rs {:keys [identifiers as-rows?]
                        :or {identifiers str/lower-case as-rows? false}
                        :as options}]
-  (let [metadata    (.getMetaData rs)
-        idseq       (range 1 (inc (.getColumnCount metadata)))
-        keyseq      (->> idseq
-                         (map (fn [^long i] (.getColumnLabel metadata i)))
-                         (map (comp keyword identifiers)))
-        values      (fn [] (map (fn [^long i] (proto/from-sql-type (.getObject rs i) conn metadata i)) idseq))
-        records     (fn thisfn []
-                      (when (.next rs)
-                        (cons (zipmap keyseq (values)) (lazy-seq (thisfn)))))
-        rows        (fn thisfn []
-                      (when (.next rs)
-                        (cons (vec (values)) (lazy-seq (thisfn)))))]
-    (if as-rows? (rows) (records))))
+  (let [^ResultSetMetaData metadata (.getMetaData rs)
+        idseq (range 1 (inc (.getColumnCount metadata)))
+        keyseq (mapv (comp keyword identifiers (fn [^long i] (.getColumnLabel metadata i))) idseq)
+        values (fn []
+                 (mapv (fn [^long i]
+                         (-> (.getObject rs i)
+                             (proto/from-sql-type conn metadata i)))
+                       idseq))
+        rows (fn thisfn []
+               (when (.next rs)
+                 (cons (values) (lazy-seq (thisfn)))))
+        records (fn thisfn []
+                  (when (.next rs)
+                    (-> (zipmap keyseq (values))
+                        (cons (lazy-seq (thisfn))))))]
+    (if as-rows?
+      (rows)
+      (records))))
+
 
 (defn result-set->vector
   "Function that evaluates a result into one clojure persistent
   vector. Accept same parameters as `result-set->lazyseq`."
-  [conn rs options]
+  [conn ^ResultSet rs options]
   (vec (result-set->lazyseq conn rs options)))

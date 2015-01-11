@@ -39,7 +39,7 @@
   (if-not (seq param-groups)
     (with-exception
       (seq [(.executeUpdate stmt)]))
-    (let [set-parameter (fn [index value]
+    (let [set-parameter (fn [^long index value]
                           (proto/set-stmt-parameter! value conn stmt (inc index)))]
       (doseq [pgroup param-groups]
         (dorun (map-indexed set-parameter pgroup))
@@ -230,7 +230,7 @@
         (println row)))
   "
   ([conn sqlvec] (query conn sqlvec {}))
-  ([conn sqlvec {:keys [lazy] :or {lazy false} :as options}]
+  ([conn sqlvec options]
    (let [^java.sql.PreparedStatement stmt (proto/prepared-statement sqlvec conn options)]
      (let [^ResultSet rs (.executeQuery stmt)]
        (result-set->vector conn rs options)))))

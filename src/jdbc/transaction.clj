@@ -15,7 +15,8 @@
 (ns jdbc.transaction
   "Transactions support for clojure.jdbc"
   (:require [jdbc.constants :as constants]
-            [jdbc.proto :as proto]))
+            [jdbc.proto :as proto])
+  (:import java.sql.Connection))
 
 (defprotocol ITransactionStrategy
   (begin! [_ conn opts] "Starts a transaction and return a connection instance.")
@@ -27,7 +28,7 @@
   *default-tx-strategy*
   (reify ITransactionStrategy
     (begin! [_ conn opts]
-      (let [rconn (proto/get-connection conn)
+      (let [^Connection rconn (proto/get-connection conn)
             metadata (-> (meta conn)
                          (assoc :rollback (atom false)
                                 :prev-isolation (.getTransactionIsolation rconn)
@@ -47,7 +48,7 @@
               (assoc metadata :prev-autocommit prev-autocommit :transaction true))))))
 
     (rollback! [_ conn opts]
-      (let [rconn (proto/get-connection conn)
+      (let [^Connection rconn (proto/get-connection conn)
             metadata (meta conn)]
         (if-let [savepoint (:savepoint metadata)]
           (.rollback rconn savepoint)
@@ -58,7 +59,7 @@
             (.setReadOnly rconn (:prev-readonly metadata))))))
 
     (commit! [_ conn opts]
-      (let [rconn (proto/get-connection conn)
+      (let [^Connection rconn (proto/get-connection conn)
             metadata  (meta conn)]
         (if-let [savepoint (:savepoint metadata)]
           (.releaseSavepoint rconn savepoint)
