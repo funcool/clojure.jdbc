@@ -515,8 +515,12 @@ You can read more about that in this blog post: http://www.niwi.be/2014/04/13/po
 [[connection-pool]]
 Connection pool
 ---------------
-To make good use of resourses is much recommendable use any style of connection pooling
-in your production code. This can avoid continuosly creating and destroying connections,
+
+DataSource is the preferd way to connect to the database in production enviroments, and
+is usually used for implement connection pools.
+
+To make good use of resourses is much recommendable use some kind of connection pool
+implementation. This can avoid continuosly creating and destroying connections,
 that in the majority of time is a slow operation.
 
 Java ecosystem comes with various of it. This is a list of most used:
@@ -526,7 +530,7 @@ Java ecosystem comes with various of it. This is a list of most used:
 - Apache DBCP2: http://commons.apache.org/proper/commons-dbcp/
 
 _clojure.jdbc_ is compatible with any other connection pool implemenetation, simply
-pass a `javax.sql.DataSource` instance `jdbc/connection`.
+pass a `javax.sql.DataSource` instance to `jdbc/connection` function.
 
 
 c3p0
