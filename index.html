@@ -4,14 +4,14 @@
 <meta charset="UTF-8">
 <!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="generator" content="Asciidoctor 1.5.1">
+<meta name="generator" content="Asciidoctor 1.5.2">
 <meta name="author" content="Andrey Antukh, &lt;niwi@niwi.be&gt;">
 <title>clojure.jdbc documentation</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic|Noto+Serif:400,400italic,700,700italic|Droid+Sans+Mono:400">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400">
 <style>
 /* Asciidoctor default stylesheet | MIT License | http://asciidoctor.org */
 /* Remove the comments around the @import statement below when using this as a custom stylesheet */
-/*@import "https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic|Noto+Serif:400,400italic,700,700italic|Droid+Sans+Mono:400";*/
+/*@import "https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400";*/
 article,aside,details,figcaption,figure,footer,header,hgroup,main,nav,section,summary{display:block}
 audio,canvas,video{display:inline-block}
 audio:not([controls]){display:none;height:0}
@@ -275,8 +275,8 @@ dl dd:last-child,dl dd:last-child>:last-child{margin-bottom:0}
 ol>li p,ul>li p,ul dd,ol dd,.olist .olist,.ulist .ulist,.ulist .olist,.olist .ulist{margin-bottom:.625em}
 ul.unstyled,ol.unnumbered,ul.checklist,ul.none{list-style-type:none}
 ul.unstyled,ol.unnumbered,ul.checklist{margin-left:.625em}
-ul.checklist li>p:first-child>.fa-check-square-o:first-child,ul.checklist li>p:first-child>input[type="checkbox"]:first-child{margin-right:.25em}
-ul.checklist li>p:first-child>input[type="checkbox"]:first-child{position:relative;top:1px}
+ul.checklist li>p:first-child>.fa-square-o:first-child,ul.checklist li>p:first-child>.fa-check-square-o:first-child{width:1em;font-size:.85em}
+ul.checklist li>p:first-child>input[type="checkbox"]:first-child{width:1em;position:relative;top:1px}
 ul.inline{margin:0 auto .625em auto;margin-left:-1.375em;margin-right:0;padding:0;list-style:none;overflow:hidden}
 ul.inline>li{list-style:none;float:left;margin-left:1.375em;display:block}
 ul.inline>li>*{display:block}
@@ -480,7 +480,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <h1>clojure.jdbc documentation</h1>
 <div class="details">
 <span id="author" class="author">Andrey Antukh, &lt;niwi@niwi.be&gt;</span><br>
-<span id="revdate">0.3.2</span>
+<span id="revdate">0.4.0-beta1</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
@@ -494,11 +494,9 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_install">3. Install</a>
 <ul class="sectlevel2">
 <li><a href="#_requirements">3.1. Requirements</a></li>
-<li><a href="#_coming_from_clj_jdbc">3.2. Coming from clj.jdbc</a></li>
-<li><a href="#_leiningen">3.3. Leiningen</a></li>
-<li><a href="#_gradle">3.4. Gradle</a></li>
-<li><a href="#_maven">3.5. Maven</a></li>
-<li><a href="#_get_the_code">3.6. Get the Code</a></li>
+<li><a href="#_leiningen">3.2. Leiningen</a></li>
+<li><a href="#_gradle">3.3. Gradle</a></li>
+<li><a href="#_get_the_code">3.4. Get the Code</a></li>
 </ul>
 </li>
 <li><a href="#_user_guide">4. User Guide</a>
@@ -512,9 +510,8 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_advanced_usage">5. Advanced usage</a>
 <ul class="sectlevel2">
 <li><a href="#cursor-queries">5.1. Server Side Cursors</a></li>
-<li><a href="#_low_level_query_interface">5.2. Low-level Query Interface</a></li>
-<li><a href="#transaction-strategy">5.3. Transaction Strategy</a></li>
-<li><a href="#_extend_sql_types">5.4. Extend SQL Types</a></li>
+<li><a href="#transaction-strategy">5.2. Transaction Strategy</a></li>
+<li><a href="#_extend_sql_types">5.3. Extend SQL Types</a></li>
 </ul>
 </li>
 <li><a href="#connection-pool">6. Connection pool</a>
@@ -608,22 +605,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 </div>
 <div class="sect2">
-<h3 id="_coming_from_clj_jdbc">3.2. Coming from clj.jdbc</h3>
-<div class="paragraph">
-<p>Only a package name is changed, all API is maintained as is with expected
-small changes as described in changelog.</p>
-</div>
-<div class="paragraph">
-<p>You should change your dependency entry on project.clj to new package name:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">[</span><span class="tok-nv">clojure.jdbc</span> <span class="tok-s">&quot;x.y.z&quot;</span><span class="tok-p">]</span></code></pre>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_leiningen">3.3. Leiningen</h3>
+<h3 id="_leiningen">3.2. Leiningen</h3>
 <div class="paragraph">
 <p>The simplest way to use <em>clojure.jdbc</em> in a clojure project, is by including it in the dependency
 vector on your <strong><em>project.clj</em></strong> file:</p>
@@ -631,51 +613,25 @@ vector on your <strong><em>project.clj</em></strong> file:</p>
 <div class="listingblock">
 <div class="title"><em>on project.clj</em></div>
 <div class="content">
-<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">[</span><span class="tok-nv">clojure.jdbc</span> <span class="tok-s">&quot;0.3.2&quot;</span><span class="tok-p">]</span></code></pre>
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">[</span><span class="tok-nv">clojure.jdbc</span> <span class="tok-s">&quot;0.4.0-beta1&quot;</span><span class="tok-p">]</span></code></pre>
 </div>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_gradle">3.4. Gradle</h3>
+<h3 id="_gradle">3.3. Gradle</h3>
 <div class="paragraph">
 <p>If you are using gradle, this is a dependency line for gradle dsl:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="groovy"><span class="tok-n">compile</span> <span class="tok-s2">&quot;clojure.jdbc:clojure.jdbc:0.3.2&quot;</span></code></pre>
+<pre class="pygments highlight"><code data-lang="groovy"><span class="tok-n">compile</span> <span class="tok-s2">&quot;clojure.jdbc:clojure.jdbc:0.4.0-beta1&quot;</span></code></pre>
 </div>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_maven">3.5. Maven</h3>
+<h3 id="_get_the_code">3.4. Get the Code</h3>
 <div class="paragraph">
-<p>And for old school people, who are using a ugly XML files to configure everything,
-this is a XML block that you should put in a dependency section of a maven config file:</p>
-</div>
-<div class="listingblock">
-<div class="title">Repository entry.</div>
-<div class="content">
-<pre class="pygments highlight"><code data-lang="xml"><span class="tok-nt">&lt;repository&gt;</span>
-    <span class="tok-nt">&lt;id&gt;</span>clojars.org<span class="tok-nt">&lt;/id&gt;</span>
-    <span class="tok-nt">&lt;url&gt;</span>http://clojars.org/repo<span class="tok-nt">&lt;/url&gt;</span>
-<span class="tok-nt">&lt;/repository&gt;</span></code></pre>
-</div>
-</div>
-<div class="listingblock">
-<div class="title">Dependency entry.</div>
-<div class="content">
-<pre class="pygments highlight"><code data-lang="xml"><span class="tok-nt">&lt;dependency&gt;</span>
-  <span class="tok-nt">&lt;groupId&gt;</span>clojure.jdbc<span class="tok-nt">&lt;/groupId&gt;</span>
-  <span class="tok-nt">&lt;artifactId&gt;</span>clojure.jdbc<span class="tok-nt">&lt;/artifactId&gt;</span>
-  <span class="tok-nt">&lt;version&gt;</span>0.3.2<span class="tok-nt">&lt;/version&gt;</span>
-<span class="tok-nt">&lt;/dependency&gt;</span></code></pre>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_get_the_code">3.6. Get the Code</h3>
-<div class="paragraph">
-<p><em>clojure.jdbc</em> is open source and is entirely developed on <a href="https://github.com/niwibe/clojure.jdbc">github</a>.</p>
+<p><em>clojure.jdbc</em> is open source and you can found the source on <a href="https://github.com/niwibe/clojure.jdbc">github</a>.</p>
 </div>
 <div class="paragraph">
 <p>You can clone the public repository with this command:</p>
@@ -728,21 +684,8 @@ and most idiomatic way in Clojure to define configuration parameters.</p>
              <span class="tok-ss">:password</span> <span class="tok-s">&quot;password&quot;</span><span class="tok-p">})</span> <span class="tok-c1">;; Optional</span></code></pre>
 </div>
 </div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<div class="title">Note</div>
-</td>
-<td class="content">
 <div class="paragraph">
-<p>The <code>:classname</code> parameter represents a class location/route of the JDBC driver. Each driver has one;
-in this example it is a path to a Postgresql JDBC driver.  This parameter can be omited and in that
-case it is automatically resolved from a predefined list using the <code>:subprotocol</code> key.</p>
-</div>
-</td>
-</tr>
-</table>
+<p>But it has some disadvantages: it does not supports all options of a default dbspec format.</p>
 </div>
 <div class="paragraph">
 <p>Also, <strong>dbspec</strong> can be represented as a URI.</p>
@@ -760,62 +703,24 @@ case it is automatically resolved from a predefined list using the <code>:subpro
 <p>With clojure.jdbc every function that interacts with a database explicitly requires
 one connection instance as parameter (no dynamic vars are used for it).</p>
 </div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<div class="title">Note</div>
-</td>
-<td class="content">
-clojure.jdbc does not use any global/thread-local state, and always tries to ensure immutability.
-</td>
-</tr>
-</table>
-</div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<div class="title">Note</div>
-</td>
-<td class="content">
-unlike java.jdbc, with <em>clojure.jdbc</em> you can&#8217;t use a plain dbspec hash-map as a
-connection parameter and you should explicitly open a new connection before doing any operation
-with a database.
-</td>
-</tr>
-</table>
-</div>
 <div class="listingblock">
-<div class="title">Example using <code>make-connection</code> function</div>
+<div class="title">Create one connection using <code>connection</code> function:</div>
 <div class="content">
-<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-nf">require</span> <span class="tok-o">&#39;</span><span class="tok-p">[</span><span class="tok-nv">jdbc.core</span> <span class="tok-ss">:refer</span> <span class="tok-ss">:all</span><span class="tok-p">])</span>
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-nf">require</span> <span class="tok-o">&#39;</span><span class="tok-p">[</span><span class="tok-nv">jdbc.core</span> <span class="tok-ss">:as</span> <span class="tok-nv">jdbc</span><span class="tok-p">])</span>
 
-<span class="tok-p">(</span><span class="tok-k">let </span><span class="tok-p">[</span><span class="tok-nv">conn</span> <span class="tok-p">(</span><span class="tok-nf">make-connection</span> <span class="tok-nv">dbspec</span><span class="tok-p">)]</span>
+<span class="tok-p">(</span><span class="tok-k">let </span><span class="tok-p">[</span><span class="tok-nv">conn</span> <span class="tok-p">(</span><span class="tok-nf">jdbc/connection</span> <span class="tok-nv">dbspec</span><span class="tok-p">)]</span>
   <span class="tok-p">(</span><span class="tok-nf">do-something-with</span> <span class="tok-nv">conn</span><span class="tok-p">)</span>
   <span class="tok-p">(</span><span class="tok-nf">.close</span> <span class="tok-nv">conn</span><span class="tok-p">))</span></code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>The <code>make-connection</code> function exposes a low-level interface for creating a connection,
-and delegates connection resource management to the user. A connection is not automatically
-closed and so use of the <code>with-open</code> macro is strongly recommended for clear resource management.</p>
-</div>
-<div class="listingblock">
-<div class="title">Better way.</div>
-<div class="content">
-<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-nb">with-open </span><span class="tok-p">[</span><span class="tok-nv">conn</span> <span class="tok-p">(</span><span class="tok-nf">make-connection</span> <span class="tok-nv">dbspec</span><span class="tok-p">)]</span>
-  <span class="tok-p">(</span><span class="tok-nf">do-something-with</span> <span class="tok-nv">conn</span><span class="tok-p">))</span></code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>However, the <code>with-connection</code> macro intends to be a high-level abstraction and
-works like the <code>with-open</code> clojure macro. This is an equivalent piece of code using
-<code>with-connection</code> macro:</p>
+<p>As you can see in previous example, you should explicltly close connection for proper
+resource management. You can use the <code>with-open</code> clojure macro for make code looks
+more clean and idiomatic.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-nf">with-connection</span> <span class="tok-p">[</span><span class="tok-nv">conn</span> <span class="tok-nv">dbspec</span><span class="tok-p">]</span>
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-nb">with-open </span><span class="tok-p">[</span><span class="tok-nv">conn</span> <span class="tok-p">(</span><span class="tok-nf">jdbc/connection</span> <span class="tok-nv">dbspec</span><span class="tok-p">)]</span>
   <span class="tok-p">(</span><span class="tok-nf">do-something-with</span> <span class="tok-nv">conn</span><span class="tok-p">))</span></code></pre>
 </div>
 </div>
@@ -831,8 +736,8 @@ an active connection as the first parameter followed by SQL sentences:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-nf">with-connection</span> <span class="tok-p">[</span><span class="tok-nv">conn</span> <span class="tok-nv">dbspec</span><span class="tok-p">]</span>
-  <span class="tok-p">(</span><span class="tok-nf">execute!</span> <span class="tok-nv">conn</span> <span class="tok-s">&quot;CREATE TABLE foo (id serial, name text);&quot;</span><span class="tok-p">))</span></code></pre>
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-nb">with-open </span><span class="tok-p">[</span><span class="tok-nv">conn</span> <span class="tok-p">(</span><span class="tok-nf">jdbc/connection</span> <span class="tok-nv">dbspec</span><span class="tok-p">)]</span>
+  <span class="tok-p">(</span><span class="tok-nf">jdbc/execute!</span> <span class="tok-nv">conn</span> <span class="tok-s">&quot;CREATE TABLE foo (id serial, name text);&quot;</span><span class="tok-p">))</span></code></pre>
 </div>
 </div>
 </div>
@@ -852,14 +757,14 @@ the repeated execution of the same operations with distinct parameters.</p>
 <div class="title">Execute a simple insert SQL statement.</div>
 <div class="content">
 <pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-k">let </span><span class="tok-p">[</span><span class="tok-nv">sql</span> <span class="tok-s">&quot;INSERT INTO foo (name) VALUES (?)&quot;</span><span class="tok-p">]</span>
-  <span class="tok-p">(</span><span class="tok-nf">execute-prepared!</span> <span class="tok-nv">conn</span> <span class="tok-p">[</span><span class="tok-nv">sql</span> <span class="tok-s">&quot;Foo&quot;</span><span class="tok-p">]))</span></code></pre>
+  <span class="tok-p">(</span><span class="tok-nf">jdbc/execute-prepared!</span> <span class="tok-nv">conn</span> <span class="tok-p">[</span><span class="tok-nv">sql</span> <span class="tok-s">&quot;Foo&quot;</span><span class="tok-p">]))</span></code></pre>
 </div>
 </div>
 <div class="listingblock">
 <div class="title">Bulk insert example.</div>
 <div class="content">
 <pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-k">let </span><span class="tok-p">[</span><span class="tok-nv">sql</span> <span class="tok-s">&quot;INSERT INTO foo (name) VALUES (?)&quot;</span><span class="tok-p">]</span>
-  <span class="tok-p">(</span><span class="tok-nf">execute-prepared!</span> <span class="tok-nv">conn</span> <span class="tok-nv">sql</span> <span class="tok-p">[</span><span class="tok-s">&quot;Foo&quot;</span><span class="tok-p">]</span> <span class="tok-p">[</span><span class="tok-s">&quot;Bar&quot;</span><span class="tok-p">]))</span>
+  <span class="tok-p">(</span><span class="tok-nf">jdbc/execute-prepared!</span> <span class="tok-nv">conn</span> <span class="tok-nv">sql</span> <span class="tok-p">[</span><span class="tok-s">&quot;Foo&quot;</span><span class="tok-p">]</span> <span class="tok-p">[</span><span class="tok-s">&quot;Bar&quot;</span><span class="tok-p">]))</span>
 
 <span class="tok-c1">;; This should emit this sql:</span>
 <span class="tok-c1">;;   INSERT INTO foo (name) VALUES (&#39;Foo&#39;);</span>
@@ -879,7 +784,7 @@ your queries for return the primary keys of newly inserted records.</p>
 <div class="listingblock">
 <div class="content">
 <pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-k">let </span><span class="tok-p">[</span><span class="tok-nv">sql</span> <span class="tok-s">&quot;INSERT INTO foo (name) VALUES (?);&quot;</span>
-      <span class="tok-nv">res</span> <span class="tok-p">(</span><span class="tok-nf">execute-prepared!</span> <span class="tok-nv">conn</span> <span class="tok-nv">sql</span> <span class="tok-p">[</span><span class="tok-s">&quot;Foo&quot;</span><span class="tok-p">]</span> <span class="tok-p">[</span><span class="tok-s">&quot;Bar&quot;</span><span class="tok-p">]</span> <span class="tok-p">{</span><span class="tok-ss">:returning</span> <span class="tok-p">[</span><span class="tok-ss">:id</span><span class="tok-p">]})]</span>
+      <span class="tok-nv">res</span> <span class="tok-p">(</span><span class="tok-nf">jdbc/execute-prepared!</span> <span class="tok-nv">conn</span> <span class="tok-nv">sql</span> <span class="tok-p">[</span><span class="tok-s">&quot;Foo&quot;</span><span class="tok-p">]</span> <span class="tok-p">[</span><span class="tok-s">&quot;Bar&quot;</span><span class="tok-p">]</span> <span class="tok-p">{</span><span class="tok-ss">:returning</span> <span class="tok-p">[</span><span class="tok-ss">:id</span><span class="tok-p">]})]</span>
   <span class="tok-p">(</span><span class="tok-nb">println </span><span class="tok-nv">res</span><span class="tok-p">))</span>
 
 <span class="tok-c1">;; This should print something like this to standard output:</span>
@@ -891,7 +796,7 @@ your queries for return the primary keys of newly inserted records.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-nf">execute-prepared!</span> <span class="tok-nv">conn</span> <span class="tok-nv">sql</span> <span class="tok-p">[</span><span class="tok-s">&quot;foo&quot;</span><span class="tok-p">]</span> <span class="tok-p">{</span><span class="tok-ss">:returning</span> <span class="tok-ss">:all</span><span class="tok-p">})</span></code></pre>
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-nf">jdbc/execute-prepared!</span> <span class="tok-nv">conn</span> <span class="tok-nv">sql</span> <span class="tok-p">[</span><span class="tok-s">&quot;foo&quot;</span><span class="tok-p">]</span> <span class="tok-p">{</span><span class="tok-ss">:returning</span> <span class="tok-ss">:all</span><span class="tok-p">})</span></code></pre>
 </div>
 </div>
 </div>
@@ -904,9 +809,9 @@ your queries for return the primary keys of newly inserted records.</p>
 <div class="listingblock">
 <div class="content">
 <pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-k">let </span><span class="tok-p">[</span><span class="tok-nv">sql</span>    <span class="tok-p">[</span><span class="tok-s">&quot;SELECT id, name FROM people WHERE age &gt; ?&quot;</span>, <span class="tok-mi">2</span><span class="tok-p">]</span>
-      <span class="tok-nv">result</span> <span class="tok-p">(</span><span class="tok-nf">query</span> <span class="tok-nv">conn</span> <span class="tok-nv">sql</span><span class="tok-p">)]</span>
+      <span class="tok-nv">result</span> <span class="tok-p">(</span><span class="tok-nf">jdbc/query</span> <span class="tok-nv">conn</span> <span class="tok-nv">sql</span><span class="tok-p">)]</span>
   <span class="tok-p">(</span><span class="tok-nb">doseq </span><span class="tok-p">[</span><span class="tok-nv">row</span> <span class="tok-nv">results</span><span class="tok-p">]</span>
-  <span class="tok-p">(</span><span class="tok-nb">println </span><span class="tok-nv">row</span><span class="tok-p">))))</span>
+    <span class="tok-p">(</span><span class="tok-nb">println </span><span class="tok-nv">row</span><span class="tok-p">))))</span>
 
 <span class="tok-c1">;; It should print this:</span>
 <span class="tok-c1">;; =&gt; {:id 1 :name &quot;Foo&quot;}</span>
@@ -1034,7 +939,7 @@ code wrapped in transaction blocks truly atomic independently of transaction nes
 <div class="listingblock">
 <div class="title">You can set the isolation level when creating a connection by specifying it in your dbspec.</div>
 <div class="content">
-<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-k">def </span><span class="tok-nv">dbsoec</span> <span class="tok-p">{</span><span class="tok-ss">:subprotocol</span> <span class="tok-s">&quot;h2&quot;</span>
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-k">def </span><span class="tok-nv">dbspec</span> <span class="tok-p">{</span><span class="tok-ss">:subprotocol</span> <span class="tok-s">&quot;h2&quot;</span>
              <span class="tok-ss">:subname</span> <span class="tok-s">&quot;mem:&quot;</span>
              <span class="tok-ss">:isolation-level</span> <span class="tok-ss">:serializable</span><span class="tok-p">})</span></code></pre>
 </div>
@@ -1042,11 +947,11 @@ code wrapped in transaction blocks truly atomic independently of transaction nes
 <div class="listingblock">
 <div class="title">Or set it when executing a transaction</div>
 <div class="content">
-<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-nf">call-in-transaction</span> <span class="tok-nv">conn</span> <span class="tok-nv">do-something</span> <span class="tok-p">{</span><span class="tok-ss">:isolation-level</span> <span class="tok-ss">:serializable</span><span class="tok-p">})</span>
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-nf">tx/call-in-transaction</span> <span class="tok-nv">conn</span> <span class="tok-nv">do-something</span> <span class="tok-p">{</span><span class="tok-ss">:isolation-level</span> <span class="tok-ss">:serializable</span><span class="tok-p">})</span>
 
 <span class="tok-c1">;; Or...</span>
 
-<span class="tok-p">(</span><span class="tok-nf">with-transaction</span> <span class="tok-nv">conn</span> <span class="tok-p">{</span><span class="tok-ss">:isolation-level</span> <span class="tok-ss">:serializable</span><span class="tok-p">}</span>
+<span class="tok-p">(</span><span class="tok-nf">tx/with-transaction</span> <span class="tok-nv">conn</span> <span class="tok-p">{</span><span class="tok-ss">:isolation-level</span> <span class="tok-ss">:serializable</span><span class="tok-p">}</span>
   <span class="tok-p">(</span><span class="tok-nf">do-something</span> <span class="tok-nv">conn</span><span class="tok-p">))</span></code></pre>
 </div>
 </div>
@@ -1098,7 +1003,8 @@ optimizations for this operation.</p>
 <div class="listingblock">
 <div class="title">You can set transaction read-only using transaction options</div>
 <div class="content">
-<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-nf">with-transaction</span> <span class="tok-nv">conn</span> <span class="tok-p">{</span><span class="tok-ss">:isolation-level</span> <span class="tok-ss">:serializable</span> <span class="tok-ss">:read-only</span> <span class="tok-nv">true</span><span class="tok-p">}</span>
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-nf">tx/with-transaction</span> <span class="tok-nv">conn</span> <span class="tok-p">{</span><span class="tok-ss">:isolation-level</span> <span class="tok-ss">:serializable</span>
+                           <span class="tok-ss">:read-only</span> <span class="tok-nv">true</span><span class="tok-p">}</span>
   <span class="tok-p">(</span><span class="tok-nf">query-something</span> <span class="tok-nv">conn</span><span class="tok-p">))</span></code></pre>
 </div>
 </div>
@@ -1112,122 +1018,53 @@ optimizations for this operation.</p>
 <div class="sect2">
 <h3 id="cursor-queries">5.1. Server Side Cursors</h3>
 <div class="paragraph">
-<p>By default, most JDBC drivers prefetch all results into memory make the use of lazy structures totally useless
-for fetching data. Luckily, some databases implement server-side cursors that avoid this behavior.</p>
+<p>By default, most JDBC drivers prefetch all results into memory make the use of lazy structures
+totally useless for fetching data. Luckily, some databases implement server-side cursors that avoid
+this behavior.</p>
 </div>
 <div class="paragraph">
-<p>If you have an extremely large resultset and you want retrieve it and process each item, this is exactly what you need.</p>
+<p>If you have an extremely large resultset and you want retrieve it and process each item, this is
+exactly what you need.</p>
 </div>
 <div class="paragraph">
-<p>For this purpose, <em>clojure.jdbc</em> exposes the <code>with-query</code> macro that uses server-side cursors internally
-and exposes a lazy seq of records (instead of a fully evaluated vector) in a macro-created context:</p>
+<p>For this purpose, <em>clojure.jdbc</em> exposes the <code>lazy-query</code> function, that returns a some kind of
+cursor instance. At the moment of creating cursor, no query is executed.</p>
+</div>
+<div class="paragraph">
+<p>The cursor can be used converting it into clojure lazyseq using <code>cursor-&gt;lazyseq</code> function:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-k">let </span><span class="tok-p">[</span><span class="tok-nv">sql</span> <span class="tok-p">[</span><span class="tok-s">&quot;SELECT id, name FROM people;&quot;</span><span class="tok-p">]]</span>
-  <span class="tok-p">(</span><span class="tok-nf">with-query</span> <span class="tok-nv">conn</span> <span class="tok-nv">sql</span> <span class="tok-nv">results</span>
-    <span class="tok-p">(</span><span class="tok-nb">doseq </span><span class="tok-p">[</span><span class="tok-nv">row</span> <span class="tok-nv">results</span><span class="tok-p">]</span>
-      <span class="tok-p">(</span><span class="tok-nb">println </span><span class="tok-nv">row</span><span class="tok-p">))))</span></code></pre>
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-nf">with-transaction</span> <span class="tok-nv">conn</span>
+  <span class="tok-p">(</span><span class="tok-nb">with-open </span><span class="tok-p">[</span><span class="tok-nv">cursor</span> <span class="tok-p">(</span><span class="tok-nf">jdbc/lazy-query</span> <span class="tok-nv">conn</span> <span class="tok-p">[</span><span class="tok-s">&quot;SELECT id, name FROM people;&quot;</span><span class="tok-p">])]</span>
+    <span class="tok-p">(</span><span class="tok-nb">doseq </span><span class="tok-p">[</span><span class="tok-nv">row</span> <span class="tok-p">(</span><span class="tok-nf">jdbc/cursor-&gt;lazyseq</span> <span class="tok-nv">cursor</span><span class="tok-p">)]</span>
+      <span class="tok-p">(</span><span class="tok-nb">println </span><span class="tok-nv">row</span><span class="tok-p">)))</span></code></pre>
 </div>
 </div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<div class="title">Note</div>
-</td>
-<td class="content">
 <div class="paragraph">
-<p>The <code>with-query</code> macro implicitly ensures that all code inside a created context is executed
-in one transaction or subtransaction. This is mandatory because server-side cursors only work
-inside one transaction.</p>
-</div>
-</td>
-</tr>
-</table>
+<p>In some databases, it requires that cursor should be evaluated in a context of one
+transaction.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_low_level_query_interface">5.2. Low-level Query Interface</h3>
+<h3 id="transaction-strategy">5.2. Transaction Strategy</h3>
 <div class="paragraph">
-<p>All functions that execute queries, use the <code>make-query</code> function behind the scenes. It is a low-level
-interface for access to query functionality.</p>
-</div>
-<div class="paragraph">
-<p>This function has distinct behavior in comparison with its high-level siblings. It returns a
-<code>jdbc.types.resultset.ResultSet</code> instance that works as a Clojure persistent map and contains
-these keys:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>the <code>:stmt</code> key contains a statement instance used to make the query.</p>
-</li>
-<li>
-<p>the <code>:rs</code> key contains a raw <code>java.sql.ResultSet</code> instance.</p>
-</li>
-<li>
-<p>the <code>:data</code> key contains the results as lazy-seq or vector depending on parameters.</p>
-</li>
-</ul>
-</div>
-<div class="listingblock">
-<div class="title">Example using <code>make-query</code> function</div>
-<div class="content">
-<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-k">let </span><span class="tok-p">[</span><span class="tok-nv">sql</span>    <span class="tok-p">[</span><span class="tok-s">&quot;SELECT id, name FROM people WHERE age &gt; ?&quot;</span>, <span class="tok-mi">2</span><span class="tok-p">]</span>
-      <span class="tok-nv">result</span> <span class="tok-p">(</span><span class="tok-nf">make-query</span> <span class="tok-nv">conn</span> <span class="tok-nv">sql</span><span class="tok-p">)]</span>
-  <span class="tok-p">(</span><span class="tok-nb">doseq </span><span class="tok-p">[</span><span class="tok-nv">row</span> <span class="tok-p">(</span><span class="tok-ss">:data</span> <span class="tok-nv">result</span><span class="tok-p">)]</span>
-    <span class="tok-p">(</span><span class="tok-nb">println </span><span class="tok-nv">row</span><span class="tok-p">))</span>
-  <span class="tok-p">(</span><span class="tok-nf">.close</span> <span class="tok-nv">result</span><span class="tok-p">))</span></code></pre>
-</div>
-</div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<div class="title">Note</div>
-</td>
-<td class="content">
-<div class="paragraph">
-<p>You can see the API documentation to find out more about it, but mainly it is
-a container that mantains a reference to the original Java JDBC objects
-which are used in executing a query.</p>
-</div>
-</td>
-</tr>
-</table>
-</div>
-<div class="admonitionblock warning">
-<table>
-<tr>
-<td class="icon">
-<div class="title">Warning</div>
-</td>
-<td class="content">
-<code>make-query</code> is a low-level interface and you must be careful when using it.
-</td>
-</tr>
-</table>
-</div>
-</div>
-<div class="sect2">
-<h3 id="transaction-strategy">5.3. Transaction Strategy</h3>
-<div class="paragraph">
-<p>Transaction strategies in <em>clojure.jdbc</em> are implemented using protocols having default implementations explained
-in the previous sections. This approach allows an easy way to extend, customize or completely change a transaction
-strategy for your application.</p>
+<p>Transaction strategies in <em>clojure.jdbc</em> are implemented using protocols having default
+implementation explained in the previous sections. This approach allows an easy way to extend,
+customize or completely change a transaction strategy for your application.</p>
 </div>
 <div class="paragraph">
-<p>If you want another strategy, you should create a new type and implement the <code>ITransactionStrategy</code> protocol.</p>
+<p>If you want another strategy, you should create a new type and implement the
+<code>ITransactionStrategy</code> protocol.</p>
 </div>
 <div class="listingblock">
 <div class="title">Sample dummy transaction strategy.</div>
 <div class="content">
-<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-kd">defrecord </span><span class="tok-nv">DummyTransactionStrategy</span> <span class="tok-p">[]</span>
-  <span class="tok-nv">tx/ITransactionStrategy</span>
-  <span class="tok-p">(</span><span class="tok-nf">begin!</span> <span class="tok-p">[</span><span class="tok-nv">_</span> <span class="tok-nv">conn</span> <span class="tok-nv">opts</span><span class="tok-p">]</span> <span class="tok-nv">conn</span><span class="tok-p">)</span>
-  <span class="tok-p">(</span><span class="tok-nf">rollback!</span> <span class="tok-p">[</span><span class="tok-nv">_</span> <span class="tok-nv">conn</span> <span class="tok-nv">opts</span><span class="tok-p">]</span> <span class="tok-nv">conn</span><span class="tok-p">)</span>
-  <span class="tok-p">(</span><span class="tok-nf">commit!</span> <span class="tok-p">[</span><span class="tok-nv">_</span> <span class="tok-nv">conn</span> <span class="tok-nv">opts</span><span class="tok-p">]</span> <span class="tok-nv">conn</span><span class="tok-p">))</span></code></pre>
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-k">def </span><span class="tok-nv">dummy-tx-strategy</span>
+  <span class="tok-p">(</span><span class="tok-nf">reify</span> <span class="tok-nv">tx/ITransactionStrategy</span>
+    <span class="tok-p">(</span><span class="tok-nf">begin!</span> <span class="tok-p">[</span><span class="tok-nv">_</span> <span class="tok-nv">conn</span> <span class="tok-nv">opts</span><span class="tok-p">]</span> <span class="tok-nv">conn</span><span class="tok-p">)</span>
+    <span class="tok-p">(</span><span class="tok-nf">rollback!</span> <span class="tok-p">[</span><span class="tok-nv">_</span> <span class="tok-nv">conn</span> <span class="tok-nv">opts</span><span class="tok-p">]</span> <span class="tok-nv">conn</span><span class="tok-p">)</span>
+    <span class="tok-p">(</span><span class="tok-nf">commit!</span> <span class="tok-p">[</span><span class="tok-nv">_</span> <span class="tok-nv">conn</span> <span class="tok-nv">opts</span><span class="tok-p">]</span> <span class="tok-nv">conn</span><span class="tok-p">)))</span></code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1236,8 +1073,8 @@ strategy for your application.</p>
 <div class="listingblock">
 <div class="title">Using the <code>with-transaction-strategy</code> macro.</div>
 <div class="content">
-<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-nf">with-connection</span> <span class="tok-p">[</span><span class="tok-nv">conn</span> <span class="tok-nv">dbspec</span><span class="tok-p">]</span>
-  <span class="tok-p">(</span><span class="tok-nf">with-transaction-strategy</span> <span class="tok-nv">conn</span> <span class="tok-p">(</span><span class="tok-nf">DummyTransactionStrategy.</span><span class="tok-p">)</span>
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-nb">with-open </span><span class="tok-p">[</span><span class="tok-nv">conn</span> <span class="tok-p">(</span><span class="tok-nf">jdbc/connection</span> <span class="tok-nv">conn</span><span class="tok-p">)]</span>
+  <span class="tok-p">(</span><span class="tok-nf">tx/with-transaction-strategy</span> <span class="tok-nv">conn</span> <span class="tok-nv">dummy-tx-strategy</span>
     <span class="tok-p">(</span><span class="tok-nf">do-some-thing</span> <span class="tok-nv">conn</span><span class="tok-p">)))</span></code></pre>
 </div>
 </div>
@@ -1257,8 +1094,8 @@ strategy to connection and exposes it.
 <div class="listingblock">
 <div class="title">Using the <code>wrap-transaction-strategy</code> function:</div>
 <div class="content">
-<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-nb">with-open </span><span class="tok-p">[</span><span class="tok-nv">conn</span> <span class="tok-p">(</span><span class="tok-nb">-&gt; </span><span class="tok-p">(</span><span class="tok-nf">make-connection</span> <span class="tok-nv">dbspec</span><span class="tok-p">)</span>
-                     <span class="tok-p">(</span><span class="tok-nf">wrap-transaction-strategy</span> <span class="tok-p">(</span><span class="tok-nf">DummyTransactionStrategy.</span><span class="tok-p">)))]</span>
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-nb">with-open </span><span class="tok-p">[</span><span class="tok-nv">conn</span> <span class="tok-p">(</span><span class="tok-nb">-&gt; </span><span class="tok-p">(</span><span class="tok-nf">jdbc/connection</span> <span class="tok-nv">dbspec</span><span class="tok-p">)</span>
+                     <span class="tok-p">(</span><span class="tok-nf">jdbc/wrap-transaction-strategy</span> <span class="tok-nv">dummy-tx-strategy</span><span class="tok-p">))]</span>
   <span class="tok-p">(</span><span class="tok-nf">do-some-thing</span> <span class="tok-nv">conn</span><span class="tok-p">))</span></code></pre>
 </div>
 </div>
@@ -1266,16 +1103,16 @@ strategy to connection and exposes it.
 <div class="title">Using dynamic vars</div>
 <div class="content">
 <pre class="pygments highlight"><code data-lang="clojure"><span class="tok-c1">;; Overwritting the default value</span>
-<span class="tok-p">(</span><span class="tok-nf">alter-var-root</span> <span class="tok-o">#</span><span class="tok-ss">&#39;tx/*default-tx-strategy*</span> <span class="tok-p">(</span><span class="tok-k">fn </span><span class="tok-p">[</span><span class="tok-nv">_</span><span class="tok-p">]</span> <span class="tok-p">(</span><span class="tok-nf">DummyTransactionStrategy.</span><span class="tok-p">)))</span>
+<span class="tok-p">(</span><span class="tok-nf">alter-var-root</span> <span class="tok-o">#</span><span class="tok-ss">&#39;tx/*default-tx-strategy*</span> <span class="tok-p">(</span><span class="tok-k">fn </span><span class="tok-p">[</span><span class="tok-nv">_</span><span class="tok-p">]</span> <span class="tok-nv">dummy-tx-strategy</span><span class="tok-p">))</span>
 
 <span class="tok-c1">;; Or using binding</span>
-<span class="tok-p">(</span><span class="tok-nb">binding </span><span class="tok-p">[</span><span class="tok-nv">tx/*default-tx-strategy*</span> <span class="tok-p">(</span><span class="tok-nf">DummyTransactionStrategy.</span><span class="tok-p">)]</span>
+<span class="tok-p">(</span><span class="tok-nb">binding </span><span class="tok-p">[</span><span class="tok-nv">tx/*default-tx-strategy*</span> <span class="tok-nv">dummy-tx-strategy</span><span class="tok-p">]</span>
   <span class="tok-p">(</span><span class="tok-nf">some-func-that-uses-transactions</span><span class="tok-p">))</span></code></pre>
 </div>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_extend_sql_types">5.4. Extend SQL Types</h3>
+<h3 id="_extend_sql_types">5.3. Extend SQL Types</h3>
 <div class="paragraph">
 <p>Everything related to type handling/conversion is exposed in the <code>jdbc.proto</code> namespace.</p>
 </div>
@@ -1289,14 +1126,16 @@ a query parameter that corresponds to PostgreSQL text array in the database:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-nf">extend-protocol</span> <span class="tok-nv">ISQLType</span>
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-nf">require</span> <span class="tok-o">&#39;</span><span class="tok-p">[</span><span class="tok-nv">jdbc.proto</span> <span class="tok-ss">:as</span> <span class="tok-nv">proto</span><span class="tok-p">])</span>
+
+<span class="tok-p">(</span><span class="tok-nf">extend-protocol</span> <span class="tok-nv">ISQLType</span>
   <span class="tok-c1">;; Obtain a class for string array</span>
   <span class="tok-p">(</span><span class="tok-nb">class </span><span class="tok-p">(</span><span class="tok-nb">into-array </span><span class="tok-nv">String</span> <span class="tok-p">[]))</span>
 
   <span class="tok-p">(</span><span class="tok-nf">set-stmt-parameter!</span> <span class="tok-p">[</span><span class="tok-nv">this</span> <span class="tok-nv">conn</span> <span class="tok-nv">stmt</span> <span class="tok-nv">index</span><span class="tok-p">]</span>
-    <span class="tok-p">(</span><span class="tok-k">let </span><span class="tok-p">[</span><span class="tok-nv">raw-conn</span>        <span class="tok-p">(</span><span class="tok-ss">:connection</span> <span class="tok-nv">conn</span><span class="tok-p">)</span>
-          <span class="tok-nv">prepared-value</span>  <span class="tok-p">(</span><span class="tok-nf">as-sql-type</span> <span class="tok-nv">this</span> <span class="tok-nv">conn</span><span class="tok-p">)</span>
-          <span class="tok-nv">array</span>           <span class="tok-p">(</span><span class="tok-nf">.createArrayOf</span> <span class="tok-nv">raw-conn</span> <span class="tok-s">&quot;text&quot;</span> <span class="tok-nv">prepared-value</span><span class="tok-p">)]</span>
+    <span class="tok-p">(</span><span class="tok-k">let </span><span class="tok-p">[</span><span class="tok-nv">rconn</span> <span class="tok-p">(</span><span class="tok-nf">proto/get-connection</span> <span class="tok-nv">conn</span><span class="tok-p">)</span>
+          <span class="tok-nv">value</span> <span class="tok-p">(</span><span class="tok-nf">proto/as-sql-type</span> <span class="tok-nv">this</span> <span class="tok-nv">conn</span><span class="tok-p">)</span>
+          <span class="tok-nv">array</span> <span class="tok-p">(</span><span class="tok-nf">.createArrayOf</span> <span class="tok-nv">raw-conn</span> <span class="tok-s">&quot;text&quot;</span> <span class="tok-nv">value</span><span class="tok-p">)]</span>
       <span class="tok-p">(</span><span class="tok-nf">.setArray</span> <span class="tok-nv">stmt</span> <span class="tok-nb">index </span><span class="tok-nv">array</span><span class="tok-p">)))</span>
 
   <span class="tok-p">(</span><span class="tok-nf">as-sql-type</span> <span class="tok-p">[</span><span class="tok-nv">this</span> <span class="tok-nv">conn</span><span class="tok-p">]</span> <span class="tok-nv">this</span><span class="tok-p">))</span></code></pre>
@@ -1308,16 +1147,19 @@ to an SQL array and assigned properly in a prepared statement:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-nf">with-connection</span> <span class="tok-p">[</span><span class="tok-nv">conn</span> <span class="tok-nv">pg-dbspec</span><span class="tok-p">]</span>
-  <span class="tok-p">(</span><span class="tok-nf">execute!</span> <span class="tok-nv">conn</span> <span class="tok-s">&quot;CREATE TABLE arrayfoo (id integer, data text[]);&quot;</span><span class="tok-p">)</span>
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-nb">with-open </span><span class="tok-p">[</span><span class="tok-nv">conn</span> <span class="tok-p">(</span><span class="tok-nf">jdbc/connection</span> <span class="tok-nv">pg-dbspec</span><span class="tok-p">)]</span>
+  <span class="tok-p">(</span><span class="tok-nf">jdbc/execute!</span> <span class="tok-nv">conn</span> <span class="tok-s">&quot;CREATE TABLE arrayfoo (id integer, data text[]);&quot;</span><span class="tok-p">)</span>
   <span class="tok-p">(</span><span class="tok-k">let </span><span class="tok-p">[</span><span class="tok-nv">mystringarray</span> <span class="tok-p">(</span><span class="tok-nb">into-array </span><span class="tok-nv">String</span> <span class="tok-p">[</span><span class="tok-s">&quot;foo&quot;</span> <span class="tok-s">&quot;bar&quot;</span><span class="tok-p">])]</span>
-    <span class="tok-p">(</span><span class="tok-nf">execute-prepared!</span> <span class="tok-nv">conn</span> <span class="tok-s">&quot;INSERT INTO arrayfoo VALUES (?, ?);&quot;</span>
-                       <span class="tok-p">[</span><span class="tok-mi">1</span>, <span class="tok-nv">mystringarray</span><span class="tok-p">])))</span></code></pre>
+    <span class="tok-p">(</span><span class="tok-nf">jdbc/execute-prepared!</span> <span class="tok-nv">conn</span> <span class="tok-s">&quot;INSERT INTO arrayfoo VALUES (?, ?);&quot;</span>
+                            <span class="tok-p">[</span><span class="tok-mi">1</span>, <span class="tok-nv">mystringarray</span><span class="tok-p">])))</span></code></pre>
 </div>
 </div>
 <div class="paragraph">
 <p>clojure.jdbc also exposes the <code>jdbc.proto/ISQLResultSetReadColumn</code> protocol that encapsulates
 reverse conversions from SQL types to user-defined types.</p>
+</div>
+<div class="paragraph">
+<p>You can read more about that in this blog post: <a href="http://www.niwi.be/2014/04/13/postgresql-json-field-with-clojure-and-jdbc/" class="bare">http://www.niwi.be/2014/04/13/postgresql-json-field-with-clojure-and-jdbc/</a></p>
 </div>
 </div>
 </div>
@@ -1331,122 +1173,76 @@ in your production code. This can avoid continuosly creating and destroying conn
 that in the majority of time is a slow operation.</p>
 </div>
 <div class="paragraph">
-<p>Java ecosystem comes with various of it, and <em>clojure.jdbc</em> has extensios to few of
-them:</p>
+<p>Java ecosystem comes with various of it. This is a list of most used:</p>
 </div>
 <div class="ulist">
 <ul>
+<li>
+<p>HikariCP: <a href="https://github.com/brettwooldridge/HikariCP" class="bare">https://github.com/brettwooldridge/HikariCP</a></p>
+</li>
 <li>
 <p>c3p0: <a href="http://www.mchange.com/projects/c3p0/" class="bare">http://www.mchange.com/projects/c3p0/</a></p>
 </li>
 <li>
 <p>Apache DBCP2: <a href="http://commons.apache.org/proper/commons-dbcp/" class="bare">http://commons.apache.org/proper/commons-dbcp/</a></p>
 </li>
-<li>
-<p>HikariCP: <a href="https://github.com/brettwooldridge/HikariCP" class="bare">https://github.com/brettwooldridge/HikariCP</a></p>
-</li>
 </ul>
 </div>
 <div class="paragraph">
-<p>Each connection pool / datasource adapter lives in separated package for not installing
-unnecesary dependencies if it is not used.</p>
+<p><em>clojure.jdbc</em> is compatible with any other connection pool implemenetation, simply
+pass a <code>javax.sql.DataSource</code> instance <code>jdbc/connection</code>.</p>
 </div>
 <div class="sect2">
 <h3 id="_c3p0">6.1. c3p0</h3>
 <div class="paragraph">
 <p>c3p0, a mature, highly concurrent JDBC connection pooling library for clojure.jdbc.</p>
 </div>
-<div class="sect3">
-<h4 id="_install_2">6.1.1. Install</h4>
+<div class="listingblock">
+<div class="title">Dependency entry</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">[</span><span class="tok-nv">com.mchange/c3p0</span> <span class="tok-s">&quot;0.9.5&quot;</span><span class="tok-p">]</span></code></pre>
+</div>
+</div>
 <div class="paragraph">
-<p>In case of <strong>c3p0</strong>, you should put this on your dependencies vector:</p>
+<p>In order to use this connection pool, previously you should create a DataSource instance. Here
+an little example on how it can be done:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">[</span><span class="tok-nv">clojure.jdbc/clojure.jdbc-c3p0</span> <span class="tok-s">&quot;0.3.1&quot;</span><span class="tok-p">]</span></code></pre>
-</div>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_basic_usage">6.1.2. Basic Usage</h4>
-<div class="paragraph">
-<p>In order to use a connection pool, you should convert your plain dbspec into a
-datasource-dbspec using the helper function provided in each extension.</p>
-</div>
-<div class="listingblock">
-<div class="title">Example using c3p0 connection pool</div>
-<div class="content">
-<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-c1">;; Import the desired implementation</span>
-<span class="tok-p">(</span><span class="tok-nf">require</span> <span class="tok-o">&#39;</span><span class="tok-p">[</span><span class="tok-nv">jdbc.pool.c3p0</span> <span class="tok-ss">:as</span> <span class="tok-nv">pool</span><span class="tok-p">])</span>
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-nb">import </span><span class="tok-ss">&#39;com.mchange.v2.c3p0.ComboPooledDataSource</span><span class="tok-p">)</span>
 
-<span class="tok-c1">;; Convert the standard dbspec to an other dbspec with `:datasource` key</span>
-<span class="tok-p">(</span><span class="tok-k">def </span><span class="tok-nv">dbspec</span> <span class="tok-p">(</span><span class="tok-nf">pool/make-datasource-spec</span> <span class="tok-p">{</span><span class="tok-ss">:subprotocol</span> <span class="tok-s">&quot;postgresql&quot;</span>
-                                        <span class="tok-ss">:subname</span> <span class="tok-s">&quot;//localhost:5432/dbname&quot;</span><span class="tok-p">}))</span></code></pre>
+<span class="tok-p">(</span><span class="tok-k">def </span><span class="tok-nv">ds</span> <span class="tok-p">(</span><span class="tok-nb">doto </span><span class="tok-p">(</span><span class="tok-nf">ComboPooledDataSource.</span><span class="tok-p">)</span>
+          <span class="tok-p">(</span><span class="tok-nf">.setJdbcUrl</span> <span class="tok-p">(</span><span class="tok-nb">str </span><span class="tok-s">&quot;jdbc:&quot;</span>
+                            <span class="tok-p">(</span><span class="tok-ss">:subprotocol</span> <span class="tok-nv">dbspec</span><span class="tok-p">)</span>
+                            <span class="tok-p">(</span><span class="tok-ss">:subname</span> <span class="tok-nv">dbspec</span><span class="tok-p">)))</span>
+          <span class="tok-p">(</span><span class="tok-nf">.setUser</span> <span class="tok-p">(</span><span class="tok-ss">:user</span> <span class="tok-nv">dbspec</span> <span class="tok-nv">nil</span><span class="tok-p">))</span>
+          <span class="tok-p">(</span><span class="tok-nf">.setPassword</span> <span class="tok-p">(</span><span class="tok-ss">:password</span> <span class="tok-nv">dbspec</span> <span class="tok-nv">nil</span><span class="tok-p">))</span>
+
+          <span class="tok-c1">;; Pool Size Management</span>
+          <span class="tok-p">(</span><span class="tok-nf">.setMinPoolSize</span> <span class="tok-mi">3</span><span class="tok-p">)</span>
+          <span class="tok-p">(</span><span class="tok-nf">.setMaxPoolSize</span> <span class="tok-mi">15</span><span class="tok-p">)</span>
+
+          <span class="tok-c1">;; Connection eviction</span>
+          <span class="tok-p">(</span><span class="tok-nf">.setMaxConnectionAge</span>  <span class="tok-mi">3600</span><span class="tok-p">)</span> <span class="tok-c1">; 1 hour</span>
+          <span class="tok-p">(</span><span class="tok-nf">.setMaxIdleTime</span> <span class="tok-mi">1800</span><span class="tok-p">)</span>       <span class="tok-c1">; 1/2 hour</span>
+          <span class="tok-p">(</span><span class="tok-nf">.setMaxIdleTimeExcessConnections</span> <span class="tok-mi">120</span><span class="tok-p">)</span>
+
+          <span class="tok-c1">;; Connection testing</span>
+          <span class="tok-p">(</span><span class="tok-nf">.setTestConnectionOnCheckin</span> <span class="tok-nv">false</span><span class="tok-p">)</span>
+          <span class="tok-p">(</span><span class="tok-nf">.setTestConnectionOnCheckout</span> <span class="tok-nv">false</span><span class="tok-p">)</span>
+          <span class="tok-p">(</span><span class="tok-nf">.setIdleConnectionTestPeriod</span> <span class="tok-mi">600</span><span class="tok-p">)))</span></code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>Now, dbspec should be used like a plain dbspec for creating connections.</p>
+<p>You can found all configuration parameters here: <a href="http://www.mchange.com/projects/c3p0/#configuration" class="bare">http://www.mchange.com/projects/c3p0/#configuration</a></p>
 </div>
-<div class="sect4">
-<h5 id="_advanced_configuration">Advanced configuration</h5>
 <div class="paragraph">
-<p>c3p0 comes with "good" defaults that should work in majority standard environments,
-but obviously, it exposes set of options for customize it:</p>
+<p>Now, the new created datasource should be used like a plain dbspec for creating connections:</p>
 </div>
-<table class="tableblock frame-all grid-all spread">
-<colgroup>
-<col style="width: 50%;">
-<col style="width: 50%;">
-</colgroup>
-<thead>
-<tr>
-<th class="tableblock halign-left valign-top">Option</th>
-<th class="tableblock halign-left valign-top">Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:min-pool-size</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Minimum number of Connections a pool will maintain at any given time.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:max-pool-size</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Maximum number of Connections a pool will maintain at any given time.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:initial-pool-size</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Number of Connections a pool will try to acquire upon startup.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:max-wait</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">The number of milliseconds a client calling getConnection() will wait for a Connection to be checked-in or acquired when the pool is exhausted.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:max-connection-lifetime</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">The maximum lifetime in milliseconds of a connection.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:test-connection-query</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">The SQL query that will be used to validate connections from this pool before returning them to the caller. If specified, this query MUST be an SQL SELECT statement that returns at least one row. If not specified, connections will be validation by calling the isValid() method.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:test-connection-on-borrow</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">The indication of whether objects will be validated before being borrowed from the pool.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:test-connection-on-return</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">The indication of whether objects will be validated before being returned to the pool.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:test-idle-connections-period</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">The number of milliseconds to sleep between runs of the idle object evictor thread.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:max-connection-idle-lifetime</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">The minimum amount of time (in milliseconds) an object may sit idle in the pool before it is eligable for eviction by the idle object evictor (if any).</p></td>
-</tr>
-</tbody>
-</table>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-nb">with-open </span><span class="tok-p">[</span><span class="tok-nv">conn</span> <span class="tok-p">(</span><span class="tok-nf">jdbc/connection</span> <span class="tok-nv">ds</span><span class="tok-p">)]</span>
+  <span class="tok-p">(</span><span class="tok-nf">do-stuff</span> <span class="tok-nv">conn</span><span class="tok-p">))</span></code></pre>
 </div>
 </div>
 </div>
@@ -1455,99 +1251,55 @@ but obviously, it exposes set of options for customize it:</p>
 <div class="paragraph">
 <p>Apache commons DBCP (JDBC) connection pool implementation for clojure.jdbc</p>
 </div>
-<div class="sect3">
-<h4 id="_install_3">6.2.1. Install</h4>
+<div class="listingblock">
+<div class="title">Dependency entry</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">[</span><span class="tok-nv">org.apache.commons/commons-dbcp2</span> <span class="tok-s">&quot;2.0.1&quot;</span><span class="tok-p">]</span></code></pre>
+</div>
+</div>
 <div class="paragraph">
-<p>In case of Apache DBCP2, this is a dependency that you should put on your dependencies
-vector:</p>
+<p>In order to use this connection pool, previously you should create a DataSource instance. Here
+an little example on how it can be done:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">[</span><span class="tok-nv">clojure.jdbc/clojure.jdbc-dbcp</span> <span class="tok-s">&quot;0.3.1&quot;</span><span class="tok-p">]</span></code></pre>
-</div>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_basic_usage_2">6.2.2. Basic Usage</h4>
-<div class="paragraph">
-<p>In order to use a connection pool, you should convert your plain dbspec into a
-datasource-dbspec using the helper function provided in each extension.</p>
-</div>
-<div class="listingblock">
-<div class="title">Example using DBCP connection pool</div>
-<div class="content">
-<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-c1">;; Import the desired implementation</span>
-<span class="tok-p">(</span><span class="tok-nf">require</span> <span class="tok-o">&#39;</span><span class="tok-p">[</span><span class="tok-nv">jdbc.pool.dbcp</span> <span class="tok-ss">:as</span> <span class="tok-nv">pool</span><span class="tok-p">])</span>
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-nb">import </span><span class="tok-ss">&#39;org.apache.commons.dbcp2.BasicDataSource</span><span class="tok-p">)</span>
 
-<span class="tok-c1">;; Convert the standard dbspec to an other dbspec with `:datasource` key</span>
-<span class="tok-p">(</span><span class="tok-k">def </span><span class="tok-nv">dbspec</span> <span class="tok-p">(</span><span class="tok-nf">pool/make-datasource-spec</span> <span class="tok-p">{</span><span class="tok-ss">:subprotocol</span> <span class="tok-s">&quot;postgresql&quot;</span>
-                                        <span class="tok-ss">:subname</span> <span class="tok-s">&quot;//localhost:5432/dbname&quot;</span><span class="tok-p">}))</span></code></pre>
+<span class="tok-p">(</span><span class="tok-k">def </span><span class="tok-nv">ds</span> <span class="tok-p">(</span><span class="tok-nb">doto </span><span class="tok-p">(</span><span class="tok-nf">BasicDataSource.</span><span class="tok-p">)</span>
+          <span class="tok-p">(</span><span class="tok-nf">.setJdbcUrl</span> <span class="tok-p">(</span><span class="tok-nb">str </span><span class="tok-s">&quot;jdbc:&quot;</span>
+                            <span class="tok-p">(</span><span class="tok-ss">:subprotocol</span> <span class="tok-nv">dbspec</span><span class="tok-p">)</span>
+                            <span class="tok-p">(</span><span class="tok-ss">:subname</span> <span class="tok-nv">dbspec</span><span class="tok-p">)))</span>
+          <span class="tok-p">(</span><span class="tok-nf">.setUser</span> <span class="tok-p">(</span><span class="tok-ss">:user</span> <span class="tok-nv">dbspec</span> <span class="tok-nv">nil</span><span class="tok-p">))</span>
+          <span class="tok-p">(</span><span class="tok-nf">.setPassword</span> <span class="tok-p">(</span><span class="tok-ss">:password</span> <span class="tok-nv">dbspec</span> <span class="tok-nv">nil</span><span class="tok-p">))</span>
+
+          <span class="tok-c1">;; Pool Size Management</span>
+          <span class="tok-p">(</span><span class="tok-nf">.setInitialSize</span> <span class="tok-mi">0</span><span class="tok-p">)</span>
+          <span class="tok-p">(</span><span class="tok-nf">.setMaxIdle</span> <span class="tok-mi">3</span><span class="tok-p">)</span>
+          <span class="tok-p">(</span><span class="tok-nf">.setMaxTotal</span> <span class="tok-mi">15</span><span class="tok-p">)</span>
+
+          <span class="tok-c1">;; Connection eviction</span>
+          <span class="tok-p">(</span><span class="tok-nf">.setMaxConnLifetimeMillis</span> <span class="tok-mi">3600000</span><span class="tok-p">)</span> <span class="tok-c1">; 1 hour</span>
+
+          <span class="tok-c1">;; Connection testing</span>
+          <span class="tok-p">(</span><span class="tok-nf">.setTestOnBorrow</span> <span class="tok-nv">false</span><span class="tok-p">)</span>
+          <span class="tok-p">(</span><span class="tok-nf">.setTestOnReturn</span> <span class="tok-nv">false</span><span class="tok-p">)</span>
+          <span class="tok-p">(</span><span class="tok-nf">.setTestWhileIdle</span> <span class="tok-nv">true</span><span class="tok-p">)</span>
+          <span class="tok-p">(</span><span class="tok-nf">.setTimeBetweenEvictionRunsMillis</span> <span class="tok-mi">600000</span><span class="tok-p">)</span> <span class="tok-c1">;; 10 minutes</span>
+          <span class="tok-p">(</span><span class="tok-nf">.setNumTestsPerEvictionRun</span> <span class="tok-mi">4</span><span class="tok-p">)</span>
+          <span class="tok-p">(</span><span class="tok-nf">.setMinEvictableIdleTimeMillis</span> <span class="tok-mi">1800000</span><span class="tok-p">)))</span> <span class="tok-c1">;; 1/2 hours</span></code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>Now, dbspec should be used like a plain dbspec for creating connections.</p>
+<p>You can found all configuration parameters here: <a href="http://commons.apache.org/proper/commons-dbcp/configuration.html" class="bare">http://commons.apache.org/proper/commons-dbcp/configuration.html</a></p>
 </div>
-</div>
-<div class="sect3">
-<h4 id="_advanced_configuration_2">6.2.3. Advanced configuration</h4>
 <div class="paragraph">
-<p>DBCP comes with "good" defaults that should work in majority standard environments,
-but obviously, it exposes set of options for customize it:</p>
+<p>Now, the new created datasource should be used like a plain dbspec for creating connections:</p>
 </div>
-<table class="tableblock frame-all grid-all spread">
-<colgroup>
-<col style="width: 50%;">
-<col style="width: 50%;">
-</colgroup>
-<thead>
-<tr>
-<th class="tableblock halign-left valign-top">Option</th>
-<th class="tableblock halign-left valign-top">Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:min-pool-size</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Minimum number of Connections a pool will maintain at any given time.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:max-pool-size</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Maximum number of Connections a pool will maintain at any given time.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:initial-pool-size</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Number of Connections a pool will try to acquire upon startup.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:max-wait</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">The number of milliseconds a client calling getConnection() will wait for a Connection to be checked-in or acquired when the pool is exhausted.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:max-connection-lifetime</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">The maximum lifetime in milliseconds of a connection.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:test-connection-query</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">The SQL query that will be used to validate connections from this pool before returning them to the caller. If specified, this query MUST be an SQL SELECT statement that returns at least one row. If not specified, connections will be validation by calling the isValid() method.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:test-connection-on-borrow</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">The indication of whether objects will be validated before being borrowed from the pool.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:test-connection-on-return</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">The indication of whether objects will be validated before being returned to the pool.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:test-idle-connections-period</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">The number of milliseconds to sleep between runs of the idle object evictor thread.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:max-connection-idle-lifetime</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">The minimum amount of time (in milliseconds) an object may sit idle in the pool before it is eligable for eviction by the idle object evictor (if any).</p></td>
-</tr>
-</tbody>
-</table>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-nb">with-open </span><span class="tok-p">[</span><span class="tok-nv">conn</span> <span class="tok-p">(</span><span class="tok-nf">jdbc/connection</span> <span class="tok-nv">ds</span><span class="tok-p">)]</span>
+  <span class="tok-p">(</span><span class="tok-nf">do-stuff</span> <span class="tok-nv">conn</span><span class="tok-p">))</span></code></pre>
+</div>
 </div>
 </div>
 <div class="sect2">
@@ -1555,122 +1307,47 @@ but obviously, it exposes set of options for customize it:</p>
 <div class="paragraph">
 <p>Fast, simple, reliable. HikariCP is a "zero-overhead" production ready JDBC connection pool.</p>
 </div>
-<div class="admonitionblock warning">
-<table>
-<tr>
-<td class="icon">
-<div class="title">Warning</div>
-</td>
-<td class="content">
-<div class="paragraph">
-<p>This adapter does not respects the standard dbspec format, it has its own format and
-depends completely of used adapter. This is happens because HikariCP  works as some kind of
-wrapper and it forward almost all parameters to the wrapped datasource.</p>
+<div class="listingblock">
+<div class="title">Dependency entry for Java8</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">[</span><span class="tok-nv">hikari-cp</span> <span class="tok-s">&quot;0.13.0&quot;</span><span class="tok-p">]</span></code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">Dependency entry for Java7 or Java6</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">[</span><span class="tok-nv">hikari-cp</span> <span class="tok-s">&quot;0.13.0&quot;</span> <span class="tok-ss">:exclusions</span> <span class="tok-p">[</span><span class="tok-nv">com.zaxxer/HikariCP</span><span class="tok-p">]]</span>
+<span class="tok-p">[</span><span class="tok-nv">com.zaxxer/HikariCP-java6</span> <span class="tok-s">&quot;2.2.5&quot;</span><span class="tok-p">]</span></code></pre>
+</div>
 </div>
 <div class="paragraph">
-<p>Also, HikariCP adapter targets to only JDK8 version.</p>
-</div>
-</td>
-</tr>
-</table>
-</div>
-<div class="sect3">
-<h4 id="_install_4">6.3.1. Install</h4>
-<div class="paragraph">
-<p>In case of HikariCP, this is a dependency that you should put on your dependencies
-vector:</p>
+<p>In order to use this connection pool, previously you should create a DataSource instance. Here
+an little example on how it can be done:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">[</span><span class="tok-nv">clojure.jdbc/clojure.jdbc-hikari</span> <span class="tok-s">&quot;0.3.2&quot;</span><span class="tok-p">]</span></code></pre>
-</div>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_basic_usage_3">6.3.2. Basic Usage</h4>
-<div class="paragraph">
-<p>In order to use a connection pool, you should convert your plain dbspec into a
-datasource-dbspec using the helper function provided in each extension.</p>
-</div>
-<div class="listingblock">
-<div class="title">Example using DBCP connection pool</div>
-<div class="content">
-<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-c1">;; Import the desired implementation</span>
-<span class="tok-p">(</span><span class="tok-nf">require</span> <span class="tok-o">&#39;</span><span class="tok-p">[</span><span class="tok-nv">jdbc.pool.dbcp</span> <span class="tok-ss">:as</span> <span class="tok-nv">pool</span><span class="tok-p">])</span>
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-nf">require</span> <span class="tok-o">&#39;</span><span class="tok-p">[</span><span class="tok-nv">hikari-cp.core</span> <span class="tok-ss">:as</span> <span class="tok-nv">hikari</span><span class="tok-p">])</span>
 
-<span class="tok-c1">;; Convert the standard dbspec to an other dbspec with `:datasource` key</span>
-<span class="tok-p">(</span><span class="tok-k">def </span><span class="tok-nv">dbspec</span> <span class="tok-p">(</span><span class="tok-nf">pool/make-datasource-spec</span> <span class="tok-p">{</span><span class="tok-ss">:database-name</span> <span class="tok-s">&quot;test&quot;</span>
-                                        <span class="tok-ss">:adapter</span> <span class="tok-ss">:postgresql</span><span class="tok-p">}))</span></code></pre>
+<span class="tok-p">(</span><span class="tok-k">def </span><span class="tok-nv">ds</span> <span class="tok-p">(</span><span class="tok-nf">hikari/make-datasource</span>
+         <span class="tok-p">{</span><span class="tok-ss">:connection-timeout</span> <span class="tok-mi">30000</span>
+          <span class="tok-ss">:idle-timeout</span> <span class="tok-mi">600000</span>
+          <span class="tok-ss">:max-lifetime</span> <span class="tok-mi">1800000</span>
+          <span class="tok-ss">:minimum-idle</span> <span class="tok-mi">10</span>
+          <span class="tok-ss">:maximum-pool-size</span>  <span class="tok-mi">10</span>
+          <span class="tok-ss">:adapter</span> <span class="tok-s">&quot;postgresql&quot;</span>
+          <span class="tok-ss">:username</span> <span class="tok-s">&quot;username&quot;</span>
+          <span class="tok-ss">:password</span> <span class="tok-s">&quot;password&quot;</span>
+          <span class="tok-ss">:database-name</span> <span class="tok-s">&quot;database&quot;</span>
+          <span class="tok-ss">:server-name</span> <span class="tok-s">&quot;localhost&quot;</span>
+          <span class="tok-ss">:port-number</span> <span class="tok-mi">5432</span><span class="tok-p">}))</span></code></pre>
 </div>
 </div>
-</div>
-<div class="sect3">
-<h4 id="_advanced_configuration_3">6.3.3. Advanced configuration</h4>
-<div class="paragraph">
-<p>HikariCP comes with "good" defaults that should work in majority standard environments,
-but obviously, it exposes set of options for customize it:</p>
-</div>
-<table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 1. Specific generic options of HikariCP</caption>
-<colgroup>
-<col style="width: 50%;">
-<col style="width: 50%;">
-</colgroup>
-<thead>
-<tr>
-<th class="tableblock halign-left valign-top">Option</th>
-<th class="tableblock halign-left valign-top">Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:auto-commit</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">This property controls the default auto-commit behavior of connections returned from the pool. It is a boolean value. (default <code>true</code>)</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:read-only</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">This property controls whether Connections obtained from the pool are in read-only mode by default. (default `false)</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:connection-timeout</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">This property controls the maximum number of milliseconds that a client will wait for a connection from the pool. If this time is exceeded without a connection becoming available, a SQLException will be thrown. 100ms is the minimum value. (default <code>10000</code>)</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:idle-timeout</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">This property controls the maximum amount of time (in milliseconds) that a connection is allowed to sit idle in the pool. (default <code>60000</code>)</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:max-lifetime</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">This property controls the maximum lifetime of a connection in the pool. A value of 0 indicates no maximum lifetime (infinite lifetime). (default <code>1800000</code>)</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:minimum-idle</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">This property controls the minimum number of idle connections that HikariCP tries to maintain in the pool. (default <code>10</code>)</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:maximum-pool-size</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">This property controls the maximum size that the pool is allowed to reach, including both idle and in-use connections. Basically this value will determine the maximum number of actual connections to the database backend. (default <code>10</code>)</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:adapter</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">This property sets the database adapter. Please check <a href="#list-of-hikari-adapters">Adapters and corresponding datasource class names</a> for the full list of supported adapters and their datasource class names. (<strong>this parameter is mandatory</strong>)</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:username</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">This property sets the default authentication username used when obtaining Connections from the underlying driver. (default <code>nil</code>)</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:password</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">This property sets the default authentication password used when obtaining Connections from the underlying driver. (default <code>nil</code>)</p></td>
-</tr>
-</tbody>
-</table>
 <div class="paragraph">
 <p>HikariCP, unlike other datasource implementations, requires to setup explicitly that adapter should
 be used. This is a list of supported adapters:</p>
 </div>
 <table id="list-of-hikari-adapters" class="tableblock frame-all grid-all spread">
-<caption class="title">Table 2. List of adapters supported by HikariCP</caption>
+<caption class="title">Table 1. List of adapters supported by HikariCP</caption>
 <colgroup>
 <col style="width: 50%;">
 <col style="width: 50%;">
@@ -1736,31 +1413,16 @@ be used. This is a list of supported adapters:</p>
 </tr>
 </tbody>
 </table>
+<div class="paragraph">
+<p>You can found more information and documentation about hikari-cp here: <a href="https://github.com/tomekw/hikari-cp" class="bare">https://github.com/tomekw/hikari-cp</a></p>
 </div>
-<div class="sect3">
-<h4 id="_examples">6.3.4. Examples</h4>
-<div class="listingblock">
-<div class="title">Examples using HikariCP with h2 adapter.</div>
-<div class="content">
-<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-k">def </span><span class="tok-nv">dbspec</span>
-  <span class="tok-p">(</span><span class="tok-nb">-&gt; </span><span class="tok-p">{</span><span class="tok-ss">:adapter</span> <span class="tok-ss">:h2</span>
-       <span class="tok-ss">:url</span> <span class="tok-s">&quot;jdbc:h2:/tmp/test&quot;</span><span class="tok-p">}</span>
-      <span class="tok-p">(</span><span class="tok-nf">pool/make-datasource-spec</span><span class="tok-p">)))</span></code></pre>
-</div>
+<div class="paragraph">
+<p>Now, the new created datasource should be used like a plain dbspec for creating connections:</p>
 </div>
 <div class="listingblock">
-<div class="title">Example using HikariCP with postgresql adapter.</div>
 <div class="content">
-<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-c1">;; Convert the standard dbspec to an other dbspec with `:datasource` key</span>
-<span class="tok-p">(</span><span class="tok-k">def </span><span class="tok-nv">dbspec</span>
-  <span class="tok-p">(</span><span class="tok-nb">-&gt; </span><span class="tok-p">{</span><span class="tok-ss">:database-name</span> <span class="tok-s">&quot;test&quot;</span>
-       <span class="tok-ss">:username</span> <span class="tok-s">&quot;foo&quot;</span>
-       <span class="tok-ss">:password</span> <span class="tok-s">&quot;secret&quot;</span>
-       <span class="tok-ss">:server-name</span> <span class="tok-s">&quot;localhost&quot;</span>
-       <span class="tok-ss">:port-number</span> <span class="tok-mi">5432</span>
-       <span class="tok-ss">:adapter</span> <span class="tok-ss">:postgresql</span><span class="tok-p">}</span>
-      <span class="tok-p">(</span><span class="tok-nf">pool/make-datasource-spec</span><span class="tok-p">)))</span></code></pre>
-</div>
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-nb">with-open </span><span class="tok-p">[</span><span class="tok-nv">conn</span> <span class="tok-p">(</span><span class="tok-nf">jdbc/connection</span> <span class="tok-nv">ds</span><span class="tok-p">)]</span>
+  <span class="tok-p">(</span><span class="tok-nf">do-stuff</span> <span class="tok-nv">conn</span><span class="tok-p">))</span></code></pre>
 </div>
 </div>
 </div>
@@ -1845,7 +1507,7 @@ As an example:</p>
 that receive dbspec. It doesn&#8217;t have well designed connection management.<br>
 Ex: functions like <code>create!</code> can receive plain a dbspec or a connection. If you are
 curious, take a look at the <code>with-db-connection</code> implementation of java.jdbc
-and compare it with <code>with-connection</code> of clojure.jdbc. You will get a get a good idea of the
+and compare it with clojure.jdbc. It will get you a good idea of the
 hidden unnecessary complexity found in java.jdbc.<br>
 java.jdbc has inconsistent connection management. In contrast, with clojure.jdbc
 a connection should be created explicitly before using any other function that
@@ -1968,7 +1630,7 @@ initial work. Some intial ideas for clojure.jdbc are taken from that project.</p
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2014-11-21 10:32:14 CET
+Last updated 2015-01-11 11:33:13 CET
 </div>
 </div>
 </body>
