@@ -1,8 +1,10 @@
 (ns jdbc.bench
   (:require [jdbc.core :as clojure.jdbc]
-            [jdbc.transaction :as tx1]
+            [jdbc.proto :as proto]
+            [jdbc.transaction :as tx]
             [clojure.java.jdbc :as java.jdbc]
             [criterium.core :refer [bench quick-bench]])
+  (:import java.sql.Connection)
   (:gen-class))
 
 (def dbspec {:subprotocol "h2"
@@ -67,6 +69,40 @@
 ;; Benchmark 3
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(def basic-tx-strategy
+  (reify
+    tx/ITransactionStrategy
+    (begin! [_ conn opts]
+      (let [^Connection rconn (proto/get-connection conn)
+            metadata (meta conn)
+            ^long depth (:depth-level metadata)]
+        (if depth
+          (with-meta conn
+            (assoc metadata :depth-level (inc depth)))
+
+          (let [prev-autocommit (.getAutoCommit rconn)]
+            (.setAutoCommit rconn false)
+            (with-meta conn
+              (assoc metadata
+                     :depth-level 0
+                     :prev-autocommit prev-autocommit))))))
+
+    (rollback! [_ conn opts]
+      (let [^Connection rconn (proto/get-connection conn)
+            metadata (meta conn)
+            ^long depth (:depth-level metadata)]
+        (when (= depth 0)
+          (.rollback rconn)
+          (.setAutoCommit rconn (:prev-autocommit metadata)))))
+
+    (commit! [_ conn opts]
+      (let [^Connection rconn (proto/get-connection conn)
+            metadata (meta conn)
+            ^long depth (:depth-level metadata)]
+        (when (= depth 0)
+          (.commit rconn)
+          (.setAutoCommit rconn (:prev-autocommit metadata)))))))
+
 (defn bench-3-java-jdbc
   []
   (println)
@@ -87,10 +123,11 @@
   (println "Results for clojure.jdbc:")
 
   (with-open [conn (clojure.jdbc/connection dbspec)]
-    (quick-bench
-     (dotimes [i *iterations*]
-       (tx1/with-transaction conn
-         (clojure.jdbc/query conn sql))))))
+    (tx/with-transaction-strategy conn basic-tx-strategy
+      (quick-bench
+       (dotimes [i *iterations*]
+         (tx/with-transaction conn
+           (clojure.jdbc/query conn sql)))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Main

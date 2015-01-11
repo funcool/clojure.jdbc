@@ -12,7 +12,10 @@
           :src-linenum-anchor-prefix "L"}
   :profiles {:bench {:source-paths ["bench/"]
                      :main jdbc.bench
-                     :dependencies [[org.clojure/java.jdbc "0.3.5"]
+                     :global-vars {*warn-on-reflection* true
+                                   *unchecked-math* :warn-on-boxed}
+                     :dependencies [[org.clojure/clojure "1.7.0-alpha5"]
+                                    [org.clojure/java.jdbc "0.3.6"]
                                     [com.h2database/h2 "1.3.176"]
                                     [criterium "0.4.3"]]}
              :test {:dependencies [[com.h2database/h2 "1.3.176"]
