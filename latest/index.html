@@ -1168,8 +1168,12 @@ reverse conversions from SQL types to user-defined types.</p>
 <h2 id="connection-pool">6. Connection pool</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>To make good use of resourses is much recommendable use any style of connection pooling
-in your production code. This can avoid continuosly creating and destroying connections,
+<p>DataSource is the preferd way to connect to the database in production enviroments, and
+is usually used for implement connection pools.</p>
+</div>
+<div class="paragraph">
+<p>To make good use of resourses is much recommendable use some kind of connection pool
+implementation. This can avoid continuosly creating and destroying connections,
 that in the majority of time is a slow operation.</p>
 </div>
 <div class="paragraph">
@@ -1190,7 +1194,7 @@ that in the majority of time is a slow operation.</p>
 </div>
 <div class="paragraph">
 <p><em>clojure.jdbc</em> is compatible with any other connection pool implemenetation, simply
-pass a <code>javax.sql.DataSource</code> instance <code>jdbc/connection</code>.</p>
+pass a <code>javax.sql.DataSource</code> instance to <code>jdbc/connection</code> function.</p>
 </div>
 <div class="sect2">
 <h3 id="_c3p0">6.1. c3p0</h3>
@@ -1630,7 +1634,7 @@ initial work. Some intial ideas for clojure.jdbc are taken from that project.</p
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-01-11 11:39:31 CET
+Last updated 2015-01-11 13:26:35 CET
 </div>
 </div>
 </body>
