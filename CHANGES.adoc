@@ -1,8 +1,9 @@
 = Changelog
 
-== Version 0.4.0
+== Version 0.4.0-beta1
 
-Date: unreleased
+Date: 2015-01-11
+
 
 This release is focused to simplify the code and use more clojure native constructions
 like `with-open` instead of own defined macros.
@@ -36,6 +37,7 @@ Other changes:
 - Deprecated own connection pool extensions. Because they are less flexible that creating own
   datasource instance. The documentation is updated with examples of how to create datasource
   instances for all previously supported connection pool implementations.
+
 
 == Version 0.3.2
 
