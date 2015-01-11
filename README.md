@@ -4,6 +4,8 @@ Jdbc library for Clojure.
 
 [![Travis Badge](https://img.shields.io/travis/niwibe/clojure.jdbc.svg?style=flat)](https://travis-ci.org/niwibe/clojure.jdbc "Travis Badge")
 
+[![Dependencies Status](http://jarkeeper.com/niwibe/clojure.jdbc/status.svg)](http://jarkeeper.com/niwibe/clojure.jdbc)
+
 [![Clojars Project](http://clojars.org/clojure.jdbc/latest-version.svg)](http://clojars.org/clojure.jdbc)
 
 ## Documentation
