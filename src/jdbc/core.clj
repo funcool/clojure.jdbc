@@ -23,7 +23,9 @@
             [jdbc.transaction :as tx]
             [jdbc.constants :as constants])
   (:import java.sql.PreparedStatement
-           java.sql.ResultSet))
+           java.sql.DatabaseMetaData
+           java.sql.ResultSet
+           java.sql.Connection))
 
 (defn execute-statement!
   "Given a connection statement and paramgroups (can be empty)
@@ -81,8 +83,8 @@
   For more details, see documentation."
   ([dbspec] (connection dbspec {}))
   ([dbspec options]
-   (let [^java.sql.Connection conn (proto/connection dbspec)
-         ^java.sql.DatabaseMetaData metadata (.getMetaData conn)
+   (let [^Connection conn (proto/connection dbspec)
+         ^DatabaseMetaData metadata (.getMetaData conn)
          options (merge
                   (when (map? dbspec)
                     (dissoc dbspec
@@ -118,17 +120,12 @@
   Examples:
 
     ;; Without transactions
-    (with-connection dbspec conn
-      (execute! conn 'CREATE TABLE foo (id serial, name text);'))
-
-    ;; In one transaction
-    (with-connection dbspec conn
-      (tx/with-transaction conn
-        (execute! conn 'CREATE TABLE foo (id serial, name text);')))
+    (with-open [conn (connection dbspec)]
+      (execute! conn \"CREATE TABLE foo (id serial, name text);\"))
   "
   [conn & commands]
-  (let [^java.sql.Connection connection (proto/get-connection conn)]
-    (with-open [stmt (.createStatement connection)]
+  (let [^Connection connection (proto/get-connection conn)]
+    (with-open [^PreparedStatement stmt (.createStatement connection)]
       (dorun (map (fn [command]
                     (.addBatch stmt command)) commands))
       (seq (.executeBatch stmt)))))
@@ -198,7 +195,7 @@
 
      ;; In other case, build a prepared statement from sql or vector.
      (or (vector? sql) (string? sql))
-     (with-open [^java.sql.PreparedStatement stmt (proto/prepared-statement sql conn options)]
+     (with-open [^PreparedStatement stmt (proto/prepared-statement sql conn options)]
        (let [res (execute-statement! conn stmt param-groups)]
          (if (:returning options)
            ;; In case of returning key is found on options
@@ -231,7 +228,7 @@
   "
   ([conn sqlvec] (query conn sqlvec {}))
   ([conn sqlvec options]
-   (let [^java.sql.PreparedStatement stmt (proto/prepared-statement sqlvec conn options)]
+   (let [^PreparedStatement stmt (proto/prepared-statement sqlvec conn options)]
      (let [^ResultSet rs (.executeQuery stmt)]
        (result-set->vector conn rs options)))))
 
@@ -253,14 +250,13 @@
   for proper resource handling."
   ([conn sqlvec] (lazy-query conn sqlvec {}))
   ([conn sqlvec options]
-   (let [^java.sql.PreparedStatement stmt (proto/prepared-statement sqlvec conn options)]
+   (let [^PreparedStatement stmt (proto/prepared-statement sqlvec conn options)]
      (types/->cursor conn stmt))))
 
 (defn cursor->lazyseq
   "Execute a cursor query and return a lazyseq with results."
   ([cursor] (cursor->lazyseq cursor {}))
-  ([cursor options]
-   (proto/get-lazyseq cursor options)))
+  ([cursor options] (proto/get-lazyseq cursor options)))
 
 (defmacro with-connection
   "Given database connection paramers (dbspec), creates
@@ -270,6 +266,8 @@
   If dbspec has datasource (connection pool), instead of create
   a new connection, get it from connection pool and release it
   at the end.
+
+  WARNING: deprecated
 
   Example:
 
@@ -284,8 +282,8 @@
   "
   [dbspec & body]
   (if (vector? dbspec)
-    `(with-open [con# (make-connection ~(second dbspec))]
+    `(with-open [con# (connection ~(second dbspec))]
        (let [~(first dbspec) con#]
          ~@body))
-    `(with-open [~(first body) (make-connection ~dbspec)]
+    `(with-open [~(first body) (connection ~dbspec)]
        ~@(rest body))))
