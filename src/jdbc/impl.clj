@@ -195,7 +195,7 @@
   (from-sql-type [this conn metadata i] this)
 
   Boolean
-  (from-sql-type [this conn metadata i] (if (true? this) this false))
+  (from-sql-type [this conn metadata i] (= true this))
 
   nil
   (from-sql-type [this conn metadata i] nil))
