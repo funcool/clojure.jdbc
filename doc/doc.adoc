@@ -1,7 +1,7 @@
 clojure.jdbc documentation
 ==========================
 Andrey Antukh, <niwi@niwi.be>
-0.4.0-beta1
+0.4.0
 :toc: left
 :numbered:
 :source-highlighter: pygments
@@ -59,7 +59,7 @@ vector on your *_project.clj_* file:
 ._on project.clj_
 [source,clojure]
 ----
-[clojure.jdbc "0.4.0-beta1"]
+[clojure.jdbc "0.4.0"]
 ----
 
 Gradle
@@ -69,7 +69,7 @@ If you are using gradle, this is a dependency line for gradle dsl:
 
 [source,groovy]
 ----
-compile "clojure.jdbc:clojure.jdbc:0.4.0-beta1"
+compile "clojure.jdbc:clojure.jdbc:0.4.0"
 ----
 
 
