@@ -1,5 +1,12 @@
 = Changelog
 
+== Version 0.4.0
+
+Date: 2015-02-07
+
+- Fix wrong parsing boolean values in MSSQL (thanks to @vbedegi).
+
+
 == Version 0.4.0-beta1
 
 Date: 2015-01-11
