@@ -55,7 +55,7 @@
 (defn- dbspec->connection
   "Create a connection instance from dbspec."
   [{:keys [subprotocol subname user password
-           name vendor host port datasource]
+           name vendor host port datasource classname]
     :as dbspec}]
   (cond
     (and name vendor)
@@ -69,6 +69,10 @@
     (and subprotocol subname)
     (let [url (format "jdbc:%s:%s" subprotocol subname)
           options (dissoc dbspec :subprotocol :subname)]
+
+      (when classname
+        (Class/forName classname))
+      
       (DriverManager/getConnection url (map->properties options)))
 
     ;; NOTE: only for backward compatibility
