@@ -394,7 +394,7 @@ this behavior.
 If you have an extremely large resultset and you want retrieve it and process each item, this is
 exactly what you need.
 
-For this purpose, _clojure.jdbc_ exposes the `lazy-query` function, that returns a some kind of 
+For this purpose, _clojure.jdbc_ exposes the `lazy-query` function, that returns a some kind of
 cursor instance. At the moment of creating cursor, no query is executed.
 
 The cursor can be used converting it into clojure lazyseq using `cursor->lazyseq` function:
@@ -419,7 +419,7 @@ Transaction strategies in _clojure.jdbc_ are implemented using protocols having 
 implementation explained in the previous sections. This approach allows an easy way to extend,
 customize or completely change a transaction strategy for your application.
 
-If you want another strategy, you should create a new type and implement the 
+If you want another strategy, you should create a new type and implement the
 `ITransactionStrategy` protocol.
 
 .Sample dummy transaction strategy.
