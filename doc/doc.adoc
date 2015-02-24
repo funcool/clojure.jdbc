@@ -740,38 +740,22 @@ Why another JDBC wrapper?
 
 This is an incomplete list of reasons:
 
-- Connection management should be explicit. clojure.jdbc has a clear differentiation
-  between connection and dbspec without unnecessary nesting controls and with explicit
-  resource management (using `with-open` or other specific macros for it, see the
-  examples).
-- clojure.jdbc has full support for the whole transactions API, with the ability to set the
-  database isolation level and use nested transactions (savepoints).
-  It creates a new transaction if no other transaction is active but,
-  when invoked within the context of an already-existing transaction, it creates a savepoint.
-- clojure.jdbc supports extension or substitution of transaction management if a default
-  behavior is not sufficient for you.
+- Connection management in clojure.jdbc is simple and explicit. However, java.jdbc does not make
+  diferentiation between a connection or dbspec hash map. At first glace it seems more flexible,
+  but it requires huge additional complexity and boilerplate code on each function that receives
+  a connection. If you are curious, take a look at the `with-db-connection` implementation of
+  java.jdbc and compare it with *clojure.jdbc*: it will get you a good idea of the hidden and
+  unnecessary complexity found in java.jdbc.
+- clojure.jdbc comes with proper transaction management with full support for nested transactions,
+  and plugable transaction strategies. In contrast, java.jdbc comes with one unique strategy, that
+  does not support subtransactions (it flattens all nested transactions in one unique giving you
+  false security when you wraps you code in a transaction).
 - clojure.jdbc has native support for connection pools.
-- clojure.jdbc has a simpler implementation than java.jdbc. It has no more
-  complexity than necessary for each available function in the public API. +
-  As an example:
-  * java.jdbc has a lot boilerplate connection management around all functions
-    that receive dbspec. It doesn't have well designed connection management. +
-    Ex: functions like `create!` can receive plain a dbspec or a connection. If you are
-    curious, take a look at the `with-db-connection` implementation of java.jdbc
-    and compare it with clojure.jdbc. It will get you a good idea of the
-    hidden unnecessary complexity found in java.jdbc. +
-    java.jdbc has inconsistent connection management. In contrast, with clojure.jdbc
-    a connection should be created explicitly before using any other function that
-    requires one connection.
-
-    * java.jdbc has repeated transaction handling on each CRUD method
-    (insert!, drop!, etc...). With clojure.jdbc, if you want that some code to run in a
-    transaction, you should wrap it in a transaction context explicitly, using the
-    `with-transaction` macro (see the transactions section for more information).
-
-- Much more documentation ;) (a project without documentation is a project that doesn't
-  really exist).
-
+- clojure.jdbc has first class documentation.
+- clojure.jdbc has a simpler implementation than java.jdbc without unnecesary code duplication. A
+  good example are the crud methods of java.jdbc: all them repeats the transaction logic implicitly.
+  In contrast, clojure.jdbc, if you want a transaction, you should wrap your code in a transaction
+  context explicitly.
 
 Does clojure.jdbc have better performance than java.jdbc?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
