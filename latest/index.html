@@ -1314,7 +1314,7 @@ an little example on how it can be done:</p>
 <div class="listingblock">
 <div class="title">Dependency entry for Java8</div>
 <div class="content">
-<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">[</span><span class="tok-nv">hikari-cp</span> <span class="tok-s">&quot;0.13.0&quot;</span><span class="tok-p">]</span></code></pre>
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">[</span><span class="tok-nv">hikari-cp</span> <span class="tok-s">&quot;1.1.1&quot;</span><span class="tok-p">]</span></code></pre>
 </div>
 </div>
 <div class="listingblock">
@@ -1482,53 +1482,30 @@ situation:</p>
 <div class="ulist">
 <ul>
 <li>
-<p>Connection management should be explicit. clojure.jdbc has a clear differentiation
-between connection and dbspec without unnecessary nesting controls and with explicit
-resource management (using <code>with-open</code> or other specific macros for it, see the
-examples).</p>
+<p>Connection management in clojure.jdbc is simple and explicit. However, java.jdbc does not make
+diferentiation between a connection or dbspec hash map. At first glace it seems more flexible,
+but it requires huge additional complexity and boilerplate code on each function that receives
+a connection. If you are curious, take a look at the <code>with-db-connection</code> implementation of
+java.jdbc and compare it with <strong>clojure.jdbc</strong>: it will get you a good idea of the hidden and
+unnecessary complexity found in java.jdbc.</p>
 </li>
 <li>
-<p>clojure.jdbc has full support for the whole transactions API, with the ability to set the
-database isolation level and use nested transactions (savepoints).
-It creates a new transaction if no other transaction is active but,
-when invoked within the context of an already-existing transaction, it creates a savepoint.</p>
-</li>
-<li>
-<p>clojure.jdbc supports extension or substitution of transaction management if a default
-behavior is not sufficient for you.</p>
+<p>clojure.jdbc comes with proper transaction management with full support for nested transactions,
+and plugable transaction strategies. In contrast, java.jdbc comes with one unique strategy, that
+does not support subtransactions (it flattens all nested transactions in one unique giving you
+false security when you wraps you code in a transaction).</p>
 </li>
 <li>
 <p>clojure.jdbc has native support for connection pools.</p>
 </li>
 <li>
-<p>clojure.jdbc has a simpler implementation than java.jdbc. It has no more
-complexity than necessary for each available function in the public API.<br>
-As an example:</p>
-<div class="ulist">
-<ul>
-<li>
-<p>java.jdbc has a lot boilerplate connection management around all functions
-that receive dbspec. It doesn&#8217;t have well designed connection management.<br>
-Ex: functions like <code>create!</code> can receive plain a dbspec or a connection. If you are
-curious, take a look at the <code>with-db-connection</code> implementation of java.jdbc
-and compare it with clojure.jdbc. It will get you a good idea of the
-hidden unnecessary complexity found in java.jdbc.<br>
-java.jdbc has inconsistent connection management. In contrast, with clojure.jdbc
-a connection should be created explicitly before using any other function that
-requires one connection.</p>
+<p>clojure.jdbc has first class documentation.</p>
 </li>
 <li>
-<p>java.jdbc has repeated transaction handling on each CRUD method
-(insert!, drop!, etc&#8230;&#8203;). With clojure.jdbc, if you want that some code to run in a
-transaction, you should wrap it in a transaction context explicitly, using the
-<code>with-transaction</code> macro (see the transactions section for more information).</p>
-</li>
-</ul>
-</div>
-</li>
-<li>
-<p>Much more documentation ;) (a project without documentation is a project that doesn&#8217;t
-really exist).</p>
+<p>clojure.jdbc has a simpler implementation than java.jdbc without unnecesary code duplication. A
+good example are the crud methods of java.jdbc: all them repeats the transaction logic implicitly.
+In contrast, clojure.jdbc, if you want a transaction, you should wrap your code in a transaction
+context explicitly.</p>
 </li>
 </ul>
 </div>
@@ -1606,7 +1583,7 @@ clojure.jdbc will not reinvent the wheel.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>Copyright (c) 2013-2014 Andrey Antukh &lt;niwi@niwi.be&gt;
+<pre>Copyright (c) 2013-2015 Andrey Antukh &lt;niwi@niwi.be&gt;
 
 Licensed under the Apache License, Version 2.0 (the "License")
 you may not use this file except in compliance with the License.
@@ -1634,7 +1611,7 @@ initial work. Some intial ideas for clojure.jdbc are taken from that project.</p
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-02-07 10:42:36 CET
+Last updated 2015-03-04 19:44:30 CET
 </div>
 </div>
 </body>
