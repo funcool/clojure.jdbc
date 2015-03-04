@@ -646,7 +646,7 @@ Fast, simple, reliable. HikariCP is a "zero-overhead" production ready JDBC conn
 .Dependency entry for Java8
 [source, clojure]
 ----
-[hikari-cp "0.13.0"]
+[hikari-cp "1.1.1"]
 ----
 
 .Dependency entry for Java7 or Java6
