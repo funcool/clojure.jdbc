@@ -13,12 +13,14 @@
 ;; limitations under the License.
 
 (ns jdbc.transaction
-  "Transactions support for clojure.jdbc"
+  "Transactions support for clojure.jdbc
+
+  WARNING: This namespace is deprecated and will be removed in
+  clojure.jdbc 0.6.0."
   (:require [jdbc.constants :as constants]
             [jdbc.proto :as proto]
             [jdbc.impl :as impl])
   (:import java.sql.Connection))
-
 
 (def ITransactionStrategy proto/ITransactionStrategy)
 (def begin! proto/begin!)

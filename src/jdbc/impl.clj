@@ -18,7 +18,7 @@
             [clojure.walk :as walk]
             [jdbc.proto :as proto]
             [jdbc.types :as types]
-            [jdbc.util.resultset :refer [result-set->lazyseq result-set->vector]]
+            [jdbc.resultset :refer [result-set->lazyseq result-set->vector]]
             [jdbc.constants :as constants])
   (:import java.net.URI
            java.util.Properties

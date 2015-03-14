@@ -14,7 +14,7 @@
 
 (ns jdbc.types
   (:require [jdbc.proto :as proto]
-            [jdbc.util.resultset :refer [result-set->lazyseq]])
+            [jdbc.resultset :refer [result-set->lazyseq]])
   (:import java.sql.Connection
            java.sql.ResultSet
            java.sql.PreparedStatement))

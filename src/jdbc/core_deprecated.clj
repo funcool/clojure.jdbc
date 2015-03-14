@@ -13,13 +13,13 @@
 ;; limitations under the License.
 
 (ns jdbc.core-deprecated
-  "Api for clojure.jdbc <= 0.4.0."
+  "WARNING: This namespace is deprecated and will be removed in
+  clojure.jdbc 0.6.0."
   (:require [clojure.string :as str]
             [jdbc.types :as types]
             [jdbc.impl :as impl]
             [jdbc.proto :as proto]
-            [jdbc.util.exceptions :refer [with-exception raise-exc]]
-            [jdbc.util.resultset :refer [result-set->lazyseq result-set->vector]]
+            [jdbc.resultset :refer [result-set->lazyseq result-set->vector]]
             [jdbc.transaction :as tx]
             [jdbc.constants :as constants])
   (:import java.sql.PreparedStatement
@@ -40,8 +40,7 @@
   [conn ^PreparedStatement stmt param-groups]
   (let [^Connection conn (proto/connection conn)]
     (if-not (seq param-groups)
-      (with-exception
-        (seq [(.executeUpdate stmt)]))
+      (seq [(.executeUpdate stmt)])
       (let [set-parameter (fn [^long index value]
                             (proto/set-stmt-parameter! value conn stmt (inc index)))]
         (doseq [pgroup param-groups]
