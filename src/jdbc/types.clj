@@ -1,4 +1,4 @@
-;; Copyright 2014 Andrey Antukh <niwi@niwi.be>
+;; Copyright 2014-2015 Andrey Antukh <niwi@niwi.be>
 ;;
 ;; Licensed under the Apache License, Version 2.0 (the "License")
 ;; you may not use this file except in compliance with the License.
@@ -14,46 +14,37 @@
 
 (ns jdbc.types
   (:require [jdbc.proto :as proto]
-            [jdbc.util.resultset :refer [result-set->lazyseq]]))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Types (Wrappers)
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+            [jdbc.util.resultset :refer [result-set->lazyseq]])
+  (:import java.sql.Connection
+           java.sql.ResultSet
+           java.sql.PreparedStatement))
 
 (defn ->connection
-  [^java.sql.Connection connection]
+  "Create a connection wrapper.
+
+  The connection  wrapper is need because it
+  implemens IMeta interface that is mandatory
+  for transaction management."
+  [^Connection conn]
   (reify
     proto/IConnection
-    (get-connection [_] connection)
-
-    proto/IDatabaseMetadata
-    (get-database-metadata [_]
-      (.getMetaData connection))
+    (connection [_] conn)
 
     java.io.Closeable
     (close [_]
-      (.close connection))))
-
-(extend-protocol proto/IConnection
-  java.sql.Connection
-  (get-connection [this] this))
+      (.close conn))))
 
 (defn ->cursor
-  [conn ^java.sql.PreparedStatement stmt]
+  [^Connection conn ^PreparedStatement stmt]
   (reify
     proto/IConnection
-    (get-connection [_] (proto/get-connection conn))
+    (connection [_] conn)
 
     proto/ICursor
     (get-lazyseq [_ opts]
-      (let [^java.sql.ResultSet rs (.executeQuery stmt)]
+      (let [^ResultSet rs (.executeQuery stmt)]
         (result-set->lazyseq conn rs opts)))
 
     java.io.Closeable
     (close [_]
       (.close stmt))))
-
-(defn is-connection?
-  "Test if a value is a connection instance."
-  [c]
-  (satisfies? proto/IConnection c))

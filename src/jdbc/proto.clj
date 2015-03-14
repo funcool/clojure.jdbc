@@ -18,27 +18,32 @@
 ;; Internal Protocols
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defprotocol IConnectionConstructor
-  "Responsible of building a raw jdbc connection."
-  (connection [_] "Create jdbc connection."))
-
 (defprotocol IConnection
   "Represents a connection like object that wraps
   a raw jdbc connection with some other data."
-  (get-connection [_] "Get inner jdbc connection."))
+  (connection [_] "Create or obtain existing connection"))
 
 (defprotocol ICursor
   (get-lazyseq [_ opts] "Get lazy seq from cursor."))
+
+(defprotocol IExecute
+  (execute [q ctx opts] "Execute a query and return a number of rows affected."))
+
+(defprotocol IFetch
+  (fetch [q ctx opts] "Fetch eagerly results executing query."))
 
 (defprotocol IDatabaseMetadata
   "Allows uniform database metadata extraction."
   (get-database-metadata [_] "Get metadata instance."))
 
-(defprotocol IPreparedStatementConstructor
+(defprotocol IPreparedStatement
   "Responsible of building prepared statements."
   (prepared-statement [_ connection options] "Create a prepared statement."))
 
-  ;; (normalize [this conn options] "Create a prepared statement."))
+(defprotocol ITransactionStrategy
+  (begin! [_ conn opts] "Starts a transaction and return a connection instance.")
+  (rollback! [_ conn opts] "Rollbacks a transaction. Returns nil.")
+  (commit! [_ conn opts] "Commits a transaction. Returns nil."))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; SQL Extension Protocols

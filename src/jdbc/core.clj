@@ -14,7 +14,9 @@
 
 (ns jdbc.core
   "Alternative implementation of jdbc wrapper for clojure."
-  (:require [clojure.string :as str]
+  (:require [potemkin.namespaces :refer [import-vars]]
+            [clojure.string :as str]
+            [jdbc.core-deprecated :as core-deprecated]
             [jdbc.types :as types]
             [jdbc.impl :as impl]
             [jdbc.proto :as proto]
@@ -23,30 +25,31 @@
             [jdbc.transaction :as tx]
             [jdbc.constants :as constants])
   (:import java.sql.PreparedStatement
-           java.sql.DatabaseMetaData
            java.sql.ResultSet
            java.sql.Connection))
 
-(defn execute-statement!
-  "Given a connection statement and paramgroups (can be empty)
-  execute the prepared statement and return results from it.
+(def ^{:doc "Default transaction strategy implementation."
+       :dynamic true}
+  *default-tx-strategy* (impl/transaction-strategy))
 
-  This is a low level interface and should be used with precaution. This
-  function is used internally for execue raw sql such as CREATE/DROP
-  table.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Backward compatibility with previous version
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-  Status: Alpha - Implementation and name of this method can change on
-  next versions."
-  [conn ^PreparedStatement stmt param-groups]
-  (if-not (seq param-groups)
-    (with-exception
-      (seq [(.executeUpdate stmt)]))
-    (let [set-parameter (fn [^long index value]
-                          (proto/set-stmt-parameter! value conn stmt (inc index)))]
-      (doseq [pgroup param-groups]
-        (dorun (map-indexed set-parameter pgroup))
-        (.addBatch stmt))
-      (seq (.executeBatch stmt)))))
+(import-vars
+ [core-deprecated
+
+  execute-statement!
+  execute!
+  get-returning-records
+  is-prepared-statement?
+  execute-prepared!
+  query
+  query-first])
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Main public api.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn connection
   "Creates a connection to a database. As parameter accepts:
@@ -84,7 +87,6 @@
   ([dbspec] (connection dbspec {}))
   ([dbspec options]
    (let [^Connection conn (proto/connection dbspec)
-         ^DatabaseMetaData metadata (.getMetaData conn)
          options (merge
                   (when (map? dbspec)
                     (dissoc dbspec
@@ -104,42 +106,12 @@
      ;; Set the schema if it found on the options map
      (some->> (:schema options)
               (.setSchema conn))
-     (types/->connection conn))))
 
-;; Backward compatibility alias.
-(def make-connection connection)
+     (let [tx-strategy (:tx-strategy options  *default-tx-strategy*)
+           metadata {:tx-strategy tx-strategy}]
+       (with-meta (types/->connection conn) metadata)))))
 
-(defn execute!
-  "Run arbitrary number of raw sql commands such as: CREATE TABLE,
-  DROP TABLE, etc... If your want transactions, you can wrap this
-  call in transaction using `with-transaction` context block macro
-  that is available in  `jdbc.transaction` namespace.
-
-  Warning: not all database servers support ddl in transactions.
-
-  Examples:
-
-    ;; Without transactions
-    (with-open [conn (connection dbspec)]
-      (execute! conn \"CREATE TABLE foo (id serial, name text);\"))
-  "
-  [conn & commands]
-  (let [^Connection connection (proto/get-connection conn)]
-    (with-open [^PreparedStatement stmt (.createStatement connection)]
-      (dorun (map (fn [command]
-                    (.addBatch stmt command)) commands))
-      (seq (.executeBatch stmt)))))
-
-(defn get-returning-records
-  "Given a executed prepared statement with expected returning
-  values. Return a vector of records of returning values.
-  Usually is a id of just inserted objects, but in other cases
-  can be complete objects."
-  [conn ^PreparedStatement stmt]
-  (let [rs (.getGeneratedKeys stmt)]
-    (result-set->vector conn rs {})))
-
-(defn is-prepared-statement?
+(defn prepared-statement?
   "Check if specified object is prepared statement."
   [obj]
   (instance? PreparedStatement obj))
@@ -148,94 +120,39 @@
   "Given a string or parametrized sql in sqlvec format
   return an instance of prepared statement."
   ([conn sqlvec] (prepared-statement conn sqlvec {}))
-  ([conn sqlvec options] (proto/prepared-statement sqlvec conn options)))
+  ([conn sqlvec options]
+   (let [^Connection conn (proto/connection conn)]
+     (proto/prepared-statement sqlvec conn options))))
 
-(defn execute-prepared!
-  "Given a active connection and sql (or prepared statement),
-  executes a query in a database. This differs from `execute!` function
-  with that this function allows pass parameters to query in a more safe
-  way and permit pass group of parrams enabling bulk operations.
-
-  After connection, sql/prepared statement and any number of group of
-  params you can pass options map (same as on `make-prepared-statement`
-  function).
-
-  Note: Some options are incompatible with self defined prepared
-  statement.
+(defn execute
+  "Execute a query and return a number of rows affected.
 
   Example:
 
-  (with-connection dbspec conn
-    (let [sql \"UPDATE TABLE foo SET x = ? WHERE y = ?;\"]
-      (execute-prepared! conn sql [1 2] [2 3] [3 4])))
-  "
-  [conn sql & param-groups]
-  ;; Try extract options from param-groups varargs. Options
-  ;; should be a hash-map and located as the last parameter.
-  ;; If any one know more efficient way to do it, pull-request
-  ;; are welcome ;)
-  (let [opts-candidate (last param-groups)
-        options        (if (map? opts-candidate) opts-candidate {})
-        param-groups   (if (map? opts-candidate)
-                         (or (butlast param-groups) [])
-                         param-groups)]
+    (with-open [conn (jdbc/connection dbspec)]
+      (jdbc/execute conn \"create table foo (id integer);\"))
 
-    ;; Check incompatible parameters.
-    (when (and (:returning options) (is-prepared-statement? sql))
-      (throw (IllegalArgumentException. "You can not pass prepared statement with returning options")))
+  This function also accepts sqlvec format."
+  ([conn q] (execute conn q {}))
+  ([conn q opts]
+   (let [rconn (proto/connection conn)]
+     (proto/execute q rconn opts))))
 
-    (when (and (seq param-groups) (vector? sql))
-      (throw (IllegalArgumentException. "param-groups should be empty when sql parameter is a vector")))
+(defn fetch
+  "Fetch eagerly results executing a query.
 
-    (cond
-     ;; In case of sql is just a prepared statement
-     ;; execute it in a standard way.
-     (is-prepared-statement? sql)
-     (execute-statement! conn sql param-groups)
+  This function returns a vector of records (default) or
+  rows (depending on specified opts). Resources are relased
+  inmediatelly without specific explicit action for it.
 
-     ;; In other case, build a prepared statement from sql or vector.
-     (or (vector? sql) (string? sql))
-     (with-open [^PreparedStatement stmt (proto/prepared-statement sql conn options)]
-       (let [res (execute-statement! conn stmt param-groups)]
-         (if (:returning options)
-           ;; In case of returning key is found on options
-           ;; and it has logical true value, build special prepared
-           ;; statement that expect return values.
-           (get-returning-records conn stmt)
-           res))))))
+  It accepts a sqlvec, plain sql or prepared statement
+  as query parameter."
+  ([conn q] (fetch conn q {}))
+  ([conn q opts]
+   (let [rconn (proto/connection conn)]
+     (proto/fetch q rconn opts))))
 
-(defn query
-  "Perform a simple sql query and return a evaluated result as vector.
-
-  `sqlvec` parameter can be: parametrized sql (vector format), plain sql
-  (simple sql string) or prepared statement instance.
-
-  Example using parametrized sql:
-
-    (doseq [row (query conn [\"SELECT foo FROM bar WHERE id = ?\" 1])]
-      (println row))
-
-  Example using plain sql (without parameters):
-
-    (doseq [row (query conn \"SELECT version();\")]
-      (println row))
-
-  Example using extern prepared statement:
-
-    (let [stmt (make-prepared-statement conn [\"SELECT foo FROM bar WHERE id = ?\" 1])]
-      (doseq [row (query conn stmt)]
-        (println row)))
-  "
-  ([conn sqlvec] (query conn sqlvec {}))
-  ([conn sqlvec options]
-   (let [^PreparedStatement stmt (proto/prepared-statement sqlvec conn options)]
-     (let [^ResultSet rs (.executeQuery stmt)]
-       (result-set->vector conn rs options)))))
-
-(def query-first
-  "Perform a simple sql query and return the first result. It accepts the
-  same arguments as the `query` function."
-  (comp first query))
+(def fetch-one (comp first fetch))
 
 (defn lazy-query
   "Perform a lazy query using server side cursors if them are available.
@@ -250,7 +167,8 @@
   for proper resource handling."
   ([conn sqlvec] (lazy-query conn sqlvec {}))
   ([conn sqlvec options]
-   (let [^PreparedStatement stmt (proto/prepared-statement sqlvec conn options)]
+   (let [^Connection conn (proto/connection conn)
+         ^PreparedStatement stmt (proto/prepared-statement sqlvec conn options)]
      (types/->cursor conn stmt))))
 
 (defn cursor->lazyseq
@@ -258,32 +176,91 @@
   ([cursor] (cursor->lazyseq cursor {}))
   ([cursor options] (proto/get-lazyseq cursor options)))
 
-(defmacro with-connection
-  "Given database connection paramers (dbspec), creates
-  a context with new connection to database that are closed
-  at end of code block.
 
-  If dbspec has datasource (connection pool), instead of create
-  a new connection, get it from connection pool and release it
-  at the end.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Transactions
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-  WARNING: deprecated
+(defn atomic-apply
+  "Wrap function in one transaction.
+  This function accepts as a parameter a transaction strategy. If no one
+  is specified, `DefaultTransactionStrategy` is used.
+
+  With `DefaultTransactionStrategy`, if current connection is already in
+  transaction, it uses truly nested transactions for properly handle it.
+  The availability of this feature depends on database support for it.
 
   Example:
 
-    (with-connection [conn dbspec]
-      (do-somethin-with-connection conn))
+  (with-open [conn (jdbc/connection)]
+    (atomic-apply conn (fn [conn] (execute! conn 'DROP TABLE foo;'))))
 
-  Deprecated but yet working example (this behavior should be
-  removed on 1.1 version):
+  For more idiomatic code, you should use `atomic` macro.
 
-    (with-connection dbspec conn
-      (do-something-with conn))
+  Depending on transaction strategy you are using, this function can accept
+  additional parameters. The default transaction strategy exposes two additional
+  parameters:
+
+  - `:isolation-level` - set isolation level for this transaction
+  - `:read-only` - set current transaction to read only"
+  [conn func & [{:keys [savepoints strategy] :or {savepoints true} :as opts}]]
+  (let [metadata (meta conn)
+        tx-strategy (or strategy
+                        (:tx-strategy metadata)
+                        *default-tx-strategy*)]
+    (when (and (:transaction metadata) (not savepoints))
+      (throw (RuntimeException. "Savepoints explicitly disabled.")))
+
+    (let [conn (proto/begin! tx-strategy conn opts)
+          metadata (meta conn)]
+      (try
+        (let [returnvalue (func conn)]
+          (proto/commit! tx-strategy conn opts)
+          returnvalue)
+        (catch Throwable t
+          (proto/rollback! tx-strategy conn opts)
+          (throw t))))))
+
+(defmacro atomic
+  "Creates a context that evaluates in transaction (or nested transaction).
+  This is a more idiomatic way to execute some database operations in
+  atomic way.
+
+  Example:
+
+  (jdbc/atomic conn
+    (jdbc/execute conn \"DROP TABLE foo;\")
+    (jdbc/execute conn \"DROP TABLE bar;\"))
+
+  Also, you can pass additional options to transaction:
+
+  (jdbc/atomic conn {:read-only true}
+    (jdbc/execute conn \"DROP TABLE foo;\")
+    (jdbc/execute conn \"DROP TABLE bar;\"))
   "
-  [dbspec & body]
-  (if (vector? dbspec)
-    `(with-open [con# (connection ~(second dbspec))]
-       (let [~(first dbspec) con#]
-         ~@body))
-    `(with-open [~(first body) (connection ~dbspec)]
-       ~@(rest body))))
+  [conn & body]
+  (if (map? (first body))
+    `(let [func# (fn [c#] (let [~conn c#] ~@(next body)))]
+       (atomic-apply ~conn func# ~(first body)))
+    `(let [func# (fn [c#] (let [~conn c#] ~@body))]
+       (atomic-apply ~conn func#))))
+
+(defn set-rollback!
+  "Mark a current connection for rollback.
+
+  It ensures that on the end of the current transaction
+  instead of commit changes, rollback them.
+
+  This function should be used inside of a transaction
+  block, otherwise this function does nothing.
+
+  Example:
+
+  (with-transaction conn
+    (make-some-queries-without-changes conn)
+    (set-rollback! conn))
+  "
+  [conn]
+  (let [metadata (meta conn)]
+    (when-let [rollback-flag (:rollback metadata)]
+      (reset! rollback-flag true))))

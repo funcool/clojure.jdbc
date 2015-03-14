@@ -15,65 +15,24 @@
 (ns jdbc.transaction
   "Transactions support for clojure.jdbc"
   (:require [jdbc.constants :as constants]
-            [jdbc.proto :as proto])
+            [jdbc.proto :as proto]
+            [jdbc.impl :as impl])
   (:import java.sql.Connection))
 
-(defprotocol ITransactionStrategy
-  (begin! [_ conn opts] "Starts a transaction and return a connection instance.")
-  (rollback! [_ conn opts] "Rollbacks a transaction. Returns nil.")
-  (commit! [_ conn opts] "Commits a transaction. Returns nil."))
+
+(def ITransactionStrategy proto/ITransactionStrategy)
+(def begin! proto/begin!)
+(def rollback! proto/rollback!)
+(def commit! proto/commit!)
+
+;; (defprotocol ITransactionStrategy
+;;   (begin! [_ conn opts] "Starts a transaction and return a connection instance.")
+;;   (rollback! [_ conn opts] "Rollbacks a transaction. Returns nil.")
+;;   (commit! [_ conn opts] "Commits a transaction. Returns nil."))
 
 (def ^{:doc "Default transaction strategy implementation."
        :dynamic true}
-  *default-tx-strategy*
-  (reify ITransactionStrategy
-    (begin! [_ conn opts]
-      (let [^Connection rconn (proto/get-connection conn)
-            metadata (-> (meta conn)
-                         (assoc :rollback (atom false)
-                                :prev-isolation (.getTransactionIsolation rconn)
-                                :prev-readonly (.isReadOnly rconn)))]
-        (if (:transaction metadata)
-          (let [sp (.setSavepoint rconn)]
-            (with-meta conn
-              (assoc metadata :savepoint sp :transaction true)))
-
-          (let [prev-autocommit (.getAutoCommit rconn)]
-            (.setAutoCommit rconn false)
-            (when-let [isolation (:isolation-level opts)]
-              (.setTransactionIsolation rconn (get constants/isolation-levels isolation)))
-            (when-let [read-only (:read-only opts)]
-              (.setReadOnly rconn read-only))
-            (with-meta conn
-              (assoc metadata :prev-autocommit prev-autocommit :transaction true))))))
-
-    (rollback! [_ conn opts]
-      (let [^Connection rconn (proto/get-connection conn)
-            metadata (meta conn)]
-        (if-let [savepoint (:savepoint metadata)]
-          (.rollback rconn savepoint)
-          (do
-            (.rollback rconn)
-            (.setAutoCommit rconn (:prev-autocommit metadata))
-            (.setTransactionIsolation rconn (:prev-isolation metadata))
-            (.setReadOnly rconn (:prev-readonly metadata))))))
-
-    (commit! [ts conn opts]
-      (let [^Connection rconn (proto/get-connection conn)
-            metadata  (meta conn)]
-        ;; In case on commit and rollback flag is set, commit action
-        ;; should be ignored and rollback will performed.
-        (if @(:rollback metadata)
-          (rollback! ts conn opts)
-          (if-let [savepoint (:savepoint metadata)]
-            (.releaseSavepoint rconn savepoint)
-            (do
-              (.commit rconn)
-
-              (.setAutoCommit rconn (:prev-autocommit metadata))
-              (.setTransactionIsolation rconn (:prev-isolation metadata))
-              (.setReadOnly rconn (:prev-readonly metadata)))))))))
-
+  *default-tx-strategy* (impl/transaction-strategy))
 
 (defn wrap-transaction-strategy
   "Simple helper function that associate a strategy
@@ -87,7 +46,7 @@
   "
   [conn strategy]
   (let [metadata (meta conn)]
-    (with-meta conn (assoc metadata :transaction-strategy strategy))))
+    (with-meta conn (assoc metadata :tx-strategy strategy))))
 
 (defn set-rollback!
   "Mark a current connection for rollback.
@@ -156,7 +115,7 @@
   [conn func & [{:keys [savepoints strategy] :or {savepoints true} :as opts}]]
   (let [metadata (meta conn)
         tx-strategy (or strategy
-                        (:transaction-strategy metadata)
+                        (:tx-strategy metadata)
                         *default-tx-strategy*)]
     (when (and (:transaction metadata) (not savepoints))
       (throw (RuntimeException. "Savepoints explicitly disabled.")))
