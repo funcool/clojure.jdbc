@@ -12,7 +12,7 @@
 ;; See the License for the specific language governing permissions and
 ;; limitations under the License.
 
-(ns jdbc.util.resultset
+(ns jdbc.resultset
   "ResultSet conversion functions."
   (:require [clojure.string :as str]
             [jdbc.proto :as proto])
