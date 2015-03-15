@@ -35,15 +35,6 @@
       (let [result (jdbc/fetch conn "SELECT 1 + 1 as foo;")]
         (is (= [{:foo 2}] result))))))
 
-;; (deftest db-extra-returning-keys-basic
-;;   (with-open [conn (jdbc/connection pg-dbspec)]
-;;     (jdbc/execute conn "DROP TABLE IF EXISTS foo_retkeys;")
-;;     (jdbc/execute conn "CREATE TABLE foo_retkeys (id int primary key, num integer);")
-
-;;     (let [sql (str "INSERT INTO foo_retkeys (id, num) VALUES (?, ?)")
-;;           res (jdbc/fetch conn [sql 2, 0] {:returning [:id]})]
-;;       (is (= res [{:id 2}])))))
-
 (deftest db-specs
   (let [c1 (jdbc/connection h2-dbspec1)
         c2 (jdbc/connection h2-dbspec2)
