@@ -1,23 +1,20 @@
-clojure.jdbc documentation
-==========================
+= clojure.jdbc documentation
 Andrey Antukh, <niwi@niwi.be>
-0.4.0
+0.5.0
 :toc: left
 :numbered:
 :source-highlighter: pygments
 :pygments-style: friendly
 
 
-Introduction
-------------
+== Introduction
 
 _clojure.jdbc_ is a library for low level, jdbc-based database access.
 
 
 link:api/index.html[Api reference documentation.]
 
-Philosophy
-~~~~~~~~~~
+=== Philosophy
 
 Five most important rules:
 
@@ -30,19 +27,16 @@ Five most important rules:
 All contributions to _clojure.jdbc_ should keep these important rules in mind.
 
 
-Project Maturity
-----------------
+== Project Maturity
 
 Since _clojure.jdbc_ is a young project there may be some API breakage.
 
 
-Install
--------
+== Install
 
 This section covers a installing _clojure.jdbc_ and its requirements.
 
-Requirements
-~~~~~~~~~~~~
+=== Requirements
 
 _clojure.jdbc_ is tested with these platforms:
 
@@ -50,8 +44,7 @@ _clojure.jdbc_ is tested with these platforms:
 - JDK8
 
 
-Leiningen
-~~~~~~~~~
+=== Leiningen
 
 The simplest way to use _clojure.jdbc_ in a clojure project, is by including it in the dependency
 vector on your *_project.clj_* file:
@@ -62,8 +55,7 @@ vector on your *_project.clj_* file:
 [clojure.jdbc "0.4.0"]
 ----
 
-Gradle
-~~~~~~
+=== Gradle
 
 If you are using gradle, this is a dependency line for gradle dsl:
 
@@ -73,8 +65,7 @@ compile "clojure.jdbc:clojure.jdbc:0.4.0"
 ----
 
 
-Get the Code
-~~~~~~~~~~~~
+=== Get the Code
 
 _clojure.jdbc_ is open source and you can found the source on link:https://github.com/niwibe/clojure.jdbc[github].
 
@@ -86,14 +77,11 @@ git clone https://github.com/niwibe/clojure.jdbc
 ----
 
 
-User Guide
-----------
+== User Guide
 
-Connecting to database
-~~~~~~~~~~~~~~~~~~~~~~
+=== Connecting to database
 
-Connection parameters
-^^^^^^^^^^^^^^^^^^^^^
+==== Connection parameters
 
 JDBC is the default Java abstraction/interface for SQL databases.  It's like
 the Python DB-API and similar abstractions in other languages.  Clojure, as a
@@ -135,9 +123,7 @@ Also, *dbspec* can be represented as a URI.
 (def dbspec "postgresql://user:password@localhost:5432/dbname")
 ----
 
-
-Creating a connection
-^^^^^^^^^^^^^^^^^^^^^
+==== Creating a connection
 
 With clojure.jdbc every function that interacts with a database explicitly requires
 one connection instance as parameter (no dynamic vars are used for it).
@@ -163,55 +149,46 @@ more clean and idiomatic.
 ----
 
 
-Execute Database Commands
-~~~~~~~~~~~~~~~~~~~~~~~~~
+=== Execute Database Commands
 
+==== Execute Raw SQL Statements
 
-Execute Raw SQL Statements
-^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The simplest way to execute raw SQL is using the `execute!` function. It requires
-an active connection as the first parameter followed by SQL sentences:
+The simplest way to execute raw SQL is using the `execute` function. It requires
+an active connection as the first parameter followed by SQL sentence:
 
 [source,clojure]
 ----
 (with-open [conn (jdbc/connection dbspec)]
-  (jdbc/execute! conn "CREATE TABLE foo (id serial, name text);"))
+  (jdbc/execute conn "CREATE TABLE foo (id serial, name text);"))
 ----
 
 
-Execute Parametrized SQL Statements
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+==== Execute Parametrized SQL Statements
 
 Raw SQL statements work well for creating tables and similar operations, but
 when you need to insert some data, especially if the data comes from untrusted
-sources, the `execute!` function is not a good option.
+sources. Using plain string concat is a very bat approach.
 
-For this problem, clojure.jdbc exposes the `execute-prepared!` function. It
-accepts parametrized SQL and a list of groups of parameters that allow
-the repeated execution of the same operations with distinct parameters.
+For safe parameter bindings, it there a sqlvec format that consists in a
+vector with sql followed of parameters:
+
+.Example of sqlvec format
+[source,clojure]
+----
+["select * from foo where age < ?" 20]
+----
+
+Almost all functions in clojure.jdbc accepts sqlvec. Let see an example
+using it in `execute` function:
 
 .Execute a simple insert SQL statement.
 [source,clojure]
 ----
-(let [sql "INSERT INTO foo (name) VALUES (?)"]
-  (jdbc/execute-prepared! conn [sql "Foo"]))
-----
-
-.Bulk insert example.
-[source,clojure]
-----
-(let [sql "INSERT INTO foo (name) VALUES (?)"]
-  (jdbc/execute-prepared! conn sql ["Foo"] ["Bar"]))
-
-;; This should emit this sql:
-;;   INSERT INTO foo (name) VALUES ('Foo');
-;;   INSERT INTO foo (name) VALUES ('Bar');
+(jdbc/execute conn ["insert into foo (name) values (?);" "Foo"]))
 ----
 
 
-Returning Inserted Keys
-^^^^^^^^^^^^^^^^^^^^^^^
+==== Returning Inserted Keys
 
 In some circumstances, you want use "RETURNING id" or similar functionality on
 your queries for return the primary keys of newly inserted records.
@@ -235,30 +212,27 @@ Also, you can use `:all` keyword in case of you need statement with "RETURNING *
 (jdbc/execute-prepared! conn sql ["foo"] {:returning :all})
 ----
 
+=== Make Queries
 
-Make Queries
-~~~~~~~~~~~~
-
-The basic way to query a database is using the `query` function:
+It is time for start executin queries and fetch results. For it purpise,
+clojure.jdbc exposes the `fetch` function:
 
 [source,clojure]
 ----
 (let [sql    ["SELECT id, name FROM people WHERE age > ?", 2]
-      result (jdbc/query conn sql)]
+      result (jdbc/fetch conn sql)]
   (doseq [row results]
     (println row))))
 
-;; It should print this:
+;; It should print somthing like this:
 ;; => {:id 1 :name "Foo"}
 ;; => {:id 2 :name "Bar"}
 ----
 
-Parametrized sql can be:
-
-- A vector with first element a sql string following with parameters
-- A native string (SQL query without parameters)
-- An instance of `PreparedStatement`
-- An instance of any type that implements the `ISQLStatement` protocol.
+We are know that almost all function in clojure.jdbc accepts a plain
+sql and sqlvec as query parameter. But is not entirely true, it also
+accepts as query parameter an instance of self crafted `PreparedStatement`
+or anythig that implements the `ISQLStatement` protocol.
 
 [NOTE]
 ====
@@ -268,27 +242,17 @@ that are explained in the xref:cursor-queries[Advanced usage] section.
 ====
 
 
-Transactions
-~~~~~~~~~~~~
+=== Transactions
 
 
-Getting Started with Transactions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+==== Getting Started with Transactions
 
-All transaction related functions in _clojure.jdbc_ are exposed under the `jdbc.transaction`
-namespace and if you need transactions in your code, you should import it:
-
-[source,clojure]
-----
-(require '[jdbc.transaction :as tx])
-----
-
-The most idiomatic way to wrap some code in a transaction, is by using the `with-transaction`
+The most idiomatic way to wrap some code in a transaction, is by using the `atomic`
 macro:
 
 [source,clojure]
 ----
-(tx/with-transaction conn
+(jdbc/atomic conn
   (do-thing-first conn)
   (do-thing-second conn))
 ----
@@ -301,21 +265,19 @@ connection that has transactional state.
 ====
 
 
-Low-level Transaction Primitives
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+==== Low-level Transaction Primitives
 
-Behind the scenes of the `with-transaction` macro, _clojure.jdbc_ uses the `call-in-transaction`
-function.
+Behind the scenes of the `atomic` macro, _clojure.jdbc_ uses the `atomic-apply` function.
 
 Given an active connection as the first parameter and function that you want execute in a
 transaction as the second parameter, it executes the function inside a database transaction.
-The function should accept a connection as its first parameter.
+
+The callback function should accept a connection as its first parameter.
 
 [source,clojure]
 ----
-(tx/call-in-transaction conn (fn [conn] (do-something-with conn)))
+(jdbc/atomic conn (fn [conn] (do-something-with conn)))
 ----
-
 
 [NOTE]
 ====
@@ -327,8 +289,7 @@ xref:transaction-strategy[Transaction Strategy section].
 ====
 
 
-Isolation Level
-^^^^^^^^^^^^^^^
+==== Isolation Level
 
 clojure.jdbc by default does nothing with the isolation level and keeps it to default values.
 
@@ -343,11 +304,11 @@ clojure.jdbc by default does nothing with the isolation level and keeps it to de
 .Or set it when executing a transaction
 [source, clojure]
 ----
-(tx/call-in-transaction conn do-something {:isolation-level :serializable})
+(jdbc/atomic-apply conn do-something {:isolation-level :serializable})
 
 ;; Or...
 
-(tx/with-transaction conn {:isolation-level :serializable}
+(jdbc/atomic conn {:isolation-level :serializable}
   (do-something conn))
 ----
 
@@ -364,8 +325,7 @@ You can read more about it on link:http://en.wikipedia.org/wiki/Isolation_(datab
 WARNING: not all JDBC providers support the above isolation levels.
 
 
-Read-Only Transactions
-^^^^^^^^^^^^^^^^^^^^^^
+==== Read-Only Transactions
 
 In some circumstances, mainly when you are using the strictest isolation-level, you may want
 to indicate to database that a query is actually read-only, allowing the database server to make some
@@ -374,18 +334,16 @@ optimizations for this operation.
 .You can set transaction read-only using transaction options
 [source, clojure]
 ----
-(tx/with-transaction conn {:isolation-level :serializable
-                           :read-only true}
+(jdbc/atomic conn {:isolation-level :serializable
+                   :read-only true}
   (query-something conn))
 ----
 
 
-Advanced usage
---------------
+== Advanced usage
 
 [[cursor-queries]]
-Server Side Cursors
-~~~~~~~~~~~~~~~~~~~
+=== Server Side Cursors
 
 By default, most JDBC drivers prefetch all results into memory make the use of lazy structures
 totally useless for fetching data. Luckily, some databases implement server-side cursors that avoid
@@ -394,15 +352,15 @@ this behavior.
 If you have an extremely large resultset and you want retrieve it and process each item, this is
 exactly what you need.
 
-For this purpose, _clojure.jdbc_ exposes the `lazy-query` function, that returns a some kind of
+For this purpose, _clojure.jdbc_ exposes the `fetch-lazy` function, that returns a some kind of
 cursor instance. At the moment of creating cursor, no query is executed.
 
 The cursor can be used converting it into clojure lazyseq using `cursor->lazyseq` function:
 
 [source,clojure]
 ----
-(with-transaction conn
-  (with-open [cursor (jdbc/lazy-query conn ["SELECT id, name FROM people;"])]
+(jdbc/atomic conn
+  (with-open [cursor (jdbc/fetch-lazy conn "SELECT id, name FROM people;")]
     (doseq [row (jdbc/cursor->lazyseq cursor)]
       (println row)))
 ----
@@ -425,51 +383,50 @@ If you want another strategy, you should create a new type and implement the
 .Sample dummy transaction strategy.
 [source,clojure]
 ----
+(require '[jdbc.proto :as proto])
+
 (def dummy-tx-strategy
-  (reify tx/ITransactionStrategy
+  (reify proto/ITransactionStrategy
     (begin! [_ conn opts] conn)
     (rollback! [_ conn opts] conn)
     (commit! [_ conn opts] conn)))
 ----
 
 
-You can specify the transaction strategy to use in these ways:
+clojure.jdbc has different ways to specify that transaction strategy shouldbe used. The most
+common is setting it in your dbspec:
 
-.Using the `with-transaction-strategy` macro.
 [source,clojure]
 ----
-(with-open [conn (jdbc/connection conn)]
-  (tx/with-transaction-strategy conn dummy-tx-strategy
-    (do-some-thing conn)))
+(def dbspec {:subprotocol "postgresql"
+             :subname "//localhost:5432/dbname"
+             :tx-strategy dummy-tx-strategy})
+(with-open [conn (jdbc/connection dbspec)]
+  (jdbc/atomic conn
+    ;; In this transaction block, the dummy transaction
+    ;; strategy will be used.
+    (do-somthing conn)))
 ----
 
-NOTE: `with-transaction-strategy` does not use dynamic vars, it simple associate the
-strategy to connection and exposes it.
+Internally, clojure.jdbc maintains an instance of default transaction strategy stored
+in a dynamic var. You can use the clojure facilities for alter that var for set
+an other default transaction stragegy:
 
-.Using the `wrap-transaction-strategy` function:
-[source,clojure]
-----
-(with-open [conn (-> (jdbc/connection dbspec)
-                     (jdbc/wrap-transaction-strategy dummy-tx-strategy))]
-  (do-some-thing conn))
-----
-
-.Using dynamic vars
+.Overwritting with `alter-var-root`
 [source, clojure]
 ----
-;; Overwritting the default value
 (alter-var-root #'tx/*default-tx-strategy* (fn [_] dummy-tx-strategy))
+----
 
-;; Or using binding
+.Overwritting it with dynamic scope
+[source, clojure]
+----
 (binding [tx/*default-tx-strategy* dummy-tx-strategy]
   (some-func-that-uses-transactions))
 ----
 
 
-Extend SQL Types
-~~~~~~~~~~~~~~~~
-
-Everything related to type handling/conversion is exposed in the `jdbc.proto` namespace.
+=== Extend SQL Types
 
 If you want to extend some type/class to use it as JDBC parameter without explicit conversion
 to an SQL-compatible type, you should extend your type with the `jdbc.proto/ISQLType` protocol.
@@ -486,9 +443,8 @@ a query parameter that corresponds to PostgreSQL text array in the database:
   (class (into-array String []))
 
   (set-stmt-parameter! [this conn stmt index]
-    (let [rconn (proto/get-connection conn)
-          value (proto/as-sql-type this conn)
-          array (.createArrayOf raw-conn "text" value)]
+    (let [value (proto/as-sql-type this conn)
+          array (.createArrayOf conn "text" value)]
       (.setArray stmt index array)))
 
   (as-sql-type [this conn] this))
@@ -500,10 +456,9 @@ to an SQL array and assigned properly in a prepared statement:
 [source,clojure]
 ----
 (with-open [conn (jdbc/connection pg-dbspec)]
-  (jdbc/execute! conn "CREATE TABLE arrayfoo (id integer, data text[]);")
+  (jdbc/execute conn "CREATE TABLE arrayfoo (id integer, data text[]);")
   (let [mystringarray (into-array String ["foo" "bar"])]
-    (jdbc/execute-prepared! conn "INSERT INTO arrayfoo VALUES (?, ?);"
-                            [1, mystringarray])))
+    (jdbc/execute conn ["INSERT INTO arrayfoo VALUES (?, ?);" 1 mystringarray])))
 ----
 
 clojure.jdbc also exposes the `jdbc.proto/ISQLResultSetReadColumn` protocol that encapsulates
@@ -513,8 +468,7 @@ You can read more about that in this blog post: http://www.niwi.be/2014/04/13/po
 
 
 [[connection-pool]]
-Connection pool
----------------
+== Connection pool
 
 DataSource is the preferd way to connect to the database in production enviroments, and
 is usually used for implement connection pools.
@@ -533,8 +487,7 @@ _clojure.jdbc_ is compatible with any other connection pool implemenetation, sim
 pass a `javax.sql.DataSource` instance to `jdbc/connection` function.
 
 
-c3p0
-~~~~
+=== c3p0
 
 c3p0, a mature, highly concurrent JDBC connection pooling library for clojure.jdbc.
 
@@ -575,7 +528,6 @@ an little example on how it can be done:
 
 You can found all configuration parameters here: http://www.mchange.com/projects/c3p0/#configuration
 
-
 Now, the new created datasource should be used like a plain dbspec for creating connections:
 
 [source, clojure]
@@ -585,8 +537,7 @@ Now, the new created datasource should be used like a plain dbspec for creating 
 ----
 
 
-dbcp2
-~~~~~
+=== dbcp2
 
 Apache commons DBCP (JDBC) connection pool implementation for clojure.jdbc
 
@@ -638,8 +589,7 @@ Now, the new created datasource should be used like a plain dbspec for creating 
 ----
 
 
-HikariCP
-~~~~~~~~
+=== HikariCP
 
 Fast, simple, reliable. HikariCP is a "zero-overhead" production ready JDBC connection pool.
 
@@ -713,8 +663,7 @@ Now, the new created datasource should be used like a plain dbspec for creating 
 ----
 
 
-How to Contribute?
-------------------
+== How to Contribute?
 
 **clojure.jdbc** unlike Clojure and other Clojure contrib libs, does not have many
 restrictions for contributions. Just follow the following steps depending on the
@@ -732,11 +681,9 @@ situation:
 - If it is accepted, follow the same steps as "bugfix".
 
 
-FAQ
----
+== FAQ
 
-Why another JDBC wrapper?
-~~~~~~~~~~~~~~~~~~~~~~~~~
+=== Why another JDBC wrapper?
 
 This is an incomplete list of reasons:
 
@@ -757,8 +704,8 @@ This is an incomplete list of reasons:
   In contrast, clojure.jdbc, if you want a transaction, you should wrap your code in a transaction
   context explicitly.
 
-Does clojure.jdbc have better performance than java.jdbc?
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+=== Does clojure.jdbc have better performance than java.jdbc?
 
 Mostly **Yes**, _clojure.jdbc_  by default has better performance than java.jdbc. You can
 run the micro benchmark code in your environment with: `lein with-profile bench run`
@@ -786,8 +733,7 @@ clojure.jdbc:
 ----
 
 
-Why does clojure.jdbc not include a DSL for working with SQL as java.jdbc 0.3 does?
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+=== Why does clojure.jdbc not include a DSL for working with SQL as java.jdbc 0.3 does?
 
 clojure.jdbc is a wrapper for the Java JDBC interface. It doesn't intend to provide helpers
 to avoid SQL usage. There are already plenty of DSLs for working with SQL.
@@ -801,14 +747,12 @@ This is an incomplete list of Clojure DSLs for SQL:
 - https://github.com/jkk/honeysql
 
 
-Is this a fork of java.jdbc?
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+=== Is this a fork of java.jdbc?
 
 No. It is an alternative implementation.
 
 
-License
--------
+== License
 
 clojure.jdbc is writen from scratch and is licensed under Apache 2.0 license:
 
