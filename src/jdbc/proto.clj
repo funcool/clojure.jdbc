@@ -23,17 +23,11 @@
   a raw jdbc connection with some other data."
   (connection [_] "Create or obtain existing connection"))
 
-(defprotocol ICursor
-  (get-lazyseq [_ opts] "Get lazy seq from cursor."))
-
 (defprotocol IExecute
   (execute [q conn opts] "Execute a query and return a number of rows affected."))
 
 (defprotocol IFetch
   (fetch [q conn opts] "Fetch eagerly results executing query."))
-
-(defprotocol IFetchLazy
-  (fetch-lazy [q conn opts] "Fetch lazy results executing query."))
 
 (defprotocol IDatabaseMetadata
   "Allows uniform database metadata extraction."
