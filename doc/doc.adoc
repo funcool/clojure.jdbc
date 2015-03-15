@@ -29,7 +29,11 @@ All contributions to _clojure.jdbc_ should keep these important rules in mind.
 
 == Project Maturity
 
-Since _clojure.jdbc_ is a young project there may be some API breakage.
+Since _clojure.jdbc_ is a young project there may be some API breakage. The last version,
+concretely 0.5.0 introduces a new simplified api and deprecates all old api.
+
+NOTE: The *0.5.0* is fully backward compatible for make the transition easy and all old
+api will be removed in *0.6.0*.
 
 
 == Install
