@@ -37,7 +37,7 @@
   (with-open [conn (clojure.jdbc/connection dbspec)]
     (quick-bench
      (dotimes [i *iterations*]
-       (clojure.jdbc/query conn sql)))))
+       (clojure.jdbc/fetch conn sql)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Benchmark 2
@@ -63,7 +63,7 @@
   (quick-bench
    (dotimes [i *iterations*]
      (with-open [conn (clojure.jdbc/connection dbspec)]
-       (clojure.jdbc/query conn sql)))))
+       (clojure.jdbc/fetch conn sql)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Benchmark 3
@@ -71,9 +71,9 @@
 
 (def basic-tx-strategy
   (reify
-    tx/ITransactionStrategy
+    proto/ITransactionStrategy
     (begin! [_ conn opts]
-      (let [^Connection rconn (proto/get-connection conn)
+      (let [^Connection rconn (proto/connection conn)
             metadata (meta conn)
             ^long depth (:depth-level metadata)]
         (if depth
@@ -88,7 +88,7 @@
                      :prev-autocommit prev-autocommit))))))
 
     (rollback! [_ conn opts]
-      (let [^Connection rconn (proto/get-connection conn)
+      (let [^Connection rconn (proto/connection conn)
             metadata (meta conn)
             ^long depth (:depth-level metadata)]
         (when (= depth 0)
@@ -96,7 +96,7 @@
           (.setAutoCommit rconn (:prev-autocommit metadata)))))
 
     (commit! [_ conn opts]
-      (let [^Connection rconn (proto/get-connection conn)
+      (let [^Connection rconn (proto/connection conn)
             metadata (meta conn)
             ^long depth (:depth-level metadata)]
         (when (= depth 0)
@@ -122,12 +122,11 @@
   (println "Benchmark: Simple query in a transaction without connection overhead")
   (println "Results for clojure.jdbc:")
 
-  (with-open [conn (clojure.jdbc/connection dbspec)]
-    (tx/with-transaction-strategy conn basic-tx-strategy
-      (quick-bench
-       (dotimes [i *iterations*]
-         (tx/with-transaction conn
-           (clojure.jdbc/query conn sql)))))))
+  (with-open [conn (clojure.jdbc/connection (assoc dbspec :tx-strategy basic-tx-strategy))]
+    (quick-bench
+     (dotimes [i *iterations*]
+       (clojure.jdbc/atomic conn
+         (clojure.jdbc/fetch conn sql))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Main
@@ -144,4 +143,3 @@
   (bench-3-java-jdbc)
   (bench-3-clojure-jdbc)
 )
-  ;; (bench-03-with-transactions))
