@@ -52,7 +52,7 @@ vector on your *_project.clj_* file:
 ._on project.clj_
 [source,clojure]
 ----
-[clojure.jdbc "0.4.0"]
+[clojure.jdbc "0.5.0"]
 ----
 
 === Gradle
@@ -61,7 +61,7 @@ If you are using gradle, this is a dependency line for gradle dsl:
 
 [source,groovy]
 ----
-compile "clojure.jdbc:clojure.jdbc:0.4.0"
+compile "clojure.jdbc:clojure.jdbc:0.5.0"
 ----
 
 
@@ -167,9 +167,9 @@ an active connection as the first parameter followed by SQL sentence:
 
 Raw SQL statements work well for creating tables and similar operations, but
 when you need to insert some data, especially if the data comes from untrusted
-sources. Using plain string concat is a very bat approach.
+sources. Using plain string concatenation is a very bat and unsafe approach.
 
-For safe parameter bindings, it there a sqlvec format that consists in a
+For safe parameter bindings, it there a *sqlvec* format that consists in a
 vector with sql followed of parameters:
 
 .Example of sqlvec format
@@ -178,8 +178,8 @@ vector with sql followed of parameters:
 ["select * from foo where age < ?" 20]
 ----
 
-Almost all functions in clojure.jdbc accepts sqlvec. Let see an example
-using it in `execute` function:
+Almost all functions in clojure.jdbc accepts sqlvec as query parameter.
+Let see an example using it in `execute` function:
 
 .Execute a simple insert SQL statement.
 [source,clojure]
@@ -197,20 +197,14 @@ This is how you can do it using clojure.jdbc:
 
 [source, clojure]
 ----
-(let [sql "INSERT INTO foo (name) VALUES (?);"
-      res (jdbc/execute-prepared! conn sql ["Foo"] ["Bar"] {:returning [:id]})]
+(let [sql "insert into foo (name) values (?) returning id;"
+      res (jdbc/fetch conn [sql "Foo"])]
   (println res))
 
 ;; This should print something like this to standard output:
-[{:id 3} {:id 4}]
+[{:id 3}]
 ----
 
-Also, you can use `:all` keyword in case of you need statement with "RETURNING *".
-
-[source, clojure]
-----
-(jdbc/execute-prepared! conn sql ["foo"] {:returning :all})
-----
 
 === Make Queries
 

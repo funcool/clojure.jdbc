@@ -83,6 +83,13 @@
       (is (true? (.isReadOnly (proto/connection conn)))))
     (is (false? (.isReadOnly (proto/connection conn))))))
 
+(deftest db-commands-2
+  (with-open [conn (jdbc/connection pg-dbspec)]
+    (jdbc/atomic conn
+      (jdbc/set-rollback! conn)
+      (jdbc/execute conn "create table foo (id serial, age integer);")
+      (let [result (jdbc/fetch conn ["insert into foo (age) values (?) returning id" 1])]
+        (is (= result [{:id 1}]))))))
 
 (deftest db-commands
   ;; Simple statement

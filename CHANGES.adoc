@@ -19,7 +19,7 @@ maintains full backward compatibility until 0.6.0.
 
 The major change of this release is make all query/statement executin functions works
 in terms of generic abstractions defined as protocols. The api is highly influenced
-by `suricatta` api, making it moststly compatible with it.
+by `suricatta` api, making it mostly compatible with it.
 
 
 == Version 0.4.0
