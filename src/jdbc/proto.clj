@@ -27,10 +27,13 @@
   (get-lazyseq [_ opts] "Get lazy seq from cursor."))
 
 (defprotocol IExecute
-  (execute [q ctx opts] "Execute a query and return a number of rows affected."))
+  (execute [q conn opts] "Execute a query and return a number of rows affected."))
 
 (defprotocol IFetch
-  (fetch [q ctx opts] "Fetch eagerly results executing query."))
+  (fetch [q conn opts] "Fetch eagerly results executing query."))
+
+(defprotocol IFetchLazy
+  (fetch-lazy [q conn opts] "Fetch lazy results executing query."))
 
 (defprotocol IDatabaseMetadata
   "Allows uniform database metadata extraction."

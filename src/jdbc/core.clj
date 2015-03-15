@@ -153,28 +153,29 @@
 
 (def fetch-one (comp first fetch))
 
-(defn lazy-query
-  "Perform a lazy query using server side cursors if them are available.
+(defn fetch-lazy
+  "Fetch lazily results executing a query.
 
-  This function returns a cursor instance. That cursor allows create
-  arbitrary number of lazyseqs.
-
-  Some databases requires that this funcion and lazyseq iteration
-  should be used in a transactoion context.
-
-  The returned cursor should be used with `with-open` clojure function
-  for proper resource handling."
-  ([conn sqlvec] (lazy-query conn sqlvec {}))
-  ([conn sqlvec options]
+  This function returns a cursor instead of result.
+  You should explicitly close the cursor at the end of
+  iteration for release resources."
+  ([conn q] (fetch-lazy conn q {}))
+  ([conn q opts]
    (let [^Connection conn (proto/connection conn)
-         ^PreparedStatement stmt (proto/prepared-statement sqlvec conn options)]
-     (types/->cursor conn stmt))))
+         ^PreparedStatement stmt (proto/prepared-statement q conn opts)]
+     (types/->cursor stmt))))
+
+(def ^{:doc "Deprecated alias for backward compatibility."
+       :deprecated true}
+  lazy-query fetch-lazy)
 
 (defn cursor->lazyseq
-  "Execute a cursor query and return a lazyseq with results."
-  ([cursor] (cursor->lazyseq cursor {}))
-  ([cursor options] (proto/get-lazyseq cursor options)))
+  "Transform a cursor in a lazyseq.
 
+  The returned lazyseq will return values until a cursor
+  is closed or all values are fetched."
+  ([cursor] (impl/cursor->lazyseq cursor {}))
+  ([cursor opts] (impl/cursor->lazyseq cursor opts)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Transactions

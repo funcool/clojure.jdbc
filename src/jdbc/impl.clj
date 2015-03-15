@@ -312,3 +312,14 @@
     (begin! [_ conn opts] (begin* conn opts))
     (rollback! [_ conn opts] (rollback* conn opts))
     (commit! [ts conn opts] (commit* ts conn opts))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Lazy Query
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn cursor->lazyseq
+  [cursor opts]
+  (let [^PreparedStatement stmt (.-stmt cursor)
+        ^Connection conn (.getConnection stmt)
+        ^ResultSet rs (.executeQuery stmt)]
+    (result-set->lazyseq conn rs opts)))

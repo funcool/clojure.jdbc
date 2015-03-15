@@ -1,6 +1,6 @@
 (ns jdbc-deprecated-test
   (:import org.postgresql.util.PGobject)
-  (:require [jdbc.core :refer :all :as jdbc]
+  (:require [jdbc.core :as jdbc]
             [jdbc.transaction :as tx]
             [jdbc.types :refer :all]
             [jdbc.impl :refer :all]
@@ -39,31 +39,31 @@
       (with-open [conn (jdbc/connection ds)]
         (is (satisfies? proto/IConnection conn))
         (is (instance? java.sql.Connection (proto/connection conn)))
-        (let [result (query conn ["SELECT 1 + 1 as foo;"])]
+        (let [result (jdbc/query conn ["SELECT 1 + 1 as foo;"])]
           (is (= [{:foo 2}] result)))))))
 
 (deftest db-extra-returning-keys
   (testing "Testing basic returning keys"
     (with-open [conn (jdbc/connection pg-dbspec)]
-      (execute! conn "DROP TABLE IF EXISTS foo_retkeys;")
-      (execute! conn "CREATE TABLE foo_retkeys (id int primary key, num integer);")
+      (jdbc/execute! conn "DROP TABLE IF EXISTS foo_retkeys;")
+      (jdbc/execute! conn "CREATE TABLE foo_retkeys (id int primary key, num integer);")
       (let [sql (str "INSERT INTO foo_retkeys (id, num) VALUES (?, ?)")
-            res (execute-prepared! conn sql [2, 0] [3, 0] {:returning [:id]})]
+            res (jdbc/execute-prepared! conn sql [2, 0] [3, 0] {:returning [:id]})]
         (is (= res [{:id 2} {:id 3}])))))
 
   (testing "Testing returning keys with vector sql"
     (with-open [conn (jdbc/connection pg-dbspec)]
-      (execute! conn "DROP TABLE IF EXISTS foo_retkeys;")
-      (execute! conn "CREATE TABLE foo_retkeys (id int primary key, num integer);")
+      (jdbc/execute! conn "DROP TABLE IF EXISTS foo_retkeys;")
+      (jdbc/execute! conn "CREATE TABLE foo_retkeys (id int primary key, num integer);")
       (let [sql (str "INSERT INTO foo_retkeys (id, num) VALUES (?, ?)")
-            res (execute-prepared! conn [sql 2 0] {:returning [:id]})]
+            res (jdbc/execute-prepared! conn [sql 2 0] {:returning [:id]})]
         (is (= res [{:id 2}])))))
 
   (testing "Testing wrong arguments"
     (with-open [conn (jdbc/connection pg-dbspec)]
       (is (thrown? IllegalArgumentException
                    (let [sql (str "INSERT INTO foo_retkeys (id, num) VALUES (?, ?)")]
-                     (execute-prepared! conn [sql 1 0] [2 0]))))))
+                     (jdbc/execute-prepared! conn [sql 1 0] [2 0]))))))
 )
 
 (deftest db-specs
@@ -113,81 +113,80 @@
   (testing "Simple create table"
     (with-open [conn (jdbc/connection h2-dbspec3)]
       (let [sql "CREATE TABLE foo (name varchar(255), age integer);"
-            r   (execute! conn sql)]
+            r   (jdbc/execute! conn sql)]
         (is (= (list 0) r)))))
 
   (testing "Create duplicate table"
     (with-open [conn (jdbc/connection h2-dbspec3)]
       (let [sql "CREATE TABLE foo (name varchar(255), age integer);"]
-        (execute! conn sql)
-        (is (thrown? org.h2.jdbc.JdbcBatchUpdateException (execute! conn sql))))))
+        (jdbc/execute! conn sql)
+        (is (thrown? org.h2.jdbc.JdbcBatchUpdateException (jdbc/execute! conn sql))))))
 
   (testing "Simple query result using query function"
     (with-open [conn (jdbc/connection h2-dbspec3)]
-      (let [result (query conn ["SELECT 1 + 1 as foo;"])]
+      (let [result (jdbc/query conn ["SELECT 1 + 1 as foo;"])]
         (is (= [{:foo 2}] result)))))
 
   (testing "More complex query using query funcion"
     (with-open [conn (jdbc/connection pg-dbspec)]
-      (let [result (query conn ["SELECT * FROM generate_series(1, ?) LIMIT 1 OFFSET 3;" 10])]
+      (let [result (jdbc/query conn ["SELECT * FROM generate_series(1, ?) LIMIT 1 OFFSET 3;" 10])]
         (is (= (count result) 1)))))
 
   (testing "Simple query result using query function overwriting identifiers parameter."
     (with-open [conn (jdbc/connection h2-dbspec3)]
-      (let [result (query conn ["SELECT 1 + 1 as foo;"] {:identifiers identity})]
+      (let [result (jdbc/query conn ["SELECT 1 + 1 as foo;"] {:identifiers identity})]
         (is (= [{:FOO 2}] result)))))
 
   (testing "Simple query result using query function and string parameter"
     (with-open [conn (jdbc/connection h2-dbspec3)]
-      (let [result (query conn "SELECT 1 + 1 as foo;")]
+      (let [result (jdbc/query conn "SELECT 1 + 1 as foo;")]
         (is (= [{:foo 2}] result)))))
 
   (testing "Simple query result using query function as vectors of vectors"
     (with-open [conn (jdbc/connection h2-dbspec3)]
-      (let [result (query conn ["SELECT 1 + 1 as foo;"] {:as-rows? true})]
+      (let [result (jdbc/query conn ["SELECT 1 + 1 as foo;"] {:as-rows? true})]
         (is (= [2] (first result))))))
 
   (testing "Execute prepared"
     (with-open [conn (jdbc/connection h2-dbspec3)]
-      (execute! conn "CREATE TABLE foo (name varchar(255), age integer);")
-      (execute-prepared! conn "INSERT INTO foo (name,age) VALUES (?, ?);"
+      (jdbc/execute! conn "CREATE TABLE foo (name varchar(255), age integer);")
+      (jdbc/execute-prepared! conn "INSERT INTO foo (name,age) VALUES (?, ?);"
                          ["foo", 1]  ["bar", 2])
 
-      (let [results (query conn ["SELECT count(age) as total FROM foo;"])]
+      (let [results (jdbc/query conn ["SELECT count(age) as total FROM foo;"])]
         (is (= [{:total 2}] results)))))
 
   (testing "Pass prepared statement."
     (with-open [conn (jdbc/connection h2-dbspec3)]
-      (let [stmt (prepared-statement conn ["SELECT 1 + 1 as foo;"])
-            result (query conn stmt {:as-rows? true})]
+      (let [stmt (jdbc/prepared-statement conn ["SELECT 1 + 1 as foo;"])
+            result (jdbc/query conn stmt {:as-rows? true})]
         (is (= [2] (first result)))))))
 
 (deftest lazy-queries
   (testing "Simple lazy query"
     (with-open [conn (jdbc/connection h2-dbspec3)]
       (tx/with-transaction conn
-        (with-open [cursor (lazy-query conn ["SELECT 1 + 1 as foo;"])]
-          (is (satisfies? proto/ICursor cursor))
-          (let [result (vec (cursor->lazyseq cursor))]
+        (with-open [cursor (jdbc/lazy-query conn ["SELECT 1 + 1 as foo;"])]
+          (let [result (vec (jdbc/cursor->lazyseq cursor))]
             (is (= [{:foo 2}] result)))
-          (let [result (vec (cursor->lazyseq cursor))]
+          (let [result (vec (jdbc/cursor->lazyseq cursor))]
             (is (= [{:foo 2}] result))))))))
 
 (deftest db-execute-prepared-statement
   (testing "Execute simple sql based prepared statement."
     (with-open [conn (jdbc/connection h2-dbspec3)]
-      (execute! conn "CREATE TABLE foo (name varchar(255), age integer);")
-      (let [res (execute-prepared! conn "INSERT INTO foo (name,age) VALUES (?, ?);"
+      (jdbc/execute! conn "CREATE TABLE foo (name varchar(255), age integer);")
+      (let [res (jdbc/execute-prepared! conn "INSERT INTO foo (name,age) VALUES (?, ?);"
                                    ["foo", 1]  ["bar", 2])]
         (is (= res (seq [1 1]))))))
 
   (testing "Executing self defined prepared statement"
     (with-open [conn (jdbc/connection h2-dbspec3)]
-      (execute! conn "CREATE TABLE foo (name varchar(255), age integer);")
-      (let [stmt (prepared-statement conn "INSERT INTO foo (name,age) VALUES (?, ?);")
-            res1 (execute-prepared! conn stmt ["foo", 1] ["bar", 2])
-            res2 (execute-prepared! conn stmt ["fooo", 1] ["barr", 2])
-            results (query conn ["SELECT count(age) as total FROM foo;"])]
+      (jdbc/execute! conn "CREATE TABLE foo (name varchar(255), age integer);")
+      (let [stmt (jdbc/prepared-statement conn "INSERT INTO foo (name,age) VALUES (?, ?);")
+            res1 (jdbc/execute-prepared! conn stmt ["foo", 1] ["bar", 2])
+            res2 (jdbc/execute-prepared! conn stmt ["fooo", 1] ["barr", 2])
+            results (jdbc/query conn ["SELECT count(age) as total FROM foo;"])]
         (is (= [{:total 4}] results))))))
 
 (deftest db-commands-bytes
@@ -196,11 +195,11 @@
           inputStream  (java.io.ByteArrayInputStream. buffer)
           sql          "CREATE TABLE foo (id integer, data bytea);"]
       (with-open [conn (jdbc/connection h2-dbspec3)]
-        (execute! conn sql)
-        (let [res (execute-prepared! conn "INSERT INTO foo (id, data) VALUES (?, ?);" [1 inputStream])]
+        (jdbc/execute! conn sql)
+        (let [res (jdbc/execute-prepared! conn "INSERT INTO foo (id, data) VALUES (?, ?);" [1 inputStream])]
           (is (= res '(1))))
 
-        (let [res (query conn "SELECT * FROM foo")
+        (let [res (jdbc/query conn "SELECT * FROM foo")
               res (first res)]
           (is (instance? (Class/forName "[B") (:data res)))
           (is (= (get (:data res) 2) 2)))))))
@@ -223,10 +222,10 @@
         (tx/set-rollback! conn)
         (let [sql "CREATE TABLE arrayfoo (id integer, data text[]);"
               dat (into-array String ["foo", "bar"])]
-          (execute! conn sql)
-          (let [res (execute-prepared! conn "INSERT INTO arrayfoo (id, data) VALUES (?, ?);" [1, dat])]
+          (jdbc/execute! conn sql)
+          (let [res (jdbc/execute-prepared! conn "INSERT INTO arrayfoo (id, data) VALUES (?, ?);" [1, dat])]
             (is (= res '(1))))
-          (let [res (first (query conn "SELECT * FROM arrayfoo"))]
+          (let [res (first (jdbc/query conn "SELECT * FROM arrayfoo"))]
 
             (let [rr (.getArray (:data res))]
               (is (= (count rr) 2))
@@ -282,15 +281,15 @@
         (tx/with-transaction-strategy conn dummmy-tx-strategy
           (is (identical? (:tx-strategy (meta conn))
                           dummmy-tx-strategy))
-          (execute! conn sql1)
+          (jdbc/execute! conn sql1)
           (try
             (tx/with-transaction conn
-              (execute-prepared! conn sql2 ["foo", 1]  ["bar", 2])
-              (let [results (query conn sql3)]
+              (jdbc/execute-prepared! conn sql2 ["foo", 1]  ["bar", 2])
+              (let [results (jdbc/query conn sql3)]
                 (is (= (count results) 2))
                 (throw (RuntimeException. "Fooo"))))
             (catch Exception e
-              (let [results (query conn sql3)]
+              (let [results (jdbc/query conn sql3)]
                 (is (= (count results) 2))))))))
 
     (testing "Test basic transaction strategy"
@@ -298,18 +297,18 @@
                            (tx/wrap-transaction-strategy basic-tx-strategy))]
         (is (identical? (:tx-strategy (meta conn))
                         basic-tx-strategy))
-        (execute! conn sql1)
+        (jdbc/execute! conn sql1)
         (try
           (tx/with-transaction conn
-            (execute-prepared! conn sql2 ["foo", 1]  ["bar", 2])
+            (jdbc/execute-prepared! conn sql2 ["foo", 1]  ["bar", 2])
             (is (= (:depth-level (meta conn)) 0))
             (tx/with-transaction conn
               (is (= (:depth-level (meta conn)) 1))
-              (let [results (query conn sql3)]
+              (let [results (jdbc/query conn sql3)]
                 (is (= (count results) 2))
                 (throw (RuntimeException. "Fooo")))))
           (catch Exception e
-            (let [results (query conn sql3)]
+            (let [results (jdbc/query conn sql3)]
               (is (= (count results) 0)))))))))
 
 
@@ -320,27 +319,27 @@
 
     (testing "Basic transaction test with exception."
       (with-open [conn (jdbc/connection h2-dbspec3)]
-        (execute! conn sql1)
+        (jdbc/execute! conn sql1)
 
         (try
           (tx/with-transaction conn
-            (execute-prepared! conn sql2 ["foo", 1]  ["bar", 2])
-            (let [results (query conn [sql3])]
+            (jdbc/execute-prepared! conn sql2 ["foo", 1]  ["bar", 2])
+            (let [results (jdbc/query conn [sql3])]
               (is (= (count results) 2))
               (throw (RuntimeException. "Fooo"))))
           (catch Exception e
-            (let [results (query conn [sql3])]
+            (let [results (jdbc/query conn [sql3])]
               (is (= (count results) 0)))))))
 
     (testing "Basic transaction test without exception."
       (with-open [conn (jdbc/connection h2-dbspec3)]
-        (execute! conn sql1)
+        (jdbc/execute! conn sql1)
 
         (tx/with-transaction conn
-          (execute-prepared! conn sql2 ["foo", 1]  ["bar", 2]))
+          (jdbc/execute-prepared! conn sql2 ["foo", 1]  ["bar", 2]))
 
         (tx/with-transaction conn
-          (let [results (query conn [sql3])]
+          (let [results (jdbc/query conn [sql3])]
             (is (= (count results) 2))))))
 
     (testing "Immutability"
@@ -365,60 +364,60 @@
 
     (testing "Set rollback 01"
       (with-open [conn (jdbc/connection h2-dbspec3)]
-        (execute! conn sql1)
+        (jdbc/execute! conn sql1)
 
         (tx/with-transaction conn
-          (execute-prepared! conn sql2 ["foo", 1]  ["bar", 2])
+          (jdbc/execute-prepared! conn sql2 ["foo", 1]  ["bar", 2])
           (is (false? @(:rollback (meta conn))))
 
           (tx/with-transaction conn
-            (execute-prepared! conn sql2 ["foo", 1]  ["bar", 2])
+            (jdbc/execute-prepared! conn sql2 ["foo", 1]  ["bar", 2])
             (tx/set-rollback! conn)
             (is (true? @(:rollback (meta conn))))
-            (let [results (query conn sql3)]
+            (let [results (jdbc/query conn sql3)]
               (is (= (count results) 4))))
 
-          (let [results (query conn [sql3])]
+          (let [results (jdbc/query conn [sql3])]
             (is (= (count results) 2))))))
 
     (testing "Set rollback 02"
       (with-open [conn (jdbc/connection h2-dbspec3)]
-        (execute! conn sql1)
+        (jdbc/execute! conn sql1)
 
         (tx/with-transaction conn
           (tx/set-rollback! conn)
-          (execute-prepared! conn sql2 ["foo", 1]  ["bar", 2])
+          (jdbc/execute-prepared! conn sql2 ["foo", 1]  ["bar", 2])
 
           (is (true? @(:rollback (meta conn))))
 
           (tx/with-transaction conn
             (is (false? @(:rollback (meta conn))))
 
-            (execute-prepared! conn sql2 ["foo", 1]  ["bar", 2])
-            (let [results (query conn sql3)]
+            (jdbc/execute-prepared! conn sql2 ["foo", 1]  ["bar", 2])
+            (let [results (jdbc/query conn sql3)]
               (is (= (count results) 4))))
 
-          (let [results (query conn [sql3])]
+          (let [results (jdbc/query conn [sql3])]
             (is (= (count results) 4))))
 
-        (let [results (query conn [sql3])]
+        (let [results (jdbc/query conn [sql3])]
           (is (= (count results) 0)))))
 
     (testing "Subtransactions"
       (with-open [conn (jdbc/connection h2-dbspec3)]
-        (execute! conn sql1)
+        (jdbc/execute! conn sql1)
 
         (tx/with-transaction conn
-          (execute-prepared! conn sql2 ["foo", 1]  ["bar", 2])
+          (jdbc/execute-prepared! conn sql2 ["foo", 1]  ["bar", 2])
 
           (try
             (tx/with-transaction conn
-              (execute-prepared! conn sql2 ["foo", 1]  ["bar", 2])
-              (let [results (query conn [sql3])]
+              (jdbc/execute-prepared! conn sql2 ["foo", 1]  ["bar", 2])
+              (let [results (jdbc/query conn [sql3])]
                 (is (= (count results) 4))
                 (throw (RuntimeException. "Fooo"))))
             (catch Exception e
-              (let [results (query conn [sql3])]
+              (let [results (jdbc/query conn [sql3])]
                 (is (= (count results) 2))))))))
 ))
 
@@ -450,7 +449,7 @@
         (let [sql-create "CREATE TABLE jsontest (data json);"
               sql-query  "SELECT data FROM jsontest;"
               sql-insert "INSERT INTO jsontest (data) VALUES (?);"]
-          (execute! conn sql-create)
-          (execute-prepared! conn sql-insert [{:foo "bar"}])
-          (let [res (first (query conn sql-query))]
+          (jdbc/execute! conn sql-create)
+          (jdbc/execute-prepared! conn sql-insert [{:foo "bar"}])
+          (let [res (first (jdbc/query conn sql-query))]
             (is (= res {:data {"foo" "bar"}}))))))))

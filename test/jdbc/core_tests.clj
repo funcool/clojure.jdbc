@@ -129,8 +129,7 @@
 (deftest lazy-queries
   (with-open [conn (jdbc/connection h2-dbspec3)]
     (jdbc/atomic conn
-      (with-open [cursor (jdbc/lazy-query conn "SELECT 1 + 1 as foo;")]
-        (is (satisfies? proto/ICursor cursor))
+      (with-open [cursor (jdbc/fetch-lazy conn "SELECT 1 + 1 as foo;")]
         (let [result (vec (jdbc/cursor->lazyseq cursor))]
           (is (= [{:foo 2}] result)))
         (let [result (vec (jdbc/cursor->lazyseq cursor))]

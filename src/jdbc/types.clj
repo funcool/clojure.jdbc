@@ -34,17 +34,14 @@
     (close [_]
       (.close conn))))
 
+(deftype Cursor [stmt]
+  proto/IConnection
+  (connection [_] (.getConnection stmt))
+
+  java.io.Closeable
+  (close [_]
+    (.close stmt)))
+
 (defn ->cursor
-  [^Connection conn ^PreparedStatement stmt]
-  (reify
-    proto/IConnection
-    (connection [_] conn)
-
-    proto/ICursor
-    (get-lazyseq [_ opts]
-      (let [^ResultSet rs (.executeQuery stmt)]
-        (result-set->lazyseq conn rs opts)))
-
-    java.io.Closeable
-    (close [_]
-      (.close stmt))))
+  [^PreparedStatement stmt]
+  (Cursor. stmt))
