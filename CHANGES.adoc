@@ -1,5 +1,27 @@
 = Changelog
 
+
+== Version 0.5.0
+
+Date: unreleased
+
+This is an other release focused in simplify the main api. It deprecates the old api but
+maintains full backward compatibility until 0.6.0.
+
+- New `execute` function in terms of abstraction. This method replaces the `execute!`
+  and `execute-prepared!` functions.
+- New `fetch` function in terms of abstraction. This method replaces the `query`
+  function.
+- New transaction api based in new `atomic` macro and `atomic-apply` function located
+  now on core ns. The old functions (`call-in-transaction` and `with-transaction`) are
+  still available in now deprecated `jdbc.transaction` namespace.
+- New name to lazy-query: fetch-lazy.
+
+The major change of this release is make all query/statement executin functions works
+in terms of generic abstractions defined as protocols. The api is highly influenced
+by `suricatta` api, making it moststly compatible with it.
+
+
 == Version 0.4.0
 
 Date: 2015-02-07
