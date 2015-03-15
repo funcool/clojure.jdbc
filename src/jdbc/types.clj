@@ -30,6 +30,10 @@
     proto/IConnection
     (connection [_] conn)
 
+    proto/IDatabaseMetadata
+    (get-database-metadata [_]
+      (.getMetaData conn))
+
     java.io.Closeable
     (close [_]
       (.close conn))))
