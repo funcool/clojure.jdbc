@@ -27,7 +27,8 @@
            java.sql.ResultSet
            java.sql.Connection))
 
-(defn execute-statement!
+(defn ^{:deprecated true}
+  execute-statement!
   "Given a connection statement and paramgroups (can be empty)
   execute the prepared statement and return results from it.
 
@@ -48,7 +49,7 @@
           (.addBatch stmt))
         (seq (.executeBatch stmt))))))
 
-(defn execute!
+(defn ^{:deprecated true} execute!
   "Run arbitrary number of raw sql commands such as: CREATE TABLE,
   DROP TABLE, etc... If your want transactions, you can wrap this
   call in transaction using `with-transaction` context block macro
@@ -58,9 +59,9 @@
 
   Examples:
 
-    ;; Without transactions
-    (with-open [conn (connection dbspec)]
-      (execute! conn \"CREATE TABLE foo (id serial, name text);\"))
+      ;; Without transactions
+      (with-open [conn (connection dbspec)]
+        (execute! conn \"CREATE TABLE foo (id serial, name text);\"))
   "
   [conn & commands]
   (let [^Connection connection (proto/connection conn)]
@@ -69,7 +70,7 @@
                     (.addBatch stmt command)) commands))
       (seq (.executeBatch stmt)))))
 
-(defn get-returning-records
+(defn ^{:deprecated true} get-returning-records
   "Given a executed prepared statement with expected returning
   values. Return a vector of records of returning values.
   Usually is a id of just inserted objects, but in other cases
@@ -79,12 +80,12 @@
         ^Connection conn (proto/connection conn)]
     (result-set->vector conn rs {})))
 
-(defn is-prepared-statement?
+(defn ^{:deprecated true} is-prepared-statement?
   "Check if specified object is prepared statement."
   [obj]
   (instance? PreparedStatement obj))
 
-(defn execute-prepared!
+(defn ^{:deprecated true} execute-prepared!
   "Given a active connection and sql (or prepared statement),
   executes a query in a database. This differs from `execute!` function
   with that this function allows pass parameters to query in a more safe
@@ -99,9 +100,9 @@
 
   Example:
 
-  (with-connection dbspec conn
-    (let [sql \"UPDATE TABLE foo SET x = ? WHERE y = ?;\"]
-      (execute-prepared! conn sql [1 2] [2 3] [3 4])))
+      (with-connection dbspec conn
+        (let [sql \"UPDATE TABLE foo SET x = ? WHERE y = ?;\"]
+          (execute-prepared! conn sql [1 2] [2 3] [3 4])))
   "
   [conn sql & param-groups]
   ;; Try extract options from param-groups varargs. Options
@@ -139,7 +140,7 @@
            (get-returning-records conn stmt)
            res))))))
 
-(defn query
+(defn ^{:deprecated true} query
   "Perform a simple sql query and return a evaluated result as vector.
 
   `sqlvec` parameter can be: parametrized sql (vector format), plain sql
@@ -147,19 +148,19 @@
 
   Example using parametrized sql:
 
-    (doseq [row (query conn [\"SELECT foo FROM bar WHERE id = ?\" 1])]
-      (println row))
+      (doseq [row (query conn [\"SELECT foo FROM bar WHERE id = ?\" 1])]
+        (println row))
 
   Example using plain sql (without parameters):
 
-    (doseq [row (query conn \"SELECT version();\")]
-      (println row))
+      (doseq [row (query conn \"SELECT version();\")]
+        (println row))
 
   Example using extern prepared statement:
 
-    (let [stmt (make-prepared-statement conn [\"SELECT foo FROM bar WHERE id = ?\" 1])]
-      (doseq [row (query conn stmt)]
-        (println row)))
+      (let [stmt (make-prepared-statement conn [\"SELECT foo FROM bar WHERE id = ?\" 1])]
+        (doseq [row (query conn stmt)]
+          (println row)))
   "
   ([conn sqlvec] (query conn sqlvec {}))
   ([conn sqlvec options]
@@ -168,12 +169,13 @@
      (let [^ResultSet rs (.executeQuery stmt)]
        (result-set->vector conn rs options)))))
 
-(def query-first
+(def ^{:deprecated true} query-first
   "Perform a simple sql query and return the first result. It accepts the
   same arguments as the `query` function."
   (comp first query))
 
-(defmacro with-connection
+(defmacro ^{:deprecated true}
+  with-connection
   "Given database connection paramers (dbspec), creates
   a context with new connection to database that are closed
   at end of code block.
@@ -186,14 +188,14 @@
 
   Example:
 
-    (with-connection [conn dbspec]
-      (do-somethin-with-connection conn))
+      (with-connection [conn dbspec]
+        (do-somethin-with-connection conn))
 
   Deprecated but yet working example (this behavior should be
   removed on 1.1 version):
 
-    (with-connection dbspec conn
-      (do-something-with conn))
+      (with-connection dbspec conn
+        (do-something-with conn))
   "
   [dbspec & body]
   (if (vector? dbspec)

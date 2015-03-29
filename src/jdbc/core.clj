@@ -28,6 +28,7 @@
            java.sql.Connection))
 
 (def ^{:doc "Default transaction strategy implementation."
+       :no-doc true
        :dynamic true}
   *default-tx-strategy* (impl/transaction-strategy))
 
@@ -61,25 +62,27 @@
   The dbspec map has this possible variants:
 
   Classic approach:
-    :subprotocol -> (required) string that represents a vendor name (ex: postgresql)
-    :subname -> (required) string that represents a database name (ex: test)
+
+  - `:subprotocol` -> (required) string that represents a vendor name (ex: postgresql)
+  - `:subname` -> (required) string that represents a database name (ex: test)
     (many others options that are pased directly as driver parameters)
 
   Pretty format:
-    :vendor -> (required) string that represents a vendor name (ex: postgresql)
-    :name -> (required) string that represents a database name (ex: test)
-    :host -> (optional) string that represents a database hostname (default: 127.0.0.1)
-    :port -> (optional) long number that represents a database port (default: driver default)
+
+  - `:vendor` -> (required) string that represents a vendor name (ex: postgresql)
+  - `:name` -> (required) string that represents a database name (ex: test)
+  - `:host` -> (optional) string that represents a database hostname (default: 127.0.0.1)
+  - `:port` -> (optional) long number that represents a database port (default: driver default)
     (many others options that are pased directly as driver parameters)
 
-  URI or String format:
-    vendor://user:password@host:post/dbname?param1=value
+  URI or String format: `vendor://user:password@host:post/dbname?param1=value`
 
   Additional options:
-    :schema -> string that represents a schema name (default: nil)
-    :read-only -> boolean for mark entire connection read only.
-    :isolation-level -> keyword that represents a isolation level (:none, :read-committed,
-                        :read-uncommitted, :repeatable-read, :serializable)
+
+  - `:schema` -> string that represents a schema name (default: nil)
+  - `:read-only` -> boolean for mark entire connection read only.
+  - `:isolation-level` -> keyword that represents a isolation level (`:none`, `:read-committed`,
+                        `:read-uncommitted`, `:repeatable-read`, `:serializable`)
 
   Opions can be passed as part of dbspec map, or as optional second argument.
   For more details, see documentation."
@@ -126,10 +129,8 @@
 (defn execute
   "Execute a query and return a number of rows affected.
 
-  Example:
-
-    (with-open [conn (jdbc/connection dbspec)]
-      (jdbc/execute conn \"create table foo (id integer);\"))
+      (with-open [conn (jdbc/connection dbspec)]
+        (jdbc/execute conn \"create table foo (id integer);\"))
 
   This function also accepts sqlvec format."
   ([conn q] (execute conn q {}))
@@ -151,10 +152,18 @@
    (let [rconn (proto/connection conn)]
      (proto/fetch q rconn opts))))
 
-(def fetch-one (comp first fetch))
+(defn fetch-one
+  "Fetch eagerly one restult executing a query."
+  ([conn q] (fetch-one conn q {}))
+  ([conn q opts]
+   (first (fetch conn q opts))))
 
 (defn fetch-lazy
   "Fetch lazily results executing a query.
+
+      (with-open [cursor (jdbc/fetch-lazy conn sql)]
+        (doseq [item (jdbc/cursor->lazyseq cursor)]
+          (do-something-with item)))
 
   This function returns a cursor instead of result.
   You should explicitly close the cursor at the end of
@@ -190,10 +199,8 @@
   transaction, it uses truly nested transactions for properly handle it.
   The availability of this feature depends on database support for it.
 
-  Example:
-
-  (with-open [conn (jdbc/connection)]
-    (atomic-apply conn (fn [conn] (execute! conn 'DROP TABLE foo;'))))
+      (with-open [conn (jdbc/connection)]
+        (atomic-apply conn (fn [conn] (execute! conn 'DROP TABLE foo;'))))
 
   For more idiomatic code, you should use `atomic` macro.
 
@@ -226,17 +233,15 @@
   This is a more idiomatic way to execute some database operations in
   atomic way.
 
-  Example:
-
-  (jdbc/atomic conn
-    (jdbc/execute conn \"DROP TABLE foo;\")
-    (jdbc/execute conn \"DROP TABLE bar;\"))
+      (jdbc/atomic conn
+        (jdbc/execute conn \"DROP TABLE foo;\")
+        (jdbc/execute conn \"DROP TABLE bar;\"))
 
   Also, you can pass additional options to transaction:
 
-  (jdbc/atomic conn {:read-only true}
-    (jdbc/execute conn \"DROP TABLE foo;\")
-    (jdbc/execute conn \"DROP TABLE bar;\"))
+      (jdbc/atomic conn {:read-only true}
+        (jdbc/execute conn \"DROP TABLE foo;\")
+        (jdbc/execute conn \"DROP TABLE bar;\"))
   "
   [conn & body]
   (if (map? (first body))
@@ -254,11 +259,9 @@
   This function should be used inside of a transaction
   block, otherwise this function does nothing.
 
-  Example:
-
-  (with-transaction conn
-    (make-some-queries-without-changes conn)
-    (set-rollback! conn))
+      (jdbc/atomic conn
+        (make-some-queries-without-changes conn)
+        (jdbc/set-rollback! conn))
   "
   [conn]
   (let [metadata (meta conn)]

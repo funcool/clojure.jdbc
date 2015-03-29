@@ -26,20 +26,20 @@
 (defn catalog-name
   "Given a connection, get a catalog name."
   [ c]
-  (let [^java.sql.Connection conn (proto/get-connection c)]
+  (let [^java.sql.Connection conn (proto/connection c)]
     (.getCatalog conn)))
 
 (defn schema-name
   "Given a connection, get a schema name."
   [c]
-  (let [^java.sql.Connection conn (proto/get-connection c)]
+  (let [^java.sql.Connection conn (proto/connection c)]
     (.getSchema conn)))
 
 (defn is-readonly?
   "Returns true if a current connection is
   in read-only model."
   [c]
-  (let [^java.sql.Connection conn (proto/get-connection c)]
+  (let [^java.sql.Connection conn (proto/connection c)]
     (.isReadOnly conn)))
 
 (defn is-valid?
@@ -48,19 +48,19 @@
   ([c]
      (is-valid? c 0))
   ([c ^long timeout]
-     (let [^java.sql.Connection conn (proto/get-connection c)]
+     (let [^java.sql.Connection conn (proto/connection c)]
        (.isValid conn timeout))))
 
 (defn network-timeout
   "Given a connection, get network timeout."
   [c]
-  (let [^java.sql.Connection conn (proto/get-connection c)]
+  (let [^java.sql.Connection conn (proto/connection c)]
     (.getNetworkTimeout conn)))
 
 (defn isolation-level
   "Given a connection, get a current isolation level."
   [c]
-  (let [^java.sql.Connection conn (proto/get-connection c)
+  (let [^java.sql.Connection conn (proto/connection c)
         ilvalue (.getTransactionIsolation conn)]
     (condp = ilvalue
       java.sql.Connection/TRANSACTION_READ_UNCOMMITTED :read-commited
