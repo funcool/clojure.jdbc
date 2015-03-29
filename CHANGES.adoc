@@ -1,9 +1,8 @@
 = Changelog
 
-
 == Version 0.5.0
 
-Date: unreleased
+Date: 2015-03-29
 
 This is an other release focused in simplify the main api. It deprecates the old api but
 maintains full backward compatibility until 0.6.0.

@@ -1,4 +1,4 @@
-(defproject clojure.jdbc "0.5.0"
+(defproject funcool/clojure.jdbc "0.5.0"
   :description "clojure.jdbc is a library for low level, jdbc-based database access."
   :url "http://github.com/niwibe/clojure.jdbc"
   :license {:name "Apache 2.0"
