@@ -8,10 +8,10 @@
 
 (def h2-dbspec1 {:classname "org.h2.Driver"
                  :subprotocol "h2"
-                 :subname "jdbctest.db"})
+                 :subname "/tmp/jdbctest.db"})
 
 (def h2-dbspec2 {:subprotocol "h2"
-                 :subname "jdbctest.db"})
+                 :subname "/tmp/jdbctest.db"})
 
 (def h2-dbspec3 {:subprotocol "h2"
                  :subname "mem:"})
