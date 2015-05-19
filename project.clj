@@ -8,7 +8,7 @@
   :javac-options ["-target" "1.7" "-source" "1.7" "-Xlint:-options"]
   :profiles {:dev {:dependencies [[com.h2database/h2 "1.4.187"]
                                   [postgresql "9.3-1102.jdbc41"]
-                                  [hikari-cp "1.2.2" :exclusions [com.zaxxer/HikariCP]]
+                                  [hikari-cp "1.2.3" :exclusions [com.zaxxer/HikariCP]]
                                   [com.zaxxer/HikariCP-java6 "2.3.7"]
                                   [cheshire "5.4.0"]]
                    :codeina {:sources ["src"]
@@ -27,7 +27,7 @@
                      :main jdbc.bench
                      :global-vars {*warn-on-reflection* true
                                    *unchecked-math* :warn-on-boxed}
-                     :dependencies [[org.clojure/clojure "1.7.0-beta2"]
+                     :dependencies [[org.clojure/clojure "1.7.0-beta3"]
                                     [org.clojure/java.jdbc "0.3.6"]
                                     [com.h2database/h2 "1.4.187"]
                                     [criterium "0.4.3"]]}})
