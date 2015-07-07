@@ -220,7 +220,7 @@ _clojure.jdbc_ exposes the `fetch` function:
 ----
 (let [sql    ["SELECT id, name FROM people WHERE age > ?", 2]
       result (jdbc/fetch conn sql)]
-  (doseq [row results]
+  (doseq [row result]
     (println row))))
 
 ;; It should print somthing like this:
