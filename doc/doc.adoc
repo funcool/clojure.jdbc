@@ -196,8 +196,8 @@ Let see an example using it in `execute` function:
 
 ==== Returning Inserted Keys
 
-In some circumstances, you want use "RETURNING id" or similar functionality on
-your queries for return the primary keys of newly inserted records.
+In some circumstances, you want to use the "RETURNING id" or similar functionality on
+your queries for getting the primary keys of newly inserted records.
 
 .Example executing query with "returning" statement
 [source, clojure]
@@ -213,7 +213,7 @@ your queries for return the primary keys of newly inserted records.
 
 === Make Queries
 
-It is time for start executin queries and fetch results. For it purpise,
+It is time to start executing queries and fetch results. For this purpose,
 _clojure.jdbc_ exposes the `fetch` function:
 
 [source,clojure]
