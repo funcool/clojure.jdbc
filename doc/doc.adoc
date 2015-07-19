@@ -611,14 +611,14 @@ Fast, simple, reliable. HikariCP is a "zero-overhead" production ready JDBC conn
 .Dependency entry for Java8
 [source, clojure]
 ----
-[hikari-cp "1.2.1"]
+[hikari-cp "1.2.4"]
 ----
 
 .Dependency entry for Java7 or Java6
 [source, clojure]
 ----
-[hikari-cp "1.2.1" :exclusions [com.zaxxer/HikariCP]]
-[com.zaxxer/HikariCP-java6 "2.3.5"]
+[hikari-cp "1.2.4" :exclusions [com.zaxxer/HikariCP]]
+[com.zaxxer/HikariCP-java6 "2.3.9"]
 ----
 
 In order to use this connection pool, previously you should create a DataSource instance. Here
