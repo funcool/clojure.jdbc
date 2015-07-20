@@ -1,9 +1,14 @@
 = clojure.jdbc documentation
-Andrey Antukh, <niwi@niwi.be>
+Andrey Antukh, <niwi@niwi.nz>
+0.5.1
 :toc: left
 :numbered:
 :source-highlighter: pygments
 :pygments-style: friendly
+:sectlinks:
+:idseparator: -
+:idprefix:
+:!numbered:
 
 
 == Introduction

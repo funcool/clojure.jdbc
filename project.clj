@@ -16,13 +16,13 @@
                                        jdbc.impl
                                        jdbc.transaction
                                        jdbc.types]
-                             :language :clojure
-                             :output-dir "doc/api"
-                             :src-dir-uri "http://github.com/niwibe/clojure.jdbc/blob/master/"
-                             :src-linenum-anchor-prefix "L"}
+                             :reader :clojure
+                             :target "doc/dist/latest/api"
+                             :src-uri "http://github.com/niwibe/clojure.jdbc/blob/master/"
+                             :src-uri-prefix "#L"}
                    :plugins [[lein-marginalia "0.7.1"]
-                             [funcool/codeina "0.1.0-SNAPSHOT"
-                              :exclusions [org.clojure/clojure]]]}
+                             [lein-ancient "0.6.7"]
+                             [funcool/codeina "0.2.0"]]}
              :bench {:source-paths ["bench/"]
                      :main jdbc.bench
                      :global-vars {*warn-on-reflection* true

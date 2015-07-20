@@ -9,8 +9,7 @@ pom.xml.asc
 /.lein-*
 /.nrepl-port
 *.db
-doc/index.html
-doc/api*
+/doc/dist
 \#*\#
 .\#*
 *~
