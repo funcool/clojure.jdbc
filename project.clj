@@ -28,6 +28,6 @@
                      :global-vars {*warn-on-reflection* true
                                    *unchecked-math* :warn-on-boxed}
                      :dependencies [[org.clojure/clojure "1.7.0"]
-                                    [org.clojure/java.jdbc "0.3.9"]
+                                    [org.clojure/java.jdbc "0.3.7"]
                                     [com.h2database/h2 "1.4.187"]
                                     [criterium "0.4.3"]]}})
