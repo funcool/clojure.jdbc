@@ -19,19 +19,6 @@ _clojure.jdbc_ is a library for low level, jdbc-based database access.
 link:api/index.html[Api reference documentation.]
 
 
-=== Philosophy
-
-Five most important rules:
-
-- Beautiful is better than ugly.
-- Explicit is better than implicit.
-- Simple is better than complex.
-- Complex is better than complicated.
-- Readability counts.
-
-All contributions to _clojure.jdbc_ should keep these important rules in mind.
-
-
 == Project Maturity
 
 Since _clojure.jdbc_ is a young project there may be some API breakage.
@@ -69,18 +56,6 @@ If you are using gradle, this is a dependency line for gradle dsl:
 [source,groovy]
 ----
 compile "funcool:clojure.jdbc:0.6.0"
-----
-
-
-=== Get the Code
-
-_clojure.jdbc_ is open source and you can found the source on link:https://github.com/funcool/clojure.jdbc[github].
-
-You can clone the public repository with this command:
-
-[source,text]
-----
-git clone https://github.com/funcool/clojure.jdbc
 ----
 
 
@@ -680,25 +655,6 @@ Now, the new created datasource should be used like a plain dbspec for creating 
 ----
 
 
-== How to Contribute?
-
-**clojure.jdbc** unlike Clojure and other Clojure contrib libs, does not have many
-restrictions for contributions. Just open a issue or a pull-request.
-
-
-== Run tests
-
-For run tests just execute this:
-
-[source, text]
-----
-lein test
-----
-
-You should have postgresql up and running with a current user created with trust access mode
-activated for this user and test db already created.
-
-
 == FAQ
 
 === Why another JDBC wrapper?
@@ -769,8 +725,54 @@ This is an incomplete list of Clojure DSLs for SQL:
 
 No. It is an alternative implementation.
 
+== Developers Guide
 
-== License
+=== Philosophy
+
+Five most important rules:
+
+- Beautiful is better than ugly.
+- Explicit is better than implicit.
+- Simple is better than complex.
+- Complex is better than complicated.
+- Readability counts.
+
+All contributions to _clojure.jdbc_ should keep these important rules in mind.
+
+
+=== Contributing
+
+Unlike Clojure and other Clojure contributed libraries _clojure.jdbc_ does not have many
+restrictions for contributions. Just open an issue or pull request.
+
+
+=== Source Code
+
+_clojure.jdbc_ is open source and can be found on
+link:https://github.com/funcool/clojure.jdbc[github].
+
+You can clone the public repository with this command:
+
+[source,text]
+----
+git clone https://github.com/funcool/clojure.jdbc
+----
+
+
+=== Run tests
+
+For running tests just execute this:
+
+[source, text]
+----
+lein test
+----
+
+You should have postgresql up and running with a current user created with trust access mode
+activated for this user and test db already created.
+
+
+=== License
 
 _clojure.jdbc_ is writen from scratch and is licensed under Apache 2.0 license:
 
