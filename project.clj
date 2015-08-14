@@ -6,7 +6,7 @@
   :dependencies [[org.clojure/clojure "1.7.0" :scope "provided"]
                  [potemkin "0.4.1"]]
   :javac-options ["-target" "1.7" "-source" "1.7" "-Xlint:-options"]
-  :profiles {:dev {:dependencies [[com.h2database/h2 "1.4.187"]
+  :profiles {:dev {:dependencies [[com.h2database/h2 "1.4.188"]
                                   [postgresql "9.3-1102.jdbc41"]
                                   [hikari-cp "1.2.4" :exclusions [com.zaxxer/HikariCP]]
                                   [com.zaxxer/HikariCP-java6 "2.3.9"]
@@ -27,6 +27,6 @@
                      :global-vars {*warn-on-reflection* true
                                    *unchecked-math* :warn-on-boxed}
                      :dependencies [[org.clojure/clojure "1.7.0"]
-                                    [org.clojure/java.jdbc "0.3.7"]
-                                    [com.h2database/h2 "1.4.187"]
+                                    [org.clojure/java.jdbc "0.4.1"]
+                                    [com.h2database/h2 "1.4.188"]
                                     [criterium "0.4.3"]]}})
