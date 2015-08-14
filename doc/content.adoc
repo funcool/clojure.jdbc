@@ -1,6 +1,6 @@
 = clojure.jdbc documentation
 Andrey Antukh, <niwi@niwi.nz>
-0.5.1
+0.6.0
 :toc: left
 :numbered:
 :source-highlighter: pygments
@@ -34,11 +34,7 @@ All contributions to _clojure.jdbc_ should keep these important rules in mind.
 
 == Project Maturity
 
-Since _clojure.jdbc_ is a young project there may be some API breakage. The last version (0.5.1),
-introduces a new simplified api and deprecates all old api.
-
-NOTE: The *0.5.1* is fully backward compatible for make the transition easy and all old
-api will be removed in *0.6.0*.
+Since _clojure.jdbc_ is a young project there may be some API breakage.
 
 
 == Install
@@ -62,7 +58,7 @@ vector on your *_project.clj_* file:
 ._on project.clj_
 [source,clojure]
 ----
-[funcool/clojure.jdbc "0.5.1"]
+[funcool/clojure.jdbc "0.6.0"]
 ----
 
 
@@ -72,7 +68,7 @@ If you are using gradle, this is a dependency line for gradle dsl:
 
 [source,groovy]
 ----
-compile "funcool:clojure.jdbc:0.5.1"
+compile "funcool:clojure.jdbc:0.6.0"
 ----
 
 
