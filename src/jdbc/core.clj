@@ -16,7 +16,6 @@
   "Alternative implementation of jdbc wrapper for clojure."
   (:require [potemkin.namespaces :refer [import-vars]]
             [clojure.string :as str]
-            [jdbc.core-deprecated :as core-deprecated]
             [jdbc.types :as types]
             [jdbc.impl :as impl]
             [jdbc.proto :as proto]
@@ -31,21 +30,6 @@
        :no-doc true
        :dynamic true}
   *default-tx-strategy* (impl/transaction-strategy))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Backward compatibility with previous version
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(import-vars
- [core-deprecated
-
-  execute-statement!
-  execute!
-  get-returning-records
-  is-prepared-statement?
-  execute-prepared!
-  query
-  query-first])
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Main public api.

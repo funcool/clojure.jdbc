@@ -12,8 +12,7 @@
                                   [com.zaxxer/HikariCP-java6 "2.3.9"]
                                   [cheshire "5.5.0"]]
                    :codeina {:sources ["src"]
-                             :exclude [jdbc.core-deprecated
-                                       jdbc.impl
+                             :exclude [jdbc.impl
                                        jdbc.transaction
                                        jdbc.types]
                              :reader :clojure
