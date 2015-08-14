@@ -1,5 +1,13 @@
 = Changelog
 
+== Version 0.6.0
+
+Date: 2015-08-14
+
+- Remove deprecated code.
+- Update dependencies.
+
+
 == Version 0.5.1
 
 Date: 2015-04-28
