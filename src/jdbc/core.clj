@@ -14,8 +14,7 @@
 
 (ns jdbc.core
   "Alternative implementation of jdbc wrapper for clojure."
-  (:require [potemkin.namespaces :refer [import-vars]]
-            [clojure.string :as str]
+  (:require [clojure.string :as str]
             [jdbc.types :as types]
             [jdbc.impl :as impl]
             [jdbc.proto :as proto]
