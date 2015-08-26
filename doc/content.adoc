@@ -19,49 +19,31 @@ _clojure.jdbc_ is a library for low level, jdbc-based database access.
 link:api/index.html[Api reference documentation.]
 
 
-== Project Maturity
-
-Since _clojure.jdbc_ is a young project there may be some API breakage.
-
-
-== Install
-
-This section covers a installing _clojure.jdbc_ and its requirements.
-
-
-=== Requirements
-
-_clojure.jdbc_ is tested with these platforms:
-
-- JDK7
-- JDK8
-
-
-=== Leiningen
+=== Install
 
 The simplest way to use _clojure.jdbc_ in a clojure project, is by including it in the dependency
 vector on your *_project.clj_* file:
 
-._on project.clj_
 [source,clojure]
 ----
 [funcool/clojure.jdbc "0.6.1"]
 ----
 
+The project is tested under JDK7 and JDK8.
 
-=== Gradle
 
-If you are using gradle, this is a dependency line for gradle dsl:
+=== Project Maturity
 
-[source,groovy]
-----
-compile "funcool:clojure.jdbc:0.6.1"
-----
+Since _clojure.jdbc_ is a young project there may be some API breakage.
 
 
 == User Guide
 
 === Connecting to database
+
+This section intends to explain everything that you should to know about how
+connect to the database.
+
 
 ==== Connection parameters
 
