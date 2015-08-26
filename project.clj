@@ -3,9 +3,9 @@
   :url "http://github.com/niwibe/clojure.jdbc"
   :license {:name "Apache 2.0"
             :url "http://www.apache.org/licenses/LICENSE-2.0.txt"}
-  :dependencies [[org.clojure/clojure "1.7.0" :scope "provided"]
-                 [potemkin "0.4.1"]]
+  :dependencies [[org.clojure/clojure "1.7.0" :scope "provided"]]
   :javac-options ["-target" "1.7" "-source" "1.7" "-Xlint:-options"]
+  :repositories [["clojars" {:sign-releases false}]]
   :profiles {:dev {:dependencies [[com.h2database/h2 "1.4.188"]
                                   [postgresql "9.3-1102.jdbc41"]
                                   [hikari-cp "1.2.4" :exclusions [com.zaxxer/HikariCP]]
