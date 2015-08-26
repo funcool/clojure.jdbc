@@ -21,7 +21,7 @@
                              :src-uri-prefix "#L"}
                    :plugins [[lein-marginalia "0.7.1"]
                              [lein-ancient "0.6.7"]
-                             [funcool/codeina "0.2.0"]]}
+                             [funcool/codeina "0.3.0"]]}
              :bench {:source-paths ["bench/"]
                      :main jdbc.bench
                      :global-vars {*warn-on-reflection* true
