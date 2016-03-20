@@ -8,7 +8,7 @@
   :profiles
   {:dev
    {:dependencies [[com.h2database/h2 "1.4.191"]
-                   [org.postgresql/postgresql "9.4.1208"]
+                   [org.postgresql/postgresql "9.4.1208.jre7"]
                    [hikari-cp "1.6.1"]
                    [cheshire "5.5.0"]]
     :codeina {:sources ["src"]
