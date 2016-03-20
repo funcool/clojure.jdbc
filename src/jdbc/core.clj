@@ -72,12 +72,8 @@
   ([dbspec] (connection dbspec {}))
   ([dbspec options]
    (let [^Connection conn (proto/connection dbspec)
-         options (merge
-                  (when (map? dbspec)
-                    (dissoc dbspec
-                            :user :password :subprotocol :subname
-                            :datasource :vendor :name :host :port))
-                  options)]
+         options (merge (when (map? dbspec) dbspec) options)]
+
      ;; Set readonly flag if it found on the options map
      (some->> (:read-only options)
               (.setReadOnly conn))
