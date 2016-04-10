@@ -29,20 +29,26 @@
     rs: ResultSet instance.
 
   Optional named parameters:
-    :identifiers -> function that is applied for column name
-                    when as-arrays? is false
+    :metadata->identifiers -> function that is passed the metadata and should
+                              return a seq of column identifiers
+                              when as-rows? is false
+
+    :identifiers -> function that is applied to column labels
+                    when metadata->identifiers is nil
+                    and as-rows? is false
+
     :as-rows?    -> by default this function return a lazy seq of
                     records (map), but in certain circumstances you
                     need results as a lazy-seq of vectors. With this keywork
                     parameter you can enable this behavior and return a lazy-seq
                     of vectors instead of records (maps).
   "
-  [conn ^ResultSet rs {:keys [identifiers as-rows?]
-                       :or {identifiers str/lower-case as-rows? false}
+  [conn ^ResultSet rs {:keys [metadata->identifiers identifiers as-rows?]
+                       :or {identifiers str/lower-case
+                            as-rows?    false}
                        :as options}]
   (let [^ResultSetMetaData metadata (.getMetaData rs)
-        idseq (range 1 (inc (.getColumnCount metadata)))
-        keyseq (mapv (comp keyword identifiers (fn [^long i] (.getColumnLabel metadata i))) idseq)
+        idseq  (range 1 (inc (.getColumnCount metadata)))
         values (fn []
                  (mapv (fn [^long i]
                          (-> (.getObject rs i)
@@ -52,9 +58,12 @@
                (when (.next rs)
                  (cons (values) (lazy-seq (thisfn)))))
         records (fn thisfn []
-                  (when (.next rs)
-                    (-> (zipmap keyseq (values))
-                        (cons (lazy-seq (thisfn))))))]
+                  (let [keyseq (if metadata->identifiers
+                                 (metadata->identifiers metadata)
+                                 (mapv (comp keyword identifiers (fn [^long i] (.getColumnLabel metadata i))) idseq))]
+                    (when (.next rs)
+                      (-> (zipmap keyseq (values))
+                          (cons (lazy-seq (thisfn)))))))]
     (if as-rows?
       (rows)
       (records))))
