@@ -109,10 +109,11 @@
   "Given a URI instance, return its querystring as
   plain map with parsed keys and values."
   [^URI uri]
-  (let [^String query (.getQuery uri)]
-    (->> (for [^String kvs (.split query "&")] (into [] (.split kvs "=")))
-         (into {})
-         (walk/keywordize-keys))))
+  (when-let [^String query (.getQuery uri)]
+    (when-not (str/blank? query)
+     (->> (for [^String kvs (.split query "&")] (into [] (.split kvs "=")))
+          (into {})
+          (walk/keywordize-keys)))))
 
 (defn- map->properties
   "Convert hash-map to java.utils.Properties instance. This method is used

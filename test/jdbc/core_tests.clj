@@ -28,6 +28,10 @@
                        :host "localhost"
                        :read-only true})
 
+(def pg-dbspec-uri-1 "postgresql://localhost:5432/test")
+(def pg-dbspec-uri-2 "postgresql://localhost:5432/test?")
+(def pg-dbspec-uri-3 "postgresql://localhost:5432/test?foo=bar")
+
 (deftest datasource-spec
   (with-open [ds (hikari/make-datasource {:adapter "h2" :url "jdbc:h2:/tmp/test"})]
     (is (instance? javax.sql.DataSource ds))
@@ -39,11 +43,17 @@
   (let [c1 (jdbc/connection h2-dbspec1)
         c2 (jdbc/connection h2-dbspec2)
         c3 (jdbc/connection h2-dbspec3)
-        c4 (jdbc/connection pg-dbspec-pretty)]
+        c4 (jdbc/connection pg-dbspec-pretty)
+        c5 (jdbc/connection pg-dbspec-uri-1)
+        c6 (jdbc/connection pg-dbspec-uri-2)
+        c7 (jdbc/connection pg-dbspec-uri-3)]
     (is (satisfies? proto/IConnection c1))
     (is (satisfies? proto/IConnection c2))
     (is (satisfies? proto/IConnection c3))
-    (is (satisfies? proto/IConnection c4))))
+    (is (satisfies? proto/IConnection c4))
+    (is (satisfies? proto/IConnection c5))
+    (is (satisfies? proto/IConnection c6))
+    (is (satisfies? proto/IConnection c7))))
 
 (deftest db-isolation-level-1
   (let [c1 (-> (jdbc/connection h2-dbspec4)
