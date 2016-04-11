@@ -1,6 +1,7 @@
 (ns jdbc.core-tests
   (:import org.postgresql.util.PGobject)
-  (:require [jdbc.core :as jdbc]
+  (:require [clojure.string :as s]
+            [jdbc.core :as jdbc]
             [jdbc.proto :as proto]
             [hikari-cp.core :as hikari]
             [cheshire.core :as json]
@@ -116,6 +117,18 @@
     (let [result (jdbc/fetch conn ["SELECT * FROM generate_series(1, ?) LIMIT 1 OFFSET 3;" 10])]
       (is (= (count result) 1))))
 
+  (with-open [conn (jdbc/connection pg-dbspec)]
+    (let [result (jdbc/fetch conn ["SELECT i % 2 = 1 AS odd FROM generate_series(1, ?) t(i);" 2]
+                             {:metadata->identifiers (fn [metadata]
+                                                       (->> metadata .getColumnCount inc
+                                                            ;; 1 based indexing not 0
+                                                            (range 1)
+                                                            (map (fn [idx]
+                                                                   (let [label (-> (.getColumnLabel metadata idx) s/lower-case (s/replace "_" "-"))]
+                                                                     (-> (str label (when (= "bool" (.getColumnTypeName metadata idx)) "?"))
+                                                                         keyword))))))})]
+      (is (= [{:odd? true} {:odd? false}] result))))
+
   ;; Fetch with sqlvec format and overwriting identifiers parameter
   (with-open [conn (jdbc/connection h2-dbspec3)]
     (let [result (jdbc/fetch conn ["SELECT 1 + 1 as foo;"] {:identifiers identity})]
@@ -130,9 +143,7 @@
   (with-open [conn (jdbc/connection h2-dbspec3)]
     (let [stmt (jdbc/prepared-statement conn ["select ? as foo;" 2])
           result (jdbc/fetch conn stmt)]
-      (is (= [{:foo 2}] result))))
-)
-
+      (is (= [{:foo 2}] result)))))
 
 (deftest lazy-queries
   (with-open [conn (jdbc/connection h2-dbspec3)]
