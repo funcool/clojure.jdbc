@@ -37,12 +37,15 @@
                     parameter you can enable this behavior and return a lazy-seq
                     of vectors instead of records (maps).
   "
-  [conn ^ResultSet rs {:keys [identifiers as-rows?]
-                       :or {identifiers str/lower-case as-rows? false}
+  [conn ^ResultSet rs {:keys [identifiers as-rows? header?]
+                       :or {identifiers str/lower-case
+                            as-rows? false
+                            header? false}
                        :as options}]
   (let [^ResultSetMetaData metadata (.getMetaData rs)
         idseq (range 1 (inc (.getColumnCount metadata)))
-        keyseq (mapv (comp keyword identifiers (fn [^long i] (.getColumnLabel metadata i))) idseq)
+        labels (mapv (fn [^long i] (.getColumnLabel metadata i)) idseq)
+        keyseq (mapv (comp keyword identifiers) labels)
         values (fn []
                  (mapv (fn [^long i]
                          (-> (.getObject rs i)
@@ -54,11 +57,13 @@
         records (fn thisfn []
                   (when (.next rs)
                     (-> (zipmap keyseq (values))
-                        (cons (lazy-seq (thisfn))))))]
-    (if as-rows?
-      (rows)
-      (records))))
-
+                        (cons (lazy-seq (thisfn))))))
+        header (mapv identifiers labels)]
+    (if-not as-rows?
+      (records)
+      (if-not header?
+        (rows)
+        (cons header (lazy-seq (rows)))))))
 
 (defn result-set->vector
   "Function that evaluates a result into one clojure persistent

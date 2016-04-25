@@ -126,6 +126,11 @@
     (let [result (jdbc/fetch conn ["SELECT 1 + 1 as foo;"] {:as-rows? true})]
       (is (= [2] (first result)))))
 
+  ;; Fetch returning rows with header
+  (with-open [conn (jdbc/connection h2-dbspec3)]
+    (let [result (jdbc/fetch conn ["SELECT 1 + 1 as foo, 2 + 2 as bar;"] {:as-rows? true :header? true})]
+      (is (= [["foo", "bar"] [2, 4]] result))))
+
   ;; Fetch from prepared statement
   (with-open [conn (jdbc/connection h2-dbspec3)]
     (let [stmt (jdbc/prepared-statement conn ["select ? as foo;" 2])
