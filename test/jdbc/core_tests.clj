@@ -88,9 +88,18 @@
   (with-open [conn (jdbc/connection pg-dbspec)]
     (jdbc/atomic conn
       (jdbc/set-rollback! conn)
-      (jdbc/execute conn "create table foo (id serial, age integer);")
-      (let [result (jdbc/fetch conn ["insert into foo (age) values (?) returning id" 1])]
-        (is (= result [{:id 1}]))))))
+      (jdbc/execute conn "create table foo2 (id serial, age integer);")
+      (let [result (jdbc/fetch conn ["insert into foo2 (age) values (?) returning id" 1])]
+        (is (= result [{:id 1}])))))
+
+  (with-open [conn (jdbc/connection pg-dbspec)]
+    (jdbc/atomic conn
+      (jdbc/set-rollback! conn)
+      (let [sql1 "CREATE TABLE foo (id integer primary key, age integer);"
+            sql2 ["INSERT INTO foo (id, age) VALUES (?,?), (?,?);" 1 1 2 2]]
+        (jdbc/execute conn sql1)
+        (let [result (jdbc/execute conn sql2 {:returning true})]
+          (is (= result [{:id 1, :age 1} {:id 2, :age 2}])))))))
 
 (deftest db-commands
   ;; Simple statement
@@ -104,13 +113,6 @@
     (let [sql "CREATE TABLE foo (name varchar(255), age integer);"]
       (jdbc/execute conn sql)
       (is (thrown? org.h2.jdbc.JdbcBatchUpdateException (jdbc/execute conn sql)))))
-
-  (with-open [conn (jdbc/connection pg-dbspec)]
-    (let [sql1 "CREATE TABLE foo (id integer primary key, age integer);"
-          sql2 ["INSERT INTO foo (id, age) VALUES (?,?), (?,?);" 1 1 2 2]]
-      (jdbc/execute conn sql1)
-      (let [result (jdbc/execute conn sql2 {:returning true})]
-        (is (= result [{:id 1, :age 1} {:id 2, :age 2}])))))
 
   ;; Fetch from simple query
   (with-open [conn (jdbc/connection h2-dbspec3)]
