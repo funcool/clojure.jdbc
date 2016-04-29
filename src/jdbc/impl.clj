@@ -130,9 +130,9 @@
 
 (extend-protocol proto/IExecute
   java.lang.String
-  (execute [^String sql ^Connection conn opts]
-    (with-open [^PreparedStatement stmt (.createStatement conn)]
-      (.addBatch stmt sql)
+  (execute [sql conn opts]
+    (with-open [^PreparedStatement stmt (.createStatement ^Connection conn)]
+      (.addBatch stmt ^String sql)
       (seq (.executeBatch stmt))))
 
   clojure.lang.IPersistentVector

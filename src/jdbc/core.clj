@@ -102,7 +102,7 @@
   return an instance of prepared statement."
   ([conn sqlvec] (prepared-statement conn sqlvec {}))
   ([conn sqlvec options]
-   (let [^Connection conn (proto/connection conn)]
+   (let [conn (proto/connection conn)]
      (proto/prepared-statement sqlvec conn options))))
 
 (defn execute
