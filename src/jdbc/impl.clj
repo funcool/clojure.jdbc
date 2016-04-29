@@ -136,13 +136,13 @@
       (seq (.executeBatch stmt))))
 
   clojure.lang.IPersistentVector
-  (execute [^clojure.lang.IPersistentVector sqlvec ^Connection conn opts]
+  (execute [sqlvec conn opts]
     (with-open [^PreparedStatement stmt (proto/prepared-statement sqlvec conn opts)]
-      ;; TODO: returning
-      ;; (if (:returning opts)
-      ;;   (let [rs (.getGeneratedKeys stmt)]
-      ;;     (result-set->vector conn rs {}))
-      (.executeUpdate stmt)))
+      (let [counts (.executeUpdate stmt)]
+        (if (:returning opts)
+          (with-open [rs (.getGeneratedKeys stmt)]
+            (result-set->vector conn rs opts))
+          counts))))
 
   PreparedStatement
   (execute [^PreparedStatement stmt ^Connection conn opts]
@@ -204,7 +204,7 @@
          ^PreparedStatement
          stmt (cond
                returning
-               (if (= :all returning)
+               (if (or (= :all returning) (true? returning))
                  (.prepareStatement conn sql java.sql.Statement/RETURN_GENERATED_KEYS)
                  (.prepareStatement conn sql
                                     #^"[Ljava.lang.String;" (into-array String (mapv name returning))))

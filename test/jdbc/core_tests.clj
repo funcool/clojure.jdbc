@@ -105,6 +105,13 @@
       (jdbc/execute conn sql)
       (is (thrown? org.h2.jdbc.JdbcBatchUpdateException (jdbc/execute conn sql)))))
 
+  (with-open [conn (jdbc/connection pg-dbspec)]
+    (let [sql1 "CREATE TABLE foo (id integer primary key, age integer);"
+          sql2 ["INSERT INTO foo (id, age) VALUES (?,?), (?,?);" 1 1 2 2]]
+      (jdbc/execute conn sql1)
+      (let [result (jdbc/execute conn sql2 {:returning true})]
+        (is (= result [{:id 1, :age 1} {:id 2, :age 2}])))))
+
   ;; Fetch from simple query
   (with-open [conn (jdbc/connection h2-dbspec3)]
     (let [result (jdbc/fetch conn "SELECT 1 + 1 as foo;")]
