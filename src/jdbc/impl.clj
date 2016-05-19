@@ -194,8 +194,7 @@
   ([^Connection conn sqlvec {:keys [result-type result-concurency fetch-size
                                     max-rows holdability returning]
                              :or {result-type :forward-only
-                                  result-concurency :read-only
-                                  fetch-size 100}
+                                  result-concurency :read-only}
                              :as options}]
    (let [sqlvec (if (string? sqlvec) [sqlvec] sqlvec)
          ^String sql (first sqlvec)
