@@ -155,13 +155,13 @@
 (extend-protocol proto/IFetch
   java.lang.String
   (fetch [^String sql ^Connection conn opts]
-    (let [^PreparedStatement stmt (proto/prepared-statement sql conn opts)]
+    (with-open [^PreparedStatement stmt (proto/prepared-statement sql conn opts)]
       (let [^ResultSet rs (.executeQuery stmt)]
         (result-set->vector conn rs opts))))
 
   clojure.lang.IPersistentVector
   (fetch [^clojure.lang.IPersistentVector sqlvec ^Connection conn opts]
-    (let [^PreparedStatement stmt (proto/prepared-statement sqlvec conn opts)]
+    (with-open [^PreparedStatement stmt (proto/prepared-statement sqlvec conn opts)]
       (let [^ResultSet rs (.executeQuery stmt)]
         (result-set->vector conn rs opts))))
 
