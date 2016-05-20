@@ -1,5 +1,13 @@
 = Changelog
 
+== Version 0.9.0
+
+Date: 2016-05-20
+
+- Fix statement leakage on `fetch` functions.
+- Remove default `fetch-size` parameter value.
+
+
 == Version 0.8.0
 
 Date: 2016-04-29
