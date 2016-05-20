@@ -1,6 +1,6 @@
 = clojure.jdbc documentation
 Andrey Antukh, <niwi@niwi.nz>
-0.8.0
+0.9.0
 :toc: left
 :numbered:
 :source-highlighter: pygments
@@ -26,7 +26,7 @@ vector on your *_project.clj_* file:
 
 [source,clojure]
 ----
-[funcool/clojure.jdbc "0.8.0"]
+[funcool/clojure.jdbc "0.9.0"]
 ----
 
 The project is tested under JDK7 and JDK8.
