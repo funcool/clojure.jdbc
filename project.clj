@@ -7,10 +7,10 @@
   :javac-options ["-target" "1.7" "-source" "1.7" "-Xlint:-options"]
   :profiles
   {:dev
-   {:dependencies [[com.h2database/h2 "1.4.191"]
-                   [org.postgresql/postgresql "9.4.1208.jre7"]
-                   [hikari-cp "1.6.1"]
-                   [cheshire "5.6.1"]]
+   {:dependencies [[com.h2database/h2 "1.4.192"]
+                   [org.postgresql/postgresql "9.4.1209.jre7"]
+                   [hikari-cp "1.7.3"]
+                   [cheshire "5.6.3"]]
     :codeina {:sources ["src"]
               :exclude [jdbc.impl
                         jdbc.transaction
@@ -20,11 +20,11 @@
               :src-uri "http://github.com/niwibe/clojure.jdbc/blob/master/"
               :src-uri-prefix "#L"}
     :plugins [[lein-ancient "0.6.10"]
-              [funcool/codeina "0.4.0"]]}
+              [funcool/codeina "0.5.0"]]}
    :bench {:source-paths ["bench/"]
            :main jdbc.bench
            :global-vars {*warn-on-reflection* true
                          *unchecked-math* :warn-on-boxed}
            :dependencies [[org.clojure/java.jdbc "0.5.8"]
-                          [com.h2database/h2 "1.4.191"]
+                          [com.h2database/h2 "1.4.192"]
                           [criterium "0.4.4"]]}})
