@@ -29,6 +29,13 @@ vector on your *_project.clj_* file:
 [funcool/clojure.jdbc "0.9.0"]
 ----
 
+You also need to add an entry for the java driver that you need. For instance, for `mysql`:
+
+[source, clojure]
+---
+[mysql/mysql-connector-java "5.1.6"]
+---
+
 The project is tested under JDK7 and JDK8.
 
 
