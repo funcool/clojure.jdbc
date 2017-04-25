@@ -293,8 +293,8 @@ the `atomic-apply` function or `atomic` macro:
 
 This is a list of supported options:
 
-- `:read-uncommited` - Set read uncommited isolation level
-- `:read-commited` - Set read committed isolation level
+- `:read-uncommitted` - Set read uncommitted isolation level
+- `:read-committed` - Set read committed isolation level
 - `:repeatable-read` - Set repeatable reads isolation level
 - `:serializable` - Set serializable isolation level
 - `:none` - Use this option to indicate to _clojure.jdbc_ to do nothing and keep default behavior.
