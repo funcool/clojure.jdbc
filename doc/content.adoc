@@ -487,6 +487,7 @@ an little example on how it can be done:
 (def ds (doto (ComboPooledDataSource.)
           (.setJdbcUrl (str "jdbc:"
                             (:subprotocol dbspec)
+                            ":"
                             (:subname dbspec)))
           (.setUser (:user dbspec nil))
           (.setPassword (:password dbspec nil))
