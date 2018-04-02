@@ -84,7 +84,7 @@ Also, _clojure.jdbc_ comes with alternative, more human comprehensible format, l
              :password "password"}) ;; Optional
 ----
 
-But it has some disadvantages: it does not supports all options of a default dbspec format.
+But it has some disadvantages: it does not support all options of a default dbspec format.
 
 Also, *dbspec* can be represented as a URI.
 
@@ -231,7 +231,7 @@ macro:
 
 [NOTE]
 ====
-_clojure.jdbc_ does not uses any dynamic thread-local vars to store the transaction state
+_clojure.jdbc_ does not use any dynamic thread-local vars to store the transaction state
 of a connection. Instead of that, it overwrites the lexical scope value of `conn` with a new
 connection that has transactional state.
 ====
