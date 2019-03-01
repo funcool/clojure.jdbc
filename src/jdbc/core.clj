@@ -99,7 +99,16 @@
 
 (defn prepared-statement
   "Given a string or parametrized sql in sqlvec format
-  return an instance of prepared statement."
+  return an instance of prepared statement.
+  `options` is an optional map with these keys (all optional):
+  - :result-type - A keyword indicating the java.sql.ResultSet type. Any of :forward-only, :scroll-insensitive, :scroll-sensitive.
+  - :result-concurrency - A keyword indicating the concurrency mode of the java.sql.ResultSet object. Either :read-only or :updatable.
+  - :fetch-size - An integer indicating the number of rows to fetch at once.
+  - :max-rows - An integer indicating the maximumal number of rows that may be fetched.
+  - :holdability - A keyword indicating whether cursors should be held or closed on commit. Either :hold or :close.
+  - :returning - Either true or :all, to indicate that the generated keys for new rows should be returned, or a sequence of keywords indicating the names of rows to return.
+
+  More information about these options can be found in the [javadoc](https://docs.oracle.com/javase/8/docs/api/java/sql/ResultSet.html)."
   ([conn sqlvec] (prepared-statement conn sqlvec {}))
   ([conn sqlvec options]
    (let [conn (proto/connection conn)]
@@ -146,11 +155,20 @@
 
   This function returns a cursor instead of result.
   You should explicitly close the cursor at the end of
-  iteration for release resources."
+  iteration for release resources.
+
+  `options` is an optional map with these keys (all optional):
+  - :result-type - A keyword indicating the java.sql.ResultSet type. Any of :forward-only, :scroll-insensitive, :scroll-sensitive.
+  - :result-concurrency - A keyword indicating the concurrency mode of the java.sql.ResultSet object. Either :read-only or :updatable.
+  - :fetch-size - An integer indicating the number of rows to fetch at once.
+  - :max-rows - An integer indicating the maximumal number of rows that may be fetched.
+  - :holdability - A keyword indicating whether cursors should be held or closed on commit. Either :hold or :close.
+
+  More information about these options can be found in the [javadoc](https://docs.oracle.com/javase/8/docs/api/java/sql/ResultSet.html)."
   ([conn q] (fetch-lazy conn q {}))
-  ([conn q opts]
+  ([conn q options]
    (let [^Connection conn (proto/connection conn)
-         ^PreparedStatement stmt (proto/prepared-statement q conn opts)]
+         ^PreparedStatement stmt (proto/prepared-statement q conn options)]
      (types/->cursor stmt))))
 
 (def ^{:doc "Deprecated alias for backward compatibility."

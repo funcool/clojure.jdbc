@@ -11,3 +11,5 @@ A JDBC library for Clojure.
 ## Documentation ##
 
 - **Documentation:** http://funcool.github.io/clojure.jdbc/latest/
+
+- **API Docs** https://funcool.github.io/clojure.jdbc/latest/api/index.html

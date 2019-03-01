@@ -10,14 +10,11 @@ Andrey Antukh, <niwi@niwi.nz>
 :idprefix:
 :!numbered:
 
+== link:api/index.html[API reference documentation]
 
 == Introduction
 
 _clojure.jdbc_ is a library for low level, jdbc-based database access.
-
-
-link:api/index.html[Api reference documentation.]
-
 
 === Install
 
