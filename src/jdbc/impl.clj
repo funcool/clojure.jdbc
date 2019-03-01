@@ -191,10 +191,10 @@
 (defn- prepared-statement*
   "Given connection and query, return a prepared statement."
   ([^Connection conn sqlvec] (prepared-statement* conn sqlvec {}))
-  ([^Connection conn sqlvec {:keys [result-type result-concurency fetch-size
+  ([^Connection conn sqlvec {:keys [result-type result-concurrency fetch-size
                                     max-rows holdability returning]
                              :or {result-type :forward-only
-                                  result-concurency :read-only}
+                                  result-concurrency :read-only}
                              :as options}]
    (let [sqlvec (if (string? sqlvec) [sqlvec] sqlvec)
          ^String sql (first sqlvec)
@@ -211,12 +211,12 @@
                holdability
                (.prepareStatement conn sql
                                   (result-type constants/resultset-options)
-                                  (result-concurency constants/resultset-options)
+                                  (result-concurrency constants/resultset-options)
                                   (holdability constants/resultset-options))
                :else
                (.prepareStatement conn sql
                                   (result-type constants/resultset-options)
-                                  (result-concurency constants/resultset-options)))]
+                                  (result-concurrency constants/resultset-options)))]
 
      ;; Set fetch-size and max-rows if provided by user
      (when fetch-size (.setFetchSize stmt fetch-size))
